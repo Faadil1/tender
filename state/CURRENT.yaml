@@ -8,7 +8,7 @@ repository:
   terminal_git_push_status: blocked_missing_terminal_credentials
 branch: main
 baseline_before_delta: 7361422c9ae2ed20e2bef67cf078ee8495dc72a8
-latest_local_commit: pending_delta_commit
+latest_local_commit: 050dd05797b17e3a99128fc8daa6b7aa83d022e9
 current_gate: GATE_6_SETTLEMENT_REPLAY_HARNESS_LOCAL_PASS
 completed_work:
   - Existing local history preserved; repository was not reinitialized.
@@ -49,5 +49,5 @@ deployment:
   preferred: Cloudflare
 active_blockers:
   - Terminal git push to GitHub fails because no username/credential is available in the shell.
-  - Canonical Tender-caused live transaction cannot run until latest local commits are on GitHub.
+  - Canonical Tender-caused live transaction cannot run until local commits are on GitHub.
 next_action: Authenticate git push or use another history-preserving push path, then run the Tender Live Proof workflow once.

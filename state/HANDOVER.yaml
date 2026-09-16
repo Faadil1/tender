@@ -8,8 +8,8 @@ canonical_repository: https://github.com/Faadil1/tender
 current_local_state:
   branch: main
   baseline_before_delta: 7361422c9ae2ed20e2bef67cf078ee8495dc72a8
-  latest_local_commit: pending_delta_commit
-  uncommitted_work_expected: false after next successful commit
+  latest_local_commit: 050dd05797b17e3a99128fc8daa6b7aa83d022e9
+  uncommitted_work_expected: false
 important_files:
   - src/domain/types.ts
   - src/domain/identity.ts
