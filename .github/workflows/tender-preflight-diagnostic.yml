@@ -23,7 +23,7 @@ jobs:
       TENDER_RECIPIENT_WALLET: ${{ inputs.recipient_wallet }}
       TENDER_AMOUNT_USDC: ${{ inputs.amount_usdc }}
     steps:
-      - name: Read-only KeeperHub diagnostics — never broadcast
+      - name: Read-only KeeperHub diagnostics and exact workflow simulation — never broadcast
         shell: bash
         run: |
           node <<'NODE'
@@ -41,51 +41,60 @@ jobs:
           const amount = required("TENDER_AMOUNT_USDC");
           const auth = { Authorization: `Bearer ${apiKey}` };
 
-          const read = async (label, url) => {
-            const res = await fetch(url, { headers: auth });
+          const parse = async (res) => {
             const text = await res.text();
             let body = text;
             try { body = JSON.parse(text); } catch {}
+            return { res, body };
+          };
+
+          const print = (label, res, body) => {
             console.log(`${label}: HTTP ${res.status} ${res.statusText}`);
             console.log(typeof body === "string" ? body.slice(0, 12000) : JSON.stringify(body, null, 2).slice(0, 12000));
-            return { ok: res.ok, status: res.status, body };
           };
 
           console.log(`Base URL normalization: ${rawBase === base ? "unchanged" : "removed trailing /api"}`);
-          console.log(`Target workflow ID: ${workflowId}`);
+          console.log(`Target workflow ID present: ${Boolean(workflowId)}`);
           console.log(`Recipient: ${recipient}`);
           console.log(`Amount: ${amount}`);
-          console.log("Mode: read-only organization-scope diagnostic. No /execute endpoint is called.");
+          console.log("Mode: read-only diagnostics + workflow simulation. No /execute endpoint is called.");
 
-          const keys = await read("Auth probe /api/keys", `${base}/api/keys`);
-          if (!keys.ok) {
-            console.error("AUTH_PROBE_FAILED: the kh_ key is invalid, revoked, or not accepted as an organization key.");
-            process.exit(1);
-          }
+          const keysParsed = await parse(await fetch(`${base}/api/keys`, { headers: auth }));
+          print("Auth probe /api/keys", keysParsed.res, keysParsed.body);
+          if (!keysParsed.res.ok) throw new Error("AUTH_PROBE_FAILED");
 
-          const workflows = await read("Workflow list /api/workflows", `${base}/api/workflows`);
-          if (!workflows.ok) {
-            console.error("WORKFLOW_LIST_FAILED: the key authenticated but cannot list organization workflows.");
-            process.exit(1);
-          }
+          const workflowsParsed = await parse(await fetch(`${base}/api/workflows`, { headers: auth }));
+          print("Workflow list /api/workflows", workflowsParsed.res, workflowsParsed.body);
+          if (!workflowsParsed.res.ok) throw new Error("WORKFLOW_LIST_FAILED");
 
-          const items = Array.isArray(workflows.body) ? workflows.body : (workflows.body?.items ?? []);
+          const items = Array.isArray(workflowsParsed.body) ? workflowsParsed.body : (workflowsParsed.body?.items ?? []);
           const visible = items.map((w) => ({ id: w.id, name: w.name, projectId: w.projectId ?? null }));
           console.log("Visible workflows summary:");
           console.log(JSON.stringify(visible, null, 2));
 
           const match = visible.find((w) => w.id === workflowId);
-          if (!match) {
-            console.error(`ORG_SCOPE_MISMATCH: target workflow ${workflowId} is not visible to this API key's organization.`);
-            console.error("Create/recreate KEEPERHUB_API_KEY from the same KeeperHub organization that owns 'Tender: Settle Claim', then replace the GitHub secret. Do not run Tender Live Proof yet.");
+          if (!match) throw new Error("ORG_SCOPE_MISMATCH");
+
+          const workflowParsed = await parse(await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}`, { headers: auth }));
+          print("Target workflow lookup", workflowParsed.res, workflowParsed.body);
+          if (!workflowParsed.res.ok) throw new Error("TARGET_LOOKUP_FAILED");
+
+          console.log("ORG_SCOPE_OK");
+
+          const simulationParsed = await parse(await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}/simulate`, {
+            method: "POST",
+            headers: {
+              ...auth,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ input: { recipient, amount } })
+          }));
+          print("Exact workflow simulation", simulationParsed.res, simulationParsed.body);
+
+          if (!simulationParsed.res.ok) {
+            console.error("WORKFLOW_SIMULATION_FAILED: no broadcast occurred. Do not run Tender Live Proof yet.");
             process.exit(1);
           }
 
-          const workflow = await read("Target workflow lookup", `${base}/api/workflows/${encodeURIComponent(workflowId)}`);
-          if (!workflow.ok) {
-            console.error("TARGET_LOOKUP_FAILED even though workflow appears in the list. Stop and inspect before any execution.");
-            process.exit(1);
-          }
-
-          console.log("ORG_SCOPE_OK: API key authenticates and can see the target Tender workflow. Safe to proceed to a separate simulation-only preflight next.");
+          console.log("WORKFLOW_SIMULATION_RESPONSE_OK: KeeperHub accepted the exact Tender workflow preflight. This run never called /execute and moved no funds.");
           NODE
