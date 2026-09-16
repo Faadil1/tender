@@ -23,7 +23,7 @@ jobs:
       TENDER_RECIPIENT_WALLET: ${{ inputs.recipient_wallet }}
       TENDER_AMOUNT_USDC: ${{ inputs.amount_usdc }}
     steps:
-      - name: Read-only KeeperHub diagnostics and exact workflow simulation — never broadcast
+      - name: Read-only KeeperHub diagnostics and transaction preflight — never broadcast
         shell: bash
         run: |
           node <<'NODE'
@@ -40,6 +40,8 @@ jobs:
           const recipient = required("TENDER_RECIPIENT_WALLET");
           const amount = required("TENDER_AMOUNT_USDC");
           const auth = { Authorization: `Bearer ${apiKey}` };
+          const jsonHeaders = { ...auth, "Content-Type": "application/json" };
+          const usdcBaseSepolia = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
           const parse = async (res) => {
             const text = await res.text();
@@ -57,7 +59,7 @@ jobs:
           console.log(`Target workflow ID present: ${Boolean(workflowId)}`);
           console.log(`Recipient: ${recipient}`);
           console.log(`Amount: ${amount}`);
-          console.log("Mode: read-only diagnostics + workflow simulation. No /execute endpoint is called.");
+          console.log("Mode: read-only diagnostics + dry-run simulation only. No broadcast endpoint is called without simulate=true.");
 
           const keysParsed = await parse(await fetch(`${base}/api/keys`, { headers: auth }));
           print("Auth probe /api/keys", keysParsed.res, keysParsed.body);
@@ -81,20 +83,41 @@ jobs:
 
           console.log("ORG_SCOPE_OK");
 
-          const simulationParsed = await parse(await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}/simulate`, {
+          const workflowSimulation = await parse(await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}/simulate`, {
             method: "POST",
-            headers: {
-              ...auth,
-              "Content-Type": "application/json"
-            },
+            headers: jsonHeaders,
             body: JSON.stringify({ input: { recipient, amount } })
           }));
-          print("Exact workflow simulation", simulationParsed.res, simulationParsed.body);
+          print("Exact workflow simulation", workflowSimulation.res, workflowSimulation.body);
 
-          if (!simulationParsed.res.ok) {
+          if (!workflowSimulation.res.ok) {
             console.error("WORKFLOW_SIMULATION_FAILED: no broadcast occurred. Do not run Tender Live Proof yet.");
             process.exit(1);
           }
 
-          console.log("WORKFLOW_SIMULATION_RESPONSE_OK: KeeperHub accepted the exact Tender workflow preflight. This run never called /execute and moved no funds.");
+          const directSimulation = await parse(await fetch(`${base}/api/execute/transfer`, {
+            method: "POST",
+            headers: jsonHeaders,
+            body: JSON.stringify({
+              chainId: 84532,
+              recipientAddress: recipient,
+              amount,
+              tokenAddress: usdcBaseSepolia,
+              simulate: true
+            })
+          }));
+          print("Equivalent ERC20 direct simulation", directSimulation.res, directSimulation.body);
+
+          const directOk =
+            directSimulation.res.ok &&
+            directSimulation.body &&
+            directSimulation.body.success === true &&
+            directSimulation.body.wouldRevert === false;
+
+          if (!directOk) {
+            console.error("DIRECT_TRANSFER_PREFLIGHT_FAILED: simulation signed nothing and broadcast nothing. Do not run Tender Live Proof yet.");
+            process.exit(1);
+          }
+
+          console.log("READ_ONLY_PREFLIGHT_OK: target workflow is visible, workflow preflight was accepted, and the equivalent Base Sepolia USDC transfer simulated successfully with wouldRevert=false. No funds moved.");
           NODE
