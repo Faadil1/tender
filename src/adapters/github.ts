@@ -12,6 +12,7 @@ export function verifyGitHubSignature(secret: string, payload: string, signature
 export function contributionFromIssueMetadata(input: {
   repository: string;
   issueId: string;
+  taskId?: string;
   pullRequestId: string;
   contributor: string;
   recipientWallet: string;
@@ -22,10 +23,12 @@ export function contributionFromIssueMetadata(input: {
   return {
     source: "github",
     repository: input.repository,
+    taskId: input.taskId ?? input.issueId,
     issueId: input.issueId,
     pullRequestId: input.pullRequestId,
     contributor: input.contributor,
     recipientWallet: input.recipientWallet,
+    recipients: [{ wallet: input.recipientWallet, amount: input.amount, role: "primary" }],
     amount: input.amount,
     token: input.token ?? "USDC",
     chainId: input.chainId ?? 84532
@@ -45,6 +48,9 @@ export function acceptanceFromGitHubPullRequestEvent(
     eventId,
     eventTime: new Date().toISOString(),
     action: payload.action ?? "closed",
+    acceptanceKind: "github_merge",
+    accepted: Boolean(pr.merged),
+    acceptedWorkId: pr.merge_commit_sha,
     repository: repo,
     issueId: String(pr.issue_url?.split("/").pop() ?? pr.number ?? "unknown"),
     pullRequestId: String(pr.number ?? "unknown"),

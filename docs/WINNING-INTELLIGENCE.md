@@ -1,70 +1,62 @@
 # Winning Intelligence
 
-## Current Hackathon Signals
+## Post-Build Delta
 
-The Agent Economy Hackathon rewards the best integration of KeeperHub into a live project. The official brief emphasizes deterministic execution, auditable records, and real value movement through KeeperHub. Submission requires a source code link, a short demo video, and a link to a transaction executed through KeeperHub.
+Crowded pattern: `external event -> safe KeeperHub payment`.
 
-Main judging rubric:
+Tender should not compete as another GitHub bounty automation or generic payout script. Tender's stronger territory is settlement infrastructure for accepted software contributions.
 
-| Signal | Implication for Tender |
+Canonical separation:
+
+| Layer | Responsibility |
 | --- | --- |
-| Integration depth | GitHub must be a real source of accepted work, not a mock toggle. |
-| Execution through KeeperHub | The final demo needs a real KeeperHub execution and transaction link. |
-| Reliability and observability | Replay protection, retries, and reconciliation are core product proof. |
-| Usefulness and originality | Tender must be a settlement primitive, not a bounty marketplace. |
-| Developer experience and code quality | Domain model, adapters, tests, README, and handoff must be clean. |
+| GitHub | Proves what work was accepted. |
+| Tender | Determines what is economically owed. |
+| KeeperHub | Proves it was settled. |
 
-KeeperHub docs confirm REST and MCP surfaces, workflow execution, direct execution, API key auth, execution wait/status endpoints, testnet USDC support on Base Sepolia, and stable idempotency requirements on write retries.
+## Memorability Lock
 
-## Competitive Landscape
-
-Crowded patterns:
-
-| Pattern | Weakness |
+| Element | Tender Lock |
 | --- | --- |
-| Generic agent wallet dashboards | Looks like a wallet front end, not a causal settlement protocol. |
-| If-this-then-pay automations | Weak obligation model; often retries with unsafe identities. |
-| Bounty marketplaces | Focus on listing/discovery, not accepted-work settlement. |
-| GitHub Actions payout scripts | Often tied to CI glue and shallow receipt/audit records. |
-| Escrow clones | Put funds in custody before acceptance; Tender starts from accepted contribution evidence. |
+| Primitive | Tender Claim |
+| Invariant | one accepted obligation -> one settlement |
+| Signature artifact | Tender Receipt |
+| Measured proof | Settlement Replay Harness |
+| Hero demo | same accepted contribution replayed -> same claim -> $0 additional movement |
 
-Prior KeeperHub winners suggest that serious submissions have real execution, tests, live deployments, useful abstractions, and failure-mode thinking. Shallow one-workflow demos are explicitly weak.
+Compressed sentences under test:
+
+- A merge creates one economic claim. Tender settles it exactly once.
+- GitHub proves the work was accepted. Tender proves what is owed. KeeperHub proves it was paid.
+- No bounty. No race. Accepted work becomes a claim.
 
 ## Differentiation
 
-Tender owns this sentence:
+Tender does not force contributors to compete for a public bounty. It settles value after useful work has actually been accepted.
 
-> Accepted work becomes a settled obligation.
+GitHub merge is only the first acceptance adapter. The architecture preserves room for explicit maintainer acceptance, accepted-outside-merge contributions, shared contribution settlement, and future non-GitHub acceptance adapters.
 
-Tender does not decide whether work is good. GitHub acceptance evidence does that. Tender converts the immutable acceptance event into a deterministic settlement claim, executes it through KeeperHub, and prevents duplicate economic effect.
+## Winning DNA Applied
+
+- Production-grade KeeperHub path via workflow execution.
+- Reusable architecture: domain engine plus source/execution adapters.
+- Failure-first testing.
+- Explicit negative-path proof.
+- Quantitative replay harness evidence.
+- Honest limitations around mock/local mode and live proof.
+- One sharp invariant.
+- Domain-native visual identity: claim, accepted, due, ledger, receipt, cleared, settled.
 
 ## Danger Zones
 
-- Do not look like a crypto dashboard.
-- Do not say “valid until” or frame the product around expiry.
-- Do not make KeeperHub a decorative final API call.
-- Do not submit without a transaction executed through KeeperHub.
-- Do not call mock mode a live proof.
-- Do not use webhook delivery ID as settlement identity.
+- Do not regress to a bounty marketplace.
+- Do not make `accepted contribution === merged PR` a permanent assumption.
+- Do not broadcast a second KeeperHub transfer for replay proof.
+- Do not call manual calibration the canonical hero proof.
+- Do not expose API keys, webhook secrets, wallet secrets, or private recipient data.
 
-## Recommended Scope
+## Current Evidence
 
-Build one high-integrity path:
-
-1. GitHub PR merge acceptance evidence.
-2. Deterministic settlement claim.
-3. KeeperHub workflow execution with idempotency key.
-4. Receipt and transaction hash.
-5. Replay produces `ALREADY_SETTLED`.
-6. Failure cases visible and tested.
-
-## Features Intentionally Not Built
-
-- Bounty marketplace.
-- Escrow/fund custody.
-- Multi-platform adapters beyond GitHub.
-- Token selection marketplace.
-- Arbitrary AI approval/rejection.
-- Rich contributor profiles.
-- Production billing.
-
+- Unit/domain tests: 12 passing.
+- Replay Harness: `10 settlement scenarios replayed · 0 duplicate payouts`.
+- Manual KeeperHub calibration succeeded on Base Sepolia for `0.01 USDC`; preserved only as calibration evidence.

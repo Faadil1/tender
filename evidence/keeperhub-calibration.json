@@ -1,0 +1,15 @@
+{
+  "kind": "keeperhub_manual_calibration",
+  "status": "success",
+  "note": "Calibration evidence only. This was a manual KeeperHub workflow execution and is not the canonical Tender-caused hero proof.",
+  "workflow": "Tender -- Settle Claim",
+  "workflowId": "yy4ml6aevkov3zaulkpx15",
+  "network": "Base Sepolia",
+  "chainId": 84532,
+  "asset": "USDC",
+  "amount": "0.01",
+  "gasSponsored": true,
+  "gasUsed": 106902,
+  "transactionHash": "0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0",
+  "explorerUrl": "https://sepolia.basescan.org/tx/0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0"
+}

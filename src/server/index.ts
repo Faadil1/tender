@@ -16,6 +16,7 @@ const executor = new KeeperHubExecutor({
   mode: process.env.KEEPERHUB_MODE === "workflow" ? "workflow" : "mock"
 });
 const engine = new SettlementEngine(repo, executor, {
+  version: "policy.demo.v1",
   token: "USDC",
   chainId: 84532,
   maxAmount: process.env.TENDER_MAX_AMOUNT_USDC ?? "5",
@@ -41,7 +42,7 @@ async function handleApi(req: any, res: any, path: string) {
   }
 
   if (req.method === "POST" && path === "/api/demo/reset") {
-    const fresh = await engine.handleAcceptance(demoContribution, demoAcceptance({ merged: false }));
+    const fresh = await engine.handleAcceptance(demoContribution, demoAcceptance({ accepted: false, merged: false }));
     return json(res, 200, { record: fresh });
   }
 

@@ -1,7 +1,9 @@
 export type SettlementStatus =
-  | "NOT_YET_OWED"
+  | "NOT_ACCEPTED"
   | "ACCEPTANCE_INCOMPLETE"
-  | "OWED"
+  | "ACCEPTED"
+  | "CLAIMED"
+  | "SETTLEABLE"
   | "SETTLING"
   | "SETTLED"
   | "ALREADY_SETTLED"
@@ -14,13 +16,21 @@ export type SourceKind = "github";
 export interface Contribution {
   source: SourceKind;
   repository: string;
+  taskId: string;
   issueId: string;
   pullRequestId: string;
   contributor: string;
   recipientWallet: string;
+  recipients: SettlementRecipient[];
   token: string;
   chainId: number;
   amount: string;
+}
+
+export interface SettlementRecipient {
+  wallet: string;
+  amount: string;
+  role: "primary" | "co_contributor" | "maintainer_override";
 }
 
 export interface AcceptanceEvidence {
@@ -28,6 +38,9 @@ export interface AcceptanceEvidence {
   eventId: string;
   eventTime: string;
   action: "closed" | "synchronize" | "workflow_run.completed" | "replayed";
+  acceptanceKind: "github_merge" | "maintainer_attestation" | "external_acceptance";
+  accepted: boolean;
+  acceptedWorkId?: string;
   repository: string;
   issueId: string;
   pullRequestId: string;
@@ -42,20 +55,25 @@ export interface AcceptanceEvidence {
 }
 
 export interface SettlementPolicy {
+  version: string;
   token: string;
   chainId: number;
   maxAmount: string;
   requireReview: boolean;
 }
 
-export interface SettlementClaim {
+export interface TenderClaim {
+  claimId: string;
   settlementId: string;
   idempotencyKey: string;
   contribution: Contribution;
   acceptance: AcceptanceEvidence;
+  policyVersion: string;
   status: SettlementStatus;
   createdAt: string;
 }
+
+export type SettlementClaim = TenderClaim;
 
 export interface ExecutionAttempt {
   attempt: number;
@@ -68,13 +86,34 @@ export interface ExecutionAttempt {
 }
 
 export interface SettlementRecord {
-  claim: SettlementClaim;
+  claim: TenderClaim;
   keeperHubExecutionId?: string;
   transactionHash?: string;
+  receipt?: TenderReceipt;
   status: SettlementStatus;
   timeline: TimelineEvent[];
   attempts: ExecutionAttempt[];
+  replayCount: number;
+  duplicatePayoutsPrevented: number;
   updatedAt: string;
+}
+
+export interface TenderReceipt {
+  receiptId: string;
+  acceptedContribution: string;
+  acceptanceEvidence: Pick<
+    AcceptanceEvidence,
+    "source" | "acceptanceKind" | "eventId" | "acceptedWorkId" | "mergeSha" | "eventTime"
+  >;
+  claimId: string;
+  policyVersion: string;
+  recipients: SettlementRecipient[];
+  asset: string;
+  amount: string;
+  keeperHubExecutionId: string;
+  transactionHash: string;
+  status: "SETTLED";
+  settledAt: string;
 }
 
 export interface TimelineEvent {
@@ -84,6 +123,7 @@ export interface TimelineEvent {
     | "CONTRIBUTION"
     | "ACCEPTED"
     | "CLAIM_CREATED"
+    | "SETTLEABLE"
     | "PREFLIGHT"
     | "SETTLING"
     | "SETTLED"

@@ -1,30 +1,45 @@
 import { createHash } from "node:crypto";
-import type { Contribution, AcceptanceEvidence } from "./types.js";
+import type { Contribution, AcceptanceEvidence, SettlementPolicy } from "./types.js";
 
-export function canonicalSettlementPayload(contribution: Contribution, acceptance: AcceptanceEvidence) {
-  if (!acceptance.mergeSha) {
-    throw new Error("accepted contribution identity requires mergeSha");
+export function canonicalTenderClaimPayload(
+  contribution: Contribution,
+  acceptance: AcceptanceEvidence,
+  policy: SettlementPolicy
+) {
+  const acceptedWorkId = acceptance.acceptedWorkId ?? acceptance.mergeSha;
+  if (!acceptedWorkId) {
+    throw new Error("accepted contribution identity requires acceptedWorkId or mergeSha");
   }
 
   return {
     source: contribution.source,
     repository: contribution.repository.toLowerCase(),
-    issueId: contribution.issueId,
+    taskId: contribution.taskId,
     pullRequestId: contribution.pullRequestId,
-    acceptedContribution: acceptance.mergeSha.toLowerCase(),
-    recipientWallet: contribution.recipientWallet.toLowerCase(),
+    acceptanceKind: acceptance.acceptanceKind,
+    acceptedContribution: acceptedWorkId.toLowerCase(),
+    policyVersion: policy.version,
+    recipients: contribution.recipients.map((recipient) => ({
+      wallet: recipient.wallet.toLowerCase(),
+      amount: recipient.amount,
+      role: recipient.role
+    })),
     token: contribution.token.toUpperCase(),
     chainId: contribution.chainId,
     amount: contribution.amount
   };
 }
 
-export function settlementIdFor(contribution: Contribution, acceptance: AcceptanceEvidence) {
-  const payload = canonicalSettlementPayload(contribution, acceptance);
+export function claimIdFor(contribution: Contribution, acceptance: AcceptanceEvidence, policy: SettlementPolicy) {
+  const payload = canonicalTenderClaimPayload(contribution, acceptance, policy);
   const digest = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
-  return `tender_${digest.slice(0, 32)}`;
+  return `tclaim_${digest.slice(0, 32)}`;
 }
 
-export function idempotencyKeyFor(settlementId: string) {
-  return `tender:settlement:${settlementId}`;
+export function settlementIdFor(contribution: Contribution, acceptance: AcceptanceEvidence, policy: SettlementPolicy) {
+  return claimIdFor(contribution, acceptance, policy);
+}
+
+export function idempotencyKeyFor(claimId: string) {
+  return `tender:claim:${claimId}`;
 }

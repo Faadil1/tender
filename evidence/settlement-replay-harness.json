@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-09-16T21:54:59.705Z",
+  "scenarios": 10,
+  "duplicatePayouts": 0,
+  "statement": "10 settlement scenarios replayed · 0 duplicate payouts",
+  "results": [
+    {
+      "name": "duplicate webhook",
+      "finalStatus": "ALREADY_SETTLED",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+      ],
+      "notes": "Second delivery mapped to same Tender Claim."
+    },
+    {
+      "name": "two concurrent workers",
+      "finalStatus": "ALREADY_SETTLED",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+      ],
+      "notes": "In-process lock converged workers before second execution."
+    },
+    {
+      "name": "repeated GitHub Action run",
+      "finalStatus": "ALREADY_SETTLED",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+      ],
+      "notes": "Action rerun does not create a new economic obligation."
+    },
+    {
+      "name": "PR closed without acceptance",
+      "finalStatus": "NOT_ACCEPTED",
+      "keeperHubExecutions": 0,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "blocked_dc99254eb90094acca718a98"
+      ],
+      "notes": "No accepted obligation exists."
+    },
+    {
+      "name": "failed CI / incomplete acceptance",
+      "finalStatus": "ACCEPTANCE_INCOMPLETE",
+      "keeperHubExecutions": 0,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "blocked_2d04ea7a3a6c465e24008337"
+      ],
+      "notes": "Checks failed before settlement."
+    },
+    {
+      "name": "malformed recipient",
+      "finalStatus": "BLOCKED",
+      "keeperHubExecutions": 0,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "blocked_dde2c5b7ce9ba1401952ea78"
+      ],
+      "notes": "Unsafe recipient blocked before KeeperHub."
+    },
+    {
+      "name": "altered economic claim",
+      "finalStatus": "SETTLED",
+      "keeperHubExecutions": 2,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
+        "tclaim_be620e553720b775f51eb0dacbee0026"
+      ],
+      "notes": "Changed economics create a different Tender Claim, not a replay."
+    },
+    {
+      "name": "KeeperHub timeout / unconfirmed result",
+      "finalStatus": "SETTLING",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+      ],
+      "notes": "Execution remains SETTLING; retry must reconcile the same claim."
+    },
+    {
+      "name": "callback/process interruption after broadcast",
+      "finalStatus": "SETTLED",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+      ],
+      "notes": "Reconciliation recovers the already-broadcast claim."
+    },
+    {
+      "name": "retry after success",
+      "finalStatus": "ALREADY_SETTLED",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
+        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+      ],
+      "notes": "Retry after success is treated as replay."
+    }
+  ]
+}

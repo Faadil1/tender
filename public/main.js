@@ -1,8 +1,10 @@
 const statusEl = document.querySelector("#status");
 const stampEl = document.querySelector("#stamp");
 const factsEl = document.querySelector("#facts");
+const receiptEl = document.querySelector("#receipt");
 const timelineEl = document.querySelector("#timeline");
 const attemptsEl = document.querySelector("#attempts");
+const proofEl = document.querySelector("#proof");
 
 const routes = {
   merge: "/api/demo/merge",
@@ -43,15 +45,40 @@ function render(record) {
     Recipient: claim.contribution.recipientWallet,
     Payout: `${claim.contribution.amount} ${claim.contribution.token}`,
     "Merge SHA": claim.acceptance.mergeSha ?? "none",
-    "Settlement ID": claim.settlementId,
+    "Claim ID": claim.claimId,
+    "Policy version": claim.policyVersion,
     "Idempotency key": claim.idempotencyKey,
-    "KeeperHub execution": record.keeperHubExecutionId ?? "not started",
-    "Transaction hash": record.transactionHash ?? "none"
+    "State": record.status
   };
 
   factsEl.innerHTML = Object.entries(facts)
     .map(([key, value]) => `<dt>${key}</dt><dd>${value}</dd>`)
     .join("");
+
+  const receipt = record.receipt
+    ? {
+        Receipt: record.receipt.receiptId,
+        "Accepted work": record.receipt.acceptedContribution,
+        Recipients: record.receipt.recipients.map((recipient) => `${recipient.amount} ${record.receipt.asset} -> ${recipient.wallet}`).join(", "),
+        "KeeperHub execution": record.receipt.keeperHubExecutionId,
+        "Transaction hash": record.receipt.transactionHash,
+        Status: record.receipt.status
+      }
+    : {
+        Receipt: "not issued",
+        "Accepted work": claim.acceptance.acceptedWorkId ?? claim.acceptance.mergeSha ?? "pending",
+        Recipients: claim.contribution.recipients.map((recipient) => `${recipient.amount} ${claim.contribution.token} -> ${recipient.wallet}`).join(", "),
+        Status: record.status
+      };
+
+  receiptEl.innerHTML = Object.entries(receipt)
+    .map(([key, value]) => `<dt>${key}</dt><dd>${value}</dd>`)
+    .join("");
+
+  proofEl.textContent =
+    record.status === "ALREADY_SETTLED"
+      ? `Replay -> same claim -> $0 moved. Duplicate payouts prevented: ${record.duplicatePayoutsPrevented}.`
+      : "Replay the same accepted contribution to prove same claim and $0 additional movement.";
 
   timelineEl.innerHTML = record.timeline
     .map((item) => `<li><strong>${item.label}</strong><br><span>${item.detail}</span></li>`)

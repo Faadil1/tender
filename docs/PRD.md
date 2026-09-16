@@ -1,39 +1,67 @@
 # Tender PRD
 
+## Product Category
+
+Tender is settlement infrastructure for accepted software contributions.
+
 ## Problem
 
-Open-source contribution and economic settlement are usually separate systems. Code acceptance happens in GitHub while payout happens manually elsewhere. That creates payout delays, duplicate payout risk, weak auditability, ambiguity over what event created the obligation, and unsafe participation for autonomous agents.
+Accepted software work and economic settlement usually live in separate systems. Review and acceptance happen in GitHub or adjacent tools, while payment happens manually elsewhere. That creates payout delays, duplicate payout risk, weak auditability, and ambiguity over which accepted event created the obligation.
 
 ## Product Hypothesis
 
-A contribution system can convert an immutable acceptance event into a deterministic settlement claim and execute that claim exactly once through KeeperHub.
+An accepted contribution can create an immutable Tender Claim. Tender can settle that claim through KeeperHub exactly once and issue a Tender Receipt that proves the causal chain.
 
-## Product Primitive
+## Core Lifecycle
 
-Tender is a contribution settlement protocol.
+`WORK -> ACCEPTANCE -> CLAIM -> SETTLEMENT -> RECEIPT`
 
-It tracks this lifecycle:
+Judge-facing progression:
 
-`WORK PROMISED -> WORK DELIVERED -> ACCEPTANCE EVIDENCE -> SETTLEMENT CLAIM -> EXECUTION -> RECEIPT`
+`ACCEPTED -> CLAIMED -> SETTLEABLE -> SETTLED`
 
-## Proof Required
+Replay path:
 
-- Real GitHub contribution lifecycle.
-- Real KeeperHub integration.
-- Real economic transaction.
-- Deterministic settlement identity.
-- Duplicate-event protection.
-- Observable receipts.
-- Meaningful failure handling.
+`REPLAY -> SAME CLAIM -> $0 MOVED`
 
-## Acceptance Rule v0
+## Primitive: Tender Claim
 
-Settlement becomes owed when:
+A Tender Claim is an immutable economic identity created from accepted contribution evidence and a settlement policy.
 
-- The PR is linked to a Tender-backed issue.
-- The PR is merged.
-- Required checks passed.
-- Settlement metadata resolves.
-- Recipient wallet is valid.
-- No prior successful settlement exists for the same economic identity.
+It binds:
 
+- repository
+- contribution/task identity
+- acceptance evidence
+- accepted-work identity such as merge SHA or maintainer attestation
+- policy version
+- recipient(s)
+- asset
+- amount
+
+## Signature Artifact: Tender Receipt
+
+A Tender Receipt records:
+
+- accepted contribution
+- acceptance evidence
+- claim ID
+- policy version
+- recipient(s)
+- economic value
+- KeeperHub execution
+- transaction proof
+- settlement status
+
+## MVP Acceptance Rule
+
+The first adapter uses GitHub pull request evidence:
+
+- contribution is linked to a task
+- acceptance evidence says the work was accepted
+- required checks passed
+- settlement metadata resolves
+- recipient wallet is valid
+- no prior successful settlement exists for the same Tender Claim
+
+GitHub merge is the first route to acceptance, not the permanent definition of acceptance.

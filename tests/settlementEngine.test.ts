@@ -27,6 +27,7 @@ function engine(executor = new FakeExecutor()) {
   return {
     executor,
     engine: new SettlementEngine(new MemorySettlementRepository(), executor, {
+      version: "policy.test.v1",
       token: "USDC",
       chainId: 84532,
       maxAmount: "5",
@@ -43,14 +44,19 @@ test("deterministic claim settles accepted contribution once", async () => {
 
   assert.equal(firstStatus, "SETTLED");
   assert.equal(replay.status, "ALREADY_SETTLED");
-  assert.equal(first.claim.settlementId, replay.claim.settlementId);
+  assert.equal(first.claim.claimId, replay.claim.claimId);
+  assert.equal(replay.duplicatePayoutsPrevented, 1);
   assert.equal(executor.calls, 1);
+  assert.ok(first.receipt);
 });
 
-test("PR closed without merge is not owed", async () => {
+test("PR closed without acceptance is not accepted", async () => {
   const { engine: tender, executor } = engine();
-  const record = await tender.handleAcceptance(demoContribution, demoAcceptance({ merged: false, mergeSha: undefined }));
-  assert.equal(record.status, "NOT_YET_OWED");
+  const record = await tender.handleAcceptance(
+    demoContribution,
+    demoAcceptance({ accepted: false, merged: false, acceptedWorkId: undefined, mergeSha: undefined })
+  );
+  assert.equal(record.status, "NOT_ACCEPTED");
   assert.equal(executor.calls, 0);
 });
 
@@ -75,7 +81,7 @@ test("temporary KeeperHub failure is retryable under same settlement identity", 
   const failed = await tender.handleAcceptance(demoContribution, demoAcceptance());
   assert.equal(failed.status, "RETRYABLE_FAILURE");
   assert.equal(fake.calls, 1);
-  assert.equal(failed.claim.idempotencyKey, `tender:settlement:${failed.claim.settlementId}`);
+  assert.equal(failed.claim.idempotencyKey, `tender:claim:${failed.claim.claimId}`);
 });
 
 test("forged webhook evidence is quarantined", async () => {
@@ -93,4 +99,28 @@ test("reconciliation can recover completed payment after interrupted callback", 
   const recovered = await tender.reconcile(settled.claim.settlementId);
   assert.equal(recovered?.status, "SETTLED");
   assert.equal(recovered?.transactionHash, "0xreconciled");
+});
+
+test("two concurrent workers converge on one claim and one execution", async () => {
+  const { engine: tender, executor } = engine();
+  const [first, second] = await Promise.all([
+    tender.handleAcceptance(demoContribution, demoAcceptance({ eventId: "worker-a" })),
+    tender.handleAcceptance(demoContribution, demoAcceptance({ eventId: "worker-b" }))
+  ]);
+
+  assert.equal(first.claim.claimId, second.claim.claimId);
+  assert.equal(executor.calls, 1);
+  assert.equal(second.status, "ALREADY_SETTLED");
+});
+
+test("altered economic claim creates a different claim identity", async () => {
+  const { engine: tender, executor } = engine();
+  const first = await tender.handleAcceptance(demoContribution, demoAcceptance());
+  const altered = await tender.handleAcceptance(
+    { ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }] },
+    demoAcceptance()
+  );
+
+  assert.notEqual(first.claim.claimId, altered.claim.claimId);
+  assert.equal(executor.calls, 2);
 });

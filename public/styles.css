@@ -179,15 +179,24 @@ li {
 }
 
 .SETTLING,
-.OWED {
+.CLAIMED,
+.SETTLEABLE,
+.SETTLING {
   color: var(--gold);
 }
 
 .BLOCKED,
 .QUARANTINED,
 .RETRYABLE_FAILURE,
-.ACCEPTANCE_INCOMPLETE {
+.ACCEPTANCE_INCOMPLETE,
+.NOT_ACCEPTED {
   color: var(--red);
+}
+
+.proof {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 48px);
+  line-height: 1;
 }
 
 @media (prefers-reduced-motion: no-preference) {

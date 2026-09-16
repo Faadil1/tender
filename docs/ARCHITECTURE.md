@@ -2,51 +2,58 @@
 
 ```mermaid
 flowchart TD
-  GitHub["GitHub acceptance event"] --> Adapter["GitHub adapter"]
-  Adapter --> Domain["Tender domain engine"]
-  Domain --> Store["Settlement record store"]
-  Domain --> KeeperHub["KeeperHub executor"]
-  KeeperHub --> Receipt["Transaction receipt"]
-  Receipt --> Store
+  Source["Acceptance adapter"] --> Evidence["Acceptance evidence"]
+  Evidence --> Claim["Tender Claim"]
+  Claim --> KeeperHub["KeeperHub execution"]
+  KeeperHub --> Receipt["Tender Receipt"]
+  Receipt --> Store["Claim record store"]
 ```
 
 ## Domain Center
 
-The code is organized around Tender concepts rather than GitHub glue:
+Tender is centered on domain concepts:
 
 - `Contribution`
 - `AcceptanceEvidence`
 - `SettlementPolicy`
-- `SettlementClaim`
+- `TenderClaim`
 - `SettlementExecution`
-- `SettlementReceipt`
+- `TenderReceipt`
 
 GitHub is the first acceptance adapter. KeeperHub is the first settlement execution adapter.
 
-## Settlement Identity Invariant
+## Tender Claim Identity
 
-The settlement ID is derived from:
+The Tender Claim ID is derived from:
 
 - source
 - repository
-- issue/task identifier
-- pull request identifier
-- merge SHA
-- recipient wallet
+- task/contribution identifier
+- acceptance kind
+- accepted-work identity
+- policy version
+- recipient set
 - token
 - chain
 - amount
 
-Webhook delivery IDs are deliberately excluded. A duplicate webhook maps to the same settlement claim and cannot create a second economic effect.
+Webhook delivery IDs, GitHub Action run IDs, and retry IDs are deliberately excluded. A duplicate webhook, rerun action, concurrent worker, or callback retry must converge on the same Tender Claim.
+
+## Exactly-Once Guardrails
+
+- In-process claim lock prevents concurrent workers from double executing.
+- Existing `SETTLED` or `ALREADY_SETTLED` records return replay proof instead of re-execution.
+- KeeperHub writes use the Tender Claim idempotency key.
+- Reconciliation resumes existing claims after timeout/interruption.
 
 ## KeeperHub Integration
 
-The production path uses:
+Configured production path:
 
-- `GET /api/keys` for auth preflight.
-- `POST /api/workflows/{workflowId}/execute` for execution.
-- `GET /api/workflows/executions/{executionId}/wait` for receipt/reconciliation.
-- `Idempotency-Key` header derived from the settlement ID.
+- `KEEPERHUB_BASE_URL=https://app.keeperhub.com`
+- `KEEPERHUB_WORKFLOW_ID=yy4ml6aevkov3zaulkpx15`
+- Workflow: `Tender -- Settle Claim`
+- Network: Base Sepolia
+- Asset: USDC
 
-Mock mode exists only for local UI and tests. It must not be presented as live transaction proof.
-
+The current KeeperHub workflow was manually calibrated with static values. The next live proof must be Tender-caused through GitHub Actions, with amount and recipient coming from the approved Tender Claim / workflow input path.

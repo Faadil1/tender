@@ -1,28 +1,53 @@
 project: Tender
 repository:
-  preferred: Faadil1/tender
-  created: false
-  blocker: GitHub create-repository capability is not available in current Work tools.
+  canonical: https://github.com/Faadil1/tender
+  visibility: private
+  default_branch: main
+  remote_configured: true
+  remote_verified_with_github_connector: true
+  terminal_git_push_status: blocked_missing_terminal_credentials
 branch: main
-latest_commit: ec2e66d96c16eb4f697842be482a62ef739dbf85
-current_gate: GATE_4_GITHUB_ACCEPTANCE_ADAPTER_READY_LOCAL
+baseline_before_delta: 7361422c9ae2ed20e2bef67cf078ee8495dc72a8
+latest_local_commit: pending_delta_commit
+current_gate: GATE_6_SETTLEMENT_REPLAY_HARNESS_LOCAL_PASS
 completed_work:
-  - GATE_0 targeted hackathon and KeeperHub research completed.
-  - GATE_1 product thesis locked as contribution settlement protocol.
-  - GATE_2 architecture drafted with Tender domain center and GitHub/KeeperHub adapters.
-  - GATE_3 settlement engine implemented and verified locally with deterministic settlement IDs and replay protection.
-  - Failure-first tests pass: 9/9.
-  - Local server/API smoke test passed for empty state, merge settlement, and replay already-settled path.
-  - TRACE design direction and UI surface implemented locally.
-active_blockers:
-  - GitHub repository creation/push requires user GitHub action or token/connector capability with repo creation.
-  - KeeperHub live proof requires KEEPERHUB_API_KEY, workflow ID, and funded testnet wallet.
+  - Existing local history preserved; repository was not reinitialized.
+  - Interrupted Tender Claim migration recovered and completed locally.
+  - Product category updated to settlement infrastructure for accepted software contributions.
+  - Tender Claim identity now includes acceptance kind, accepted-work identity, policy version, recipients, asset and amount.
+  - Tender Receipt added as signature settlement artifact.
+  - In-process same-claim lock added for concurrent worker protection.
+  - GitHub Actions live-proof workflow added for Tender-caused KeeperHub execution.
+  - Manual KeeperHub calibration evidence recorded.
+  - Replay Harness generated measured evidence.
+verification:
+  command: npm run verify
+  status: pass
+  unit_tests: 12/12
+  replay_harness: 10 settlement scenarios replayed · 0 duplicate payouts
+keeperhub:
+  status: ready_for_tender_caused_live_proof
+  base_url: https://app.keeperhub.com
+  workflow: Tender -- Settle Claim
+  workflow_id: yy4ml6aevkov3zaulkpx15
+  network: Base Sepolia
+  chain_id: 84532
+  asset: USDC
+  calibration:
+    status: success
+    amount: 0.01 USDC
+    gas_sponsored: true
+    gas_used: 106902
+    transaction_hash: 0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0
+    evidence_file: evidence/keeperhub-calibration.json
+live_proof:
+  status: pending
+  required_next_step: run Tender Live Proof GitHub Action after local commits are pushed
+  expected_replay_result: same claim -> ALREADY_SETTLED -> $0 additional movement
 deployment:
   status: not_deployed
   preferred: Cloudflare
-keeperhub:
-  status: adapter_implemented_mock_mode
-  live_transaction_status: pending_credentials
-demo_readiness: local_demo_verified_mock_keeperhub
-submission_readiness: draft_package_created_live_proof_pending
-next_action: Create/push GitHub repo, configure KeeperHub credentials, execute live testnet settlement, deploy, record transaction proof.
+active_blockers:
+  - Terminal git push to GitHub fails because no username/credential is available in the shell.
+  - Canonical Tender-caused live transaction cannot run until latest local commits are on GitHub.
+next_action: Authenticate git push or use another history-preserving push path, then run the Tender Live Proof workflow once.

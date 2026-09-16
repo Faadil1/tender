@@ -6,25 +6,34 @@ Tender
 
 ## Tagline
 
-Merge the work. Settle the obligation. Exactly once.
+No bounty. No race. Accepted work becomes a claim.
 
 ## Short Description
 
-Tender turns accepted GitHub contributions into deterministic settlement claims and executes them through KeeperHub exactly once.
+Tender is settlement infrastructure for accepted software contributions. It turns accepted work into a Tender Claim, settles it through KeeperHub, and issues a Tender Receipt exactly once.
 
 ## Long Description
 
-Tender is a contribution settlement protocol for open-source and agentic work. A maintainer attaches a small USDC bounty to an issue. A contributor completes the work through a pull request. When GitHub proves the PR was accepted, Tender constructs a deterministic settlement claim from the repository, task, PR, merge SHA, recipient, token, chain, and amount.
+GitHub proves what work was accepted. Tender determines what is economically owed. KeeperHub proves it was settled.
 
-KeeperHub executes the settlement, and Tender records the receipt. If the same GitHub event is delivered twice, Tender maps it to the same settlement ID and returns `ALREADY_SETTLED`, creating no second transfer.
+Tender creates a deterministic Tender Claim from accepted contribution evidence and settlement policy: repository, task/contribution identity, accepted-work identity, policy version, recipient(s), asset, and amount. Once KeeperHub settles the claim, Tender records a Tender Receipt with the causal evidence and transaction proof.
+
+If the same accepted contribution is replayed through a duplicate webhook, repeated GitHub Action, concurrent worker, or retry, Tender maps it back to the same claim and produces `$0` additional movement.
 
 ## KeeperHub Integration
 
-Tender uses KeeperHub as the execution layer. The planned live path uses KeeperHub workflow execution with an idempotency key derived from Tender's settlement ID, then reads KeeperHub execution status and transaction hashes for receipt/reconciliation.
+Tender uses KeeperHub as the execution layer. The live-proof path calls the configured KeeperHub workflow through repository secrets, records the execution ID and transaction hash, then replays the same Tender Claim without broadcasting a second transfer.
+
+Configured workflow:
+
+- Workflow: `Tender -- Settle Claim`
+- Workflow ID: `yy4ml6aevkov3zaulkpx15`
+- Network: Base Sepolia
+- Asset: USDC
 
 ## Repository URL
 
-Pending repository creation: `https://github.com/Faadil1/tender`
+`https://github.com/Faadil1/tender`
 
 ## Production URL
 
@@ -32,21 +41,31 @@ Pending deployment.
 
 ## Transaction Proof
 
-Pending minimal-value KeeperHub testnet transaction.
+Calibration transaction, not final hero proof:
+
+`0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0`
+
+Canonical Tender-caused proof is pending the GitHub Actions live-proof run.
+
+## Measured Replay Evidence
+
+`10 settlement scenarios replayed · 0 duplicate payouts`
+
+Evidence file: `evidence/settlement-replay-harness.json`
 
 ## What Still Breaks Or Is Unfinished
 
-- GitHub repository creation requires user authorization or a GitHub token with repo creation rights.
-- KeeperHub live execution requires `KEEPERHUB_API_KEY`, workflow ID, and funded testnet wallet.
-- Production deployment is pending after secrets are available.
+- Terminal Git push is blocked by missing Git credentials, even though the GitHub connector can see the private repo.
+- Canonical Tender-caused live transaction is pending.
+- Production deployment is pending.
+- KeeperHub workflow still needs migration from calibrated static values toward claim-driven recipient/amount input.
 
 ## Judging Criteria Mapping
 
 | Criterion | Tender Evidence |
 | --- | --- |
-| Integration depth | GitHub acceptance event is the source of economic obligation. |
-| Execution through KeeperHub | KeeperHub workflow executor is implemented; live proof pending credentials. |
-| Reliability and observability | Tests cover replay, invalid wallet, failing checks, temporary failure, and reconciliation. |
-| Usefulness and originality | Settlement entitlement from accepted contribution, not bounty discovery or escrow. |
-| Developer experience | TypeScript domain model, adapters, tests, docs, and state handoff. |
-
+| Integration depth | GitHub is the first acceptance adapter; Tender Claim is adapter-independent. |
+| Execution through KeeperHub | KeeperHub workflow calibrated; live-proof GitHub Action path added. |
+| Reliability and observability | Replay Harness, Tender Receipt, claim ID, idempotency key, execution ID, transaction proof. |
+| Usefulness and originality | Settles value after accepted work, without becoming a bounty marketplace. |
+| Developer experience | TypeScript domain model, adapters, tests, evidence artifacts, README, handoff state. |

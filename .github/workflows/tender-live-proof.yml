@@ -1,0 +1,46 @@
+name: Tender Live Proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient_wallet:
+        description: Recipient wallet for the canonical minimal-value proof
+        required: true
+      amount_usdc:
+        description: Minimal USDC amount
+        required: true
+        default: "0.01"
+      accepted_work_id:
+        description: Accepted work identity; defaults to commit SHA when blank
+        required: false
+      task_id:
+        description: Tender task/contribution identifier
+        required: false
+
+jobs:
+  settle-claim:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      KEEPERHUB_API_KEY: ${{ secrets.KEEPERHUB_API_KEY }}
+      KEEPERHUB_BASE_URL: ${{ secrets.KEEPERHUB_BASE_URL }}
+      KEEPERHUB_WORKFLOW_ID: ${{ secrets.KEEPERHUB_WORKFLOW_ID }}
+      TENDER_RECIPIENT_WALLET: ${{ inputs.recipient_wallet }}
+      TENDER_AMOUNT_USDC: ${{ inputs.amount_usdc }}
+      TENDER_ACCEPTED_WORK_ID: ${{ inputs.accepted_work_id }}
+      TENDER_TASK_ID: ${{ inputs.task_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Execute Tender-caused KeeperHub settlement
+        run: npm run live:proof
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tender-live-proof
+          path: evidence/live-proof.json
