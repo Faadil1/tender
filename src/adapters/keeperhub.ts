@@ -16,15 +16,36 @@ export class KeeperHubExecutor implements SettlementExecutor {
     this.mode = options.mode ?? (options.apiKey && options.workflowId ? "workflow" : "mock");
   }
 
+  private workflowInput(claim: SettlementClaim) {
+    return {
+      settlementId: claim.settlementId,
+      recipient: claim.contribution.recipientWallet,
+      token: claim.contribution.token,
+      chainId: claim.contribution.chainId,
+      amount: claim.contribution.amount,
+      source: claim.contribution.repository,
+      mergeSha: claim.acceptance.mergeSha,
+      acceptedWorkId: claim.acceptance.acceptedWorkId,
+      claimId: claim.claimId,
+      policyVersion: claim.policyVersion
+    };
+  }
+
   async preflight(claim: SettlementClaim) {
     if (this.mode === "mock") return { ok: true as const };
     if (!this.options.apiKey || !this.options.workflowId) return { ok: false as const, error: "keeperhub_not_configured" };
-
-    const res = await fetch(`${this.baseUrl}/api/keys`, {
-      headers: { Authorization: `Bearer ${this.options.apiKey}` }
-    });
-    if (!res.ok) return { ok: false as const, error: `keeperhub_auth_failed_${res.status}` };
     if (Number(claim.contribution.amount) <= 0) return { ok: false as const, error: "invalid_amount" };
+
+    const res = await fetch(`${this.baseUrl}/api/workflows/${this.options.workflowId}/simulate`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.options.apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ input: this.workflowInput(claim) })
+    });
+
+    if (!res.ok) return { ok: false as const, error: `keeperhub_preflight_failed_${res.status}` };
     return { ok: true as const };
   }
 
@@ -44,15 +65,7 @@ export class KeeperHubExecutor implements SettlementExecutor {
         "Content-Type": "application/json",
         "Idempotency-Key": claim.idempotencyKey
       },
-      body: JSON.stringify({
-        settlementId: claim.settlementId,
-        recipient: claim.contribution.recipientWallet,
-        token: claim.contribution.token,
-        chainId: claim.contribution.chainId,
-        amount: claim.contribution.amount,
-        source: claim.contribution.repository,
-        mergeSha: claim.acceptance.mergeSha
-      })
+      body: JSON.stringify({ input: this.workflowInput(claim) })
     });
 
     if (!res.ok) {
@@ -60,8 +73,7 @@ export class KeeperHubExecutor implements SettlementExecutor {
     }
 
     const data = (await res.json()) as { executionId: string; status: "running" };
-    const result = await this.wait(data.executionId);
-    return result;
+    return this.wait(data.executionId);
   }
 
   async reconcile(record: SettlementRecord) {
@@ -70,6 +82,9 @@ export class KeeperHubExecutor implements SettlementExecutor {
     if (result.status === "success" && result.transactionHash) {
       record.status = "SETTLED";
       record.transactionHash = result.transactionHash;
+      record.updatedAt = new Date().toISOString();
+    } else if (result.status === "failed") {
+      record.status = "RETRYABLE_FAILURE";
       record.updatedAt = new Date().toISOString();
     }
     return record;

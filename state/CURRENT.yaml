@@ -5,28 +5,29 @@ repository:
   default_branch: main
   remote_configured: true
   remote_verified_with_github_connector: true
-  terminal_git_push_status: blocked_missing_terminal_credentials
+  terminal_git_push_status: pushed_history_preserved
 branch: main
 baseline_before_delta: 7361422c9ae2ed20e2bef67cf078ee8495dc72a8
-latest_local_commit: 050dd05797b17e3a99128fc8daa6b7aa83d022e9
-current_gate: GATE_6_SETTLEMENT_REPLAY_HARNESS_LOCAL_PASS
+last_verified_remote_commit_before_hardening: 1081597c290c03b385ad81379a5bf5fda86d8555
+current_gate: GATE_6_5_LIVE_PROOF_HARDENING
 completed_work:
-  - Existing local history preserved; repository was not reinitialized.
-  - Interrupted Tender Claim migration recovered and completed locally.
-  - Product category updated to settlement infrastructure for accepted software contributions.
-  - Tender Claim identity now includes acceptance kind, accepted-work identity, policy version, recipients, asset and amount.
+  - Existing local history preserved and pushed to canonical GitHub main.
+  - Tender positioned as settlement infrastructure for accepted software contributions.
+  - Tender Claim identity includes acceptance kind, accepted-work identity, policy version, recipients, asset and amount.
   - Tender Receipt added as signature settlement artifact.
   - In-process same-claim lock added for concurrent worker protection.
   - GitHub Actions live-proof workflow added for Tender-caused KeeperHub execution.
   - Manual KeeperHub calibration evidence recorded.
   - Replay Harness generated measured evidence.
+  - Live-proof hardening adds stable accepted-work-derived IDs, workflow simulation preflight, nested KeeperHub input payloads and reconcile-before-rebroadcast behavior.
 verification:
-  command: npm run verify
-  status: pass
-  unit_tests: 12/12
+  last_known_command: npm run verify
+  last_known_status: pass
+  last_known_unit_tests: 12/12
   replay_harness: 10 settlement scenarios replayed · 0 duplicate payouts
+  hardening_verification: pending_local_pull_and_verify
 keeperhub:
-  status: ready_for_tender_caused_live_proof
+  status: calibration_complete_live_proof_not_yet_run
   base_url: https://app.keeperhub.com
   workflow: Tender -- Settle Claim
   workflow_id: yy4ml6aevkov3zaulkpx15
@@ -42,12 +43,15 @@ keeperhub:
     evidence_file: evidence/keeperhub-calibration.json
 live_proof:
   status: pending
-  required_next_step: run Tender Live Proof GitHub Action after local commits are pushed
   expected_replay_result: same claim -> ALREADY_SETTLED -> $0 additional movement
+  do_not_run_until:
+    - hardening commit is pulled and npm run verify passes
+    - KeeperHub Manual trigger fields are bound dynamically to recipient and amount inputs
+    - workflow simulation succeeds with the canonical 0.01 USDC proof input
 deployment:
   status: not_deployed
   preferred: Cloudflare
 active_blockers:
-  - Terminal git push to GitHub fails because no username/credential is available in the shell.
-  - Canonical Tender-caused live transaction cannot run until local commits are on GitHub.
-next_action: Authenticate git push or use another history-preserving push path, then run the Tender Live Proof workflow once.
+  - KeeperHub workflow still needs dynamic trigger bindings for recipient and amount before canonical Tender-caused settlement.
+  - Hardening commit must be locally verified before the live-proof Action is allowed to move value.
+next_action: Pull the hardening commit, run npm run verify, then update KeeperHub trigger bindings and simulate before one canonical live settlement.

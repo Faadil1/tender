@@ -7,16 +7,20 @@ import { demoAcceptance, demoContribution } from "../src/server/demoData.js";
 
 class FakeExecutor implements SettlementExecutor {
   calls = 0;
+  reconcileCalls = 0;
   fail = false;
+  running = false;
   async preflight() {
     return { ok: true as const };
   }
   async execute(claim: SettlementClaim) {
     this.calls += 1;
     if (this.fail) return { executionId: "kh_fail", status: "failed" as const, error: "temporary outage" };
+    if (this.running) return { executionId: "kh_running", status: "running" as const };
     return { executionId: `kh_${this.calls}`, status: "success" as const, transactionHash: `0x${claim.settlementId.slice(-8).padStart(64, "0")}` };
   }
   async reconcile(record: SettlementRecord) {
+    this.reconcileCalls += 1;
     record.status = "SETTLED";
     record.transactionHash = "0xreconciled";
     return record;
@@ -123,4 +127,21 @@ test("altered economic claim creates a different claim identity", async () => {
 
   assert.notEqual(first.claim.claimId, altered.claim.claimId);
   assert.equal(executor.calls, 2);
+});
+
+test("in-flight KeeperHub execution is reconciled without rebroadcast", async () => {
+  const fake = new FakeExecutor();
+  fake.running = true;
+  const { engine: tender } = engine(fake);
+
+  const first = await tender.handleAcceptance(demoContribution, demoAcceptance({ eventId: "first-run" }));
+  assert.equal(first.status, "SETTLING");
+  assert.equal(fake.calls, 1);
+
+  const recovered = await tender.handleAcceptance(demoContribution, demoAcceptance({ eventId: "replay-while-settling" }));
+  assert.equal(recovered.status, "SETTLED");
+  assert.equal(recovered.transactionHash, "0xreconciled");
+  assert.equal(fake.calls, 1);
+  assert.equal(fake.reconcileCalls, 1);
+  assert.ok(recovered.receipt);
 });

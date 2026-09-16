@@ -20,7 +20,7 @@ function event(type: TimelineEvent["type"], label: string, detail: string): Time
 
 export class SettlementEngine {
   constructor(
-  private readonly repo: SettlementRepository,
+    private readonly repo: SettlementRepository,
     private readonly executor: SettlementExecutor,
     private readonly policy: SettlementPolicy
   ) {}
@@ -68,7 +68,26 @@ export class SettlementEngine {
       return this.markReplay(existing, "Replay mapped to the same Tender Claim; $0 moved.");
     }
 
-    if (existing?.status === "SETTLEABLE" || existing?.status === "SETTLING" || existing?.status === "RETRYABLE_FAILURE") {
+    if (existing?.status === "SETTLING") {
+      if (!existing.keeperHubExecutionId) {
+        existing.status = "RETRYABLE_FAILURE";
+        existing.claim.status = "RETRYABLE_FAILURE";
+        existing.timeline.push(event("RETRY", "Missing execution identity", "Settlement was in-flight but no KeeperHub execution ID was persisted; refusing to rebroadcast."));
+        existing.updatedAt = now();
+        await this.repo.put(existing);
+        return existing;
+      }
+
+      existing.timeline.push(event("RETRY", "Reconcile in-flight execution", `${existing.keeperHubExecutionId}; no rebroadcast.`));
+      const reconciled = await this.executor.reconcile(existing);
+      if (reconciled.status === "SETTLED" && reconciled.transactionHash) {
+        this.finalizeSettled(reconciled, reconciled.transactionHash, reconciled.keeperHubExecutionId);
+      }
+      await this.repo.put(reconciled);
+      return reconciled;
+    }
+
+    if (existing?.status === "SETTLEABLE" || existing?.status === "RETRYABLE_FAILURE") {
       existing.timeline.push(event("RETRY", "Retry resumed", "Existing Tender Claim reused; no second obligation created."));
     }
 
@@ -103,6 +122,7 @@ export class SettlementEngine {
     record.timeline.push(event("PREFLIGHT", "KeeperHub preflight", preflight.ok ? "Preflight accepted." : preflight.error));
     if (!preflight.ok) {
       record.status = "BLOCKED";
+      record.claim.status = "BLOCKED";
       record.updatedAt = now();
       await this.repo.put(record);
       return record;
@@ -129,31 +149,7 @@ export class SettlementEngine {
     });
 
     if (result.status === "success" && result.transactionHash) {
-      record.status = "SETTLED";
-      record.claim.status = "SETTLED";
-      record.transactionHash = result.transactionHash;
-      record.receipt = {
-        receiptId: `treceipt_${claimId.replace("tclaim_", "")}`,
-        acceptedContribution: acceptance.acceptedWorkId ?? acceptance.mergeSha ?? contribution.pullRequestId,
-        acceptanceEvidence: {
-          source: acceptance.source,
-          acceptanceKind: acceptance.acceptanceKind,
-          eventId: acceptance.eventId,
-          acceptedWorkId: acceptance.acceptedWorkId,
-          mergeSha: acceptance.mergeSha,
-          eventTime: acceptance.eventTime
-        },
-        claimId,
-        policyVersion: this.policy.version,
-        recipients: contribution.recipients,
-        asset: contribution.token,
-        amount: contribution.amount,
-        keeperHubExecutionId: result.executionId,
-        transactionHash: result.transactionHash,
-        status: "SETTLED",
-        settledAt: now()
-      };
-      record.timeline.push(event("SETTLED", "Tender Receipt issued", record.receipt.receiptId));
+      this.finalizeSettled(record, result.transactionHash, result.executionId);
     } else if (result.status === "running") {
       record.status = "SETTLING";
       record.claim.status = "SETTLING";
@@ -168,20 +164,64 @@ export class SettlementEngine {
     return record;
   }
 
+  private finalizeSettled(record: SettlementRecord, transactionHash: string, executionId?: string) {
+    const resolvedExecutionId = executionId ?? record.keeperHubExecutionId;
+    if (!resolvedExecutionId) return record;
+
+    record.status = "SETTLED";
+    record.claim.status = "SETTLED";
+    record.transactionHash = transactionHash;
+    record.keeperHubExecutionId = resolvedExecutionId;
+
+    if (!record.receipt) {
+      const acceptance = record.claim.acceptance;
+      const contribution = record.claim.contribution;
+      record.receipt = {
+        receiptId: `treceipt_${record.claim.claimId.replace("tclaim_", "")}`,
+        acceptedContribution: acceptance.acceptedWorkId ?? acceptance.mergeSha ?? contribution.pullRequestId,
+        acceptanceEvidence: {
+          source: acceptance.source,
+          acceptanceKind: acceptance.acceptanceKind,
+          eventId: acceptance.eventId,
+          acceptedWorkId: acceptance.acceptedWorkId,
+          mergeSha: acceptance.mergeSha,
+          eventTime: acceptance.eventTime
+        },
+        claimId: record.claim.claimId,
+        policyVersion: record.claim.policyVersion,
+        recipients: contribution.recipients,
+        asset: contribution.token,
+        amount: contribution.amount,
+        keeperHubExecutionId: resolvedExecutionId,
+        transactionHash,
+        status: "SETTLED",
+        settledAt: now()
+      };
+      record.timeline.push(event("SETTLED", "Tender Receipt issued", record.receipt.receiptId));
+    }
+
+    record.updatedAt = now();
+    return record;
+  }
+
   private async markReplay(existing: SettlementRecord, detail: string) {
-      existing.status = "ALREADY_SETTLED";
-      existing.replayCount += 1;
-      existing.duplicatePayoutsPrevented += 1;
-      existing.timeline.push(event("REPLAY", "Same claim, $0 moved", detail));
-      existing.updatedAt = now();
-      await this.repo.put(existing);
-      return existing;
+    existing.status = "ALREADY_SETTLED";
+    existing.claim.status = "ALREADY_SETTLED";
+    existing.replayCount += 1;
+    existing.duplicatePayoutsPrevented += 1;
+    existing.timeline.push(event("REPLAY", "Same claim, $0 moved", detail));
+    existing.updatedAt = now();
+    await this.repo.put(existing);
+    return existing;
   }
 
   async reconcile(settlementId: string) {
     const record = await this.repo.get(settlementId);
     if (!record) return undefined;
     const reconciled = await this.executor.reconcile(record);
+    if (reconciled.status === "SETTLED" && reconciled.transactionHash) {
+      this.finalizeSettled(reconciled, reconciled.transactionHash, reconciled.keeperHubExecutionId);
+    }
     await this.repo.put(reconciled);
     return reconciled;
   }

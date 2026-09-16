@@ -3,17 +3,18 @@ summary: >
   Tender is settlement infrastructure for accepted software contributions.
   The central primitive is the Tender Claim. The invariant is one accepted
   obligation -> one settlement. The signature artifact is the Tender Receipt.
-resume_rule: Do not reset to 7361422 if newer local work exists.
+resume_rule: Preserve current Git history; do not reset to older local baselines.
 canonical_repository: https://github.com/Faadil1/tender
-current_local_state:
+current_state:
   branch: main
-  baseline_before_delta: 7361422c9ae2ed20e2bef67cf078ee8495dc72a8
-  latest_local_commit: 050dd05797b17e3a99128fc8daa6b7aa83d022e9
+  remote_history_pushed: true
+  last_verified_remote_commit_before_hardening: 1081597c290c03b385ad81379a5bf5fda86d8555
   uncommitted_work_expected: false
 important_files:
   - src/domain/types.ts
   - src/domain/identity.ts
   - src/domain/settlementEngine.ts
+  - src/adapters/keeperhub.ts
   - scripts/replay-harness.ts
   - scripts/live-proof.ts
   - .github/workflows/tender-live-proof.yml
@@ -32,6 +33,7 @@ gates:
   GATE_4: completed_github_adapter_local
   GATE_5: keeperhub_calibrated_manual_live_tx
   GATE_6: completed_replay_harness_local
+  GATE_6_5: live_proof_hardening_pending_local_verify
   GATE_7: pending_tender_caused_live_proof
   GATE_8: pending_deployment_and_submission_pack_final
 keeperhub:
@@ -45,9 +47,13 @@ do_not:
   - Do not repeat the manual calibration payment.
   - Do not expose KeeperHub API keys.
   - Do not demonstrate replay by broadcasting a second KeeperHub payment.
+  - Do not run Tender Live Proof until the hardening commit verifies locally.
+  - Do not run Tender Live Proof while KeeperHub recipient and amount remain hardcoded.
   - Do not frame Tender as a bounty marketplace.
 next_exact_actions:
-  - Push local history to https://github.com/Faadil1/tender with a real git credential.
-  - Run the Tender Live Proof workflow once with minimal amount and recipient wallet.
-  - Capture evidence/live-proof.json artifact.
-  - Replay proof should show same claim and $0 additional movement.
+  - Pull the live-proof hardening commit from main.
+  - Run npm ci if needed, then npm run verify.
+  - In KeeperHub, bind Manual trigger recipient and amount fields into Transfer ERC20 Token instead of hardcoded values.
+  - Run KeeperHub workflow simulation/preflight only; do not broadcast while configuring.
+  - Run Tender Live Proof exactly once with 0.01 USDC after all gates pass.
+  - Capture evidence/live-proof.json artifact and verify same claim -> ALREADY_SETTLED -> $0 additional movement.
