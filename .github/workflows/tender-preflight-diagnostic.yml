@@ -23,7 +23,7 @@ jobs:
       TENDER_RECIPIENT_WALLET: ${{ inputs.recipient_wallet }}
       TENDER_AMOUNT_USDC: ${{ inputs.amount_usdc }}
     steps:
-      - name: Simulate KeeperHub workflow only — never broadcast
+      - name: Read-only KeeperHub diagnostics — never broadcast
         shell: bash
         run: |
           node <<'NODE'
@@ -39,29 +39,63 @@ jobs:
           const apiKey = required("KEEPERHUB_API_KEY");
           const recipient = required("TENDER_RECIPIENT_WALLET");
           const amount = required("TENDER_AMOUNT_USDC");
+          const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+          const usdcBaseSepolia = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+
+          const printResponse = async (label, res) => {
+            const text = await res.text();
+            let body = text;
+            try { body = JSON.parse(text); } catch {}
+            console.log(`${label}: HTTP ${res.status} ${res.statusText}`);
+            console.log(typeof body === "string" ? body.slice(0, 8000) : JSON.stringify(body, null, 2).slice(0, 8000));
+            return { ok: res.ok, status: res.status, body };
+          };
 
           console.log(`Base URL normalization: ${rawBase === base ? "unchanged" : "removed trailing /api"}`);
           console.log(`Workflow ID present: ${Boolean(workflowId)}`);
           console.log(`Recipient: ${recipient}`);
           console.log(`Amount: ${amount}`);
-          console.log("Mode: simulation only; this workflow does not call /execute");
+          console.log("Mode: read-only diagnostics only; this workflow never calls workflow /execute or direct execution without simulate=true");
 
-          const res = await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}/simulate`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ input: { recipient, amount } })
-          });
+          const workflow = await printResponse(
+            "Workflow lookup",
+            await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}`, { headers: { Authorization: `Bearer ${apiKey}` } })
+          );
 
-          const text = await res.text();
-          let body = text;
-          try { body = JSON.parse(text); } catch {}
+          if (!workflow.ok) {
+            console.error("Workflow lookup failed. The workflow ID may be wrong for this API key's organization, or the key may be scoped to a different organization.");
+            process.exit(1);
+          }
 
-          console.log(`HTTP ${res.status} ${res.statusText}`);
-          console.log("KeeperHub simulation response:");
-          console.log(typeof body === "string" ? body.slice(0, 8000) : JSON.stringify(body, null, 2).slice(0, 8000));
+          const chains = await printResponse(
+            "Chains lookup",
+            await fetch(`${base}/api/chains`, { headers: { Authorization: `Bearer ${apiKey}` } })
+          );
 
-          if (!res.ok) process.exit(1);
+          if (!chains.ok) {
+            console.error("Unable to verify Base Sepolia availability for this organization.");
+            process.exit(1);
+          }
+
+          const directSimulation = await printResponse(
+            "Direct ERC20 simulation",
+            await fetch(`${base}/api/execute/transfer`, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                chainId: 84532,
+                recipientAddress: recipient,
+                amount,
+                tokenAddress: usdcBaseSepolia,
+                simulate: true
+              })
+            })
+          );
+
+          if (!directSimulation.ok || directSimulation.body?.success !== true || directSimulation.body?.wouldRevert === true) {
+            console.error("Direct transfer simulation did not pass. No broadcast occurred.");
+            process.exit(1);
+          }
+
+          console.log("READ_ONLY_PREFLIGHT_OK: workflow is visible to the API key and the equivalent Base Sepolia USDC transfer simulation passed without broadcast.");
           NODE
