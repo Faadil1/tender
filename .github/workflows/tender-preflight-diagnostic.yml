@@ -1,0 +1,67 @@
+name: Tender Preflight Diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient_wallet:
+        description: Recipient wallet for read-only KeeperHub simulation
+        required: true
+      amount_usdc:
+        description: USDC amount for read-only KeeperHub simulation
+        required: true
+        default: "0.01"
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      KEEPERHUB_API_KEY: ${{ secrets.KEEPERHUB_API_KEY }}
+      KEEPERHUB_BASE_URL: ${{ secrets.KEEPERHUB_BASE_URL }}
+      KEEPERHUB_WORKFLOW_ID: ${{ secrets.KEEPERHUB_WORKFLOW_ID }}
+      TENDER_RECIPIENT_WALLET: ${{ inputs.recipient_wallet }}
+      TENDER_AMOUNT_USDC: ${{ inputs.amount_usdc }}
+    steps:
+      - name: Simulate KeeperHub workflow only — never broadcast
+        shell: bash
+        run: |
+          node <<'NODE'
+          const required = (name) => {
+            const value = process.env[name];
+            if (!value) throw new Error(`${name} is required`);
+            return value;
+          };
+
+          const rawBase = required("KEEPERHUB_BASE_URL").replace(/\/+$/, "");
+          const base = rawBase.replace(/\/api$/i, "");
+          const workflowId = required("KEEPERHUB_WORKFLOW_ID");
+          const apiKey = required("KEEPERHUB_API_KEY");
+          const recipient = required("TENDER_RECIPIENT_WALLET");
+          const amount = required("TENDER_AMOUNT_USDC");
+
+          console.log(`Base URL normalization: ${rawBase === base ? "unchanged" : "removed trailing /api"}`);
+          console.log(`Workflow ID present: ${Boolean(workflowId)}`);
+          console.log(`Recipient: ${recipient}`);
+          console.log(`Amount: ${amount}`);
+          console.log("Mode: simulation only; this workflow does not call /execute");
+
+          const res = await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}/simulate`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ input: { recipient, amount } })
+          });
+
+          const text = await res.text();
+          let body = text;
+          try { body = JSON.parse(text); } catch {}
+
+          console.log(`HTTP ${res.status} ${res.statusText}`);
+          console.log("KeeperHub simulation response:");
+          console.log(typeof body === "string" ? body.slice(0, 8000) : JSON.stringify(body, null, 2).slice(0, 8000));
+
+          if (!res.ok) process.exit(1);
+          NODE
