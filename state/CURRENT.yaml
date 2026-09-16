@@ -1,0 +1,28 @@
+project: Tender
+repository:
+  preferred: Faadil1/tender
+  created: false
+  blocker: GitHub create-repository capability is not available in current Work tools.
+branch: main
+latest_commit: null
+current_gate: GATE_4_GITHUB_ACCEPTANCE_ADAPTER_READY_LOCAL
+completed_work:
+  - GATE_0 targeted hackathon and KeeperHub research completed.
+  - GATE_1 product thesis locked as contribution settlement protocol.
+  - GATE_2 architecture drafted with Tender domain center and GitHub/KeeperHub adapters.
+  - GATE_3 settlement engine implemented and verified locally with deterministic settlement IDs and replay protection.
+  - Failure-first tests pass: 9/9.
+  - Local server/API smoke test passed for empty state, merge settlement, and replay already-settled path.
+  - TRACE design direction and UI surface implemented locally.
+active_blockers:
+  - GitHub repository creation/push requires user GitHub action or token/connector capability with repo creation.
+  - KeeperHub live proof requires KEEPERHUB_API_KEY, workflow ID, and funded testnet wallet.
+deployment:
+  status: not_deployed
+  preferred: Cloudflare
+keeperhub:
+  status: adapter_implemented_mock_mode
+  live_transaction_status: pending_credentials
+demo_readiness: local_demo_verified_mock_keeperhub
+submission_readiness: draft_package_created_live_proof_pending
+next_action: Create/push GitHub repo, configure KeeperHub credentials, execute live testnet settlement, deploy, record transaction proof.

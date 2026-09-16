@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tender</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <p class="eyebrow">Contribution settlement protocol</p>
+        <h1>Tender</h1>
+        <p class="promise">Accepted work becomes a settled obligation.</p>
+        <div class="actions">
+          <button data-action="merge">Merge PR and settle</button>
+          <button data-action="replay">Replay same event</button>
+          <button data-action="checks">Fail required checks</button>
+          <button data-action="wallet">Invalid wallet</button>
+        </div>
+      </header>
+
+      <section class="ledger" aria-live="polite">
+        <div>
+          <p class="label">Economic state</p>
+          <h2 id="status">NOT YET OWED</h2>
+        </div>
+        <div class="stamp" id="stamp">PENDING</div>
+      </section>
+
+      <section class="record">
+        <div class="sheet">
+          <h3>Settlement record</h3>
+          <dl id="facts"></dl>
+        </div>
+        <div class="sheet">
+          <h3>Causal timeline</h3>
+          <ol id="timeline"></ol>
+        </div>
+      </section>
+
+      <section class="sheet">
+        <h3>Replay and execution history</h3>
+        <div id="attempts" class="attempts"></div>
+      </section>
+    </main>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

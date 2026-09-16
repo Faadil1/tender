@@ -1,0 +1,17 @@
+{
+  "name": "tender",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node scripts/copy-public.mjs",
+    "test": "tsc && node --test dist/tests/*.test.js",
+    "dev": "node --watch dist/src/server/index.js",
+    "start": "node dist/src/server/index.js",
+    "verify": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
+  }
+}

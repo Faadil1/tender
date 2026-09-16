@@ -1,0 +1,34 @@
+project: Tender
+summary: >
+  New KeeperHub Agent Economy Hackathon project. Tender converts accepted GitHub
+  contribution evidence into a deterministic settlement claim and executes through
+  KeeperHub exactly once.
+do_not_redo:
+  - Do not reframe as Valid Until or TaskProof.
+  - Do not redo broad hackathon research before reading docs/WINNING-INTELLIGENCE.md.
+  - Do not use webhook delivery ID as settlement identity.
+important_files:
+  - docs/WINNING-INTELLIGENCE.md
+  - docs/PRD.md
+  - docs/ARCHITECTURE.md
+  - docs/DESIGN-DIRECTION.md
+  - src/domain/settlementEngine.ts
+  - src/domain/identity.ts
+  - src/adapters/keeperhub.ts
+  - tests/settlementEngine.test.ts
+  - SUBMISSION.md
+gates:
+  GATE_0: completed_research
+  GATE_1: completed_product_thesis
+  GATE_2: completed_architecture_draft
+  GATE_3: completed_local_tests_9_of_9
+  GATE_4: adapter_ready_pending_real_github_webhook
+  GATE_5: pending_keeperhub_credentials
+  GATE_6: pending_full_test_pass
+  GATE_6_5: pending_runtime_visual_review
+  GATE_7: pending_deployment_and_live_tx
+  GATE_8: pending_final_submission_assets
+minimum_user_intervention:
+  - Create or authorize creation of GitHub repo Faadil1/tender.
+  - Provide KeeperHub kh_ organization API key and workflow ID, or connect KeeperHub MCP/API.
+  - Fund KeeperHub testnet wallet minimally for Base Sepolia USDC transfer.
