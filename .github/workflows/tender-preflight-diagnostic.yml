@@ -39,63 +39,53 @@ jobs:
           const apiKey = required("KEEPERHUB_API_KEY");
           const recipient = required("TENDER_RECIPIENT_WALLET");
           const amount = required("TENDER_AMOUNT_USDC");
-          const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
-          const usdcBaseSepolia = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+          const auth = { Authorization: `Bearer ${apiKey}` };
 
-          const printResponse = async (label, res) => {
+          const read = async (label, url) => {
+            const res = await fetch(url, { headers: auth });
             const text = await res.text();
             let body = text;
             try { body = JSON.parse(text); } catch {}
             console.log(`${label}: HTTP ${res.status} ${res.statusText}`);
-            console.log(typeof body === "string" ? body.slice(0, 8000) : JSON.stringify(body, null, 2).slice(0, 8000));
+            console.log(typeof body === "string" ? body.slice(0, 12000) : JSON.stringify(body, null, 2).slice(0, 12000));
             return { ok: res.ok, status: res.status, body };
           };
 
           console.log(`Base URL normalization: ${rawBase === base ? "unchanged" : "removed trailing /api"}`);
-          console.log(`Workflow ID present: ${Boolean(workflowId)}`);
+          console.log(`Target workflow ID: ${workflowId}`);
           console.log(`Recipient: ${recipient}`);
           console.log(`Amount: ${amount}`);
-          console.log("Mode: read-only diagnostics only; this workflow never calls workflow /execute or direct execution without simulate=true");
+          console.log("Mode: read-only organization-scope diagnostic. No /execute endpoint is called.");
 
-          const workflow = await printResponse(
-            "Workflow lookup",
-            await fetch(`${base}/api/workflows/${encodeURIComponent(workflowId)}`, { headers: { Authorization: `Bearer ${apiKey}` } })
-          );
+          const keys = await read("Auth probe /api/keys", `${base}/api/keys`);
+          if (!keys.ok) {
+            console.error("AUTH_PROBE_FAILED: the kh_ key is invalid, revoked, or not accepted as an organization key.");
+            process.exit(1);
+          }
 
+          const workflows = await read("Workflow list /api/workflows", `${base}/api/workflows`);
+          if (!workflows.ok) {
+            console.error("WORKFLOW_LIST_FAILED: the key authenticated but cannot list organization workflows.");
+            process.exit(1);
+          }
+
+          const items = Array.isArray(workflows.body) ? workflows.body : (workflows.body?.items ?? []);
+          const visible = items.map((w) => ({ id: w.id, name: w.name, projectId: w.projectId ?? null }));
+          console.log("Visible workflows summary:");
+          console.log(JSON.stringify(visible, null, 2));
+
+          const match = visible.find((w) => w.id === workflowId);
+          if (!match) {
+            console.error(`ORG_SCOPE_MISMATCH: target workflow ${workflowId} is not visible to this API key's organization.`);
+            console.error("Create/recreate KEEPERHUB_API_KEY from the same KeeperHub organization that owns 'Tender: Settle Claim', then replace the GitHub secret. Do not run Tender Live Proof yet.");
+            process.exit(1);
+          }
+
+          const workflow = await read("Target workflow lookup", `${base}/api/workflows/${encodeURIComponent(workflowId)}`);
           if (!workflow.ok) {
-            console.error("Workflow lookup failed. The workflow ID may be wrong for this API key's organization, or the key may be scoped to a different organization.");
+            console.error("TARGET_LOOKUP_FAILED even though workflow appears in the list. Stop and inspect before any execution.");
             process.exit(1);
           }
 
-          const chains = await printResponse(
-            "Chains lookup",
-            await fetch(`${base}/api/chains`, { headers: { Authorization: `Bearer ${apiKey}` } })
-          );
-
-          if (!chains.ok) {
-            console.error("Unable to verify Base Sepolia availability for this organization.");
-            process.exit(1);
-          }
-
-          const directSimulation = await printResponse(
-            "Direct ERC20 simulation",
-            await fetch(`${base}/api/execute/transfer`, {
-              method: "POST",
-              headers,
-              body: JSON.stringify({
-                chainId: 84532,
-                recipientAddress: recipient,
-                amount,
-                tokenAddress: usdcBaseSepolia,
-                simulate: true
-              })
-            })
-          );
-
-          if (!directSimulation.ok || directSimulation.body?.success !== true || directSimulation.body?.wouldRevert === true) {
-            console.error("Direct transfer simulation did not pass. No broadcast occurred.");
-            process.exit(1);
-          }
-
-          console.log("READ_ONLY_PREFLIGHT_OK: workflow is visible to the API key and the equivalent Base Sepolia USDC transfer simulation passed without broadcast.");
+          console.log("ORG_SCOPE_OK: API key authenticates and can see the target Tender workflow. Safe to proceed to a separate simulation-only preflight next.");
           NODE
