@@ -7,11 +7,8 @@
     "build": "tsc && node scripts/copy-public.mjs",
     "test": "tsc && node --test dist/tests/*.test.js",
     "replay:harness": "tsc && node dist/scripts/replay-harness.js",
-    "live:proof": "tsc && node dist/scripts/live-proof.js",
-    "dev": "node --watch dist/src/server/index.js",
-    "start": "node dist/src/server/index.js",
     "verify": "npm run build && npm test && npm run replay:harness",
-    "deploy:cloudflare": "npm run build && npx wrangler deploy"
+    "deploy:cloudflare": "npm run build && npx wrangler deploy --config wrangler.jsonc"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
