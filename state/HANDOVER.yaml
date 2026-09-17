@@ -167,3 +167,28 @@ second_gate_review_delta:
   keeperhub_live_proof:
     preserved: true
     no_new_payment_executed: true
+
+production_operator_runtime_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push_and_deploy
+  implemented:
+    - src/cloudflare/index.ts exports TenderOperatorStoreDurableObject and routes authenticated operator state through TENDER_OPERATOR_DO when bound.
+    - src/domain/operatorRuntime.ts exports validateAuthorization so the Durable Object uses the same exact authorizedClaimId/linkedClaimId/one-time-consumption rule as the domain verifier.
+    - wrangler.jsonc binds TENDER_OPERATOR_DO and defaults OPERATOR_SETTLEMENT_MODE to mock for non-value-moving smoke QA.
+    - tests/operatorRuntime.test.ts includes a two-runtime concurrency regression for the same authorized corrective claim.
+    - docs/OPERATOR-RUNTIME.md documents Durable Object as the value-moving store and KV as mock/dev/proof only.
+  measured_proof:
+    command: npm run verify
+    unit_tests: 33/33
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  safety:
+    canonical_keeperhub_live_proof_preserved: true
+    no_new_value_moving_execution: true
+    public_judge_runtime_has_no_broadcast_path_by_default: true
+    workflow_mode_requires_strong_store: true
+  next_actions:
+    - Push branch update to PR #2.
+    - Wait for PR CI.
+    - Deploy with OPERATOR_SETTLEMENT_MODE=mock and TENDER_OPERATOR_DO bound.
+    - Run authenticated non-value-moving operator smoke QA.
+    - Enable OPERATOR_SETTLEMENT_MODE=workflow only after Durable Object binding and server-side secrets are confirmed.
