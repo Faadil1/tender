@@ -131,6 +131,7 @@ important_files:
   - wrangler.jsonc
   - docs/OPERATOR-RUNTIME.md
   - docs/RUNTIME-PROOF-RESILIENCE.md
+  - docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   - state/CURRENT.yaml
   - state/HANDOVER.yaml
 
@@ -147,15 +148,62 @@ ui_ux_handoff:
     - Domain-native economic clearing language.
     - Clear distinction between public proof surface and authenticated operator surface.
 
+keeperhub_bounty_handoff:
+  status: research_in_progress
+  main_track_and_bounty_are_separate_workstreams: true
+  research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
+  keeperhub_contribution_rule: "Issue first -> Reason/Scope/Plan -> wait for accepted -> implement -> PR to staging"
+  key_research_findings:
+    - Previous winners were rewarded for production seriousness, reusable primitives, real usage, tests, and reproducible platform feedback rather than shallow integrations.
+    - Current submissions already crowd verified settlement, idempotency, preflight firewalls, durable settlement intents, Merkle audit, and generic framework gateways.
+    - KeeperHub issues repeatedly expose a gap between transient execution/request state and longer-lived logical identity/reconciliation.
+    - OpenZeppelin Relayer issues show the same broader class of nonce, stale-receipt, and ambiguous execution-state failures.
+  tender_unique_white_space: "economic obligation existence + deterministic obligation identity derived from accepted work"
+  provisional_bounty_candidate:
+    name: Effect-Bound Execution Reference
+    core: "durable caller reference bound to canonical execution effect and original execution/proof"
+    same_reference_same_effect: resolve original execution/proof
+    same_reference_changed_effect: fail closed
+    keeperhub_boundary: execution effect identity only
+    tender_boundary: obligation existence, policy, acceptance, correction semantics
+    overlap_status: exact-term search currently clean; final source-level/PR overlap validation still required
+    issue_filed: false
+    code_started: false
+  known_no_go_overlaps:
+    - "#2495 web3/disburse partial payout resume"
+    - "#2395 receipt export"
+    - "#2503 executed-call verification"
+    - "#2398 permission cards"
+    - "#2318 multi-model consensus"
+    - "#2479 generic EVM sign-and-hold"
+    - generic simulator/firewall
+    - generic framework connector
+    - generic Merkle audit
+  external_llm_gate:
+    status: planned_not_executed
+    planned_models:
+      - Claude: maintainer/mergeability critique
+      - Gemini: API/schema/migration critique
+      - Grok: uniqueness/duplicate/adversarial critique
+    note: no direct provider connector is available in this chat; do not claim those reviews occurred until outputs are obtained
+  next_steps:
+    - Inspect exact directExecutions/idempotency data model and direct-execution route contracts.
+    - Repeat issue/PR overlap search with final proposed names.
+    - Draft upstream KeeperHub issue but do not file until the evidence packet is complete.
+    - Run external-LLM critique, synthesize, then file only if still distinct.
+    - Wait for accepted before any upstream implementation.
+
 remaining_work:
   - QA redesigned product on desktop/mobile and reduced motion.
   - QA loading/error/failure states and navigation after UI changes.
   - Lock <=3 minute demo narrative and video.
   - Final submission copy and packaging.
+  - Complete KeeperHub bounty candidate validation without changing Tender's locked runtime.
 
 runtime_lock_rule:
   - Treat settlement/runtime/proof behavior as locked unless a real bug appears.
   - Do not spend remaining time adding speculative runtime features.
+  - KeeperHub bounty research may proceed in parallel but must not alter Tender's product semantics to fit the bounty.
 
 local_worktree_note:
   issue: npm run verify regenerates evidence/settlement-replay-harness.json timestamp locally
@@ -168,9 +216,12 @@ do_not:
   - Do not switch OPERATOR_SETTLEMENT_MODE to workflow during current QA/demo work.
   - Do not weaken Tender into generic merge-to-pay or bounty-marketplace positioning.
   - Do not add value-moving execution to the public judge runtime.
+  - Do not duplicate an active KeeperHub issue simply to enter the bounty.
+  - Do not implement KeeperHub bounty code before the upstream issue is accepted.
 
 next_exact_actions:
-  - Pull the latest state-only main updates locally when convenient.
-  - Let Benita redesign UI/UX against the verified runtime without changing core invariants.
+  - Let Benita continue UI/UX redesign against the verified runtime without changing core invariants.
+  - Complete source-level validation of Effect-Bound Execution Reference and its migration/API blast radius.
+  - Prepare the Reason/Scope/Plan evidence packet and external-LLM review packet.
   - Run responsive/reduced-motion/failure-state QA after UI changes.
-  - Lock demo/video and submission.
+  - Lock demo/video and main-track submission independently of the bounty workstream.
