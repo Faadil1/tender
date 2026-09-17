@@ -17,17 +17,27 @@ This workstream must not destabilize Tender's already verified settlement/runtim
 
 ## Upstream contribution rule
 
-KeeperHub's current contributor policy requires an issue before behavior-changing code. The issue must state Reason, Scope and Plan. Coding starts only after maintainers apply the `accepted` label, and the accepted plan — including any maintainer edits — is the implementation contract. Pull requests target `staging` and reference the accepted issue.
+KeeperHub's contributor policy requires an issue before behavior-changing code. The issue must state Reason, Scope and Plan. Coding starts only after maintainers apply the `accepted` label, and the accepted plan — including maintainer edits — becomes the implementation contract. Pull requests target `staging` and reference the accepted issue.
 
-Therefore the bounty sequence is:
+Sequence:
 
 `RESEARCH -> OVERLAP CHECK -> ISSUE (Reason/Scope/Plan) -> WAIT FOR accepted -> IMPLEMENT -> TEST -> PR -> SEPARATE BUIDL`
 
 Do not open a speculative PR first.
 
+## Current hackathon signal
+
+KeeperHub's current public Agent Economy framing is unusually explicit: the main track prefers KeeperHub integrated into a live project/product rather than another standalone demo, while the separate feature bounty rewards something KeeperHub can merge.
+
+Implication for Tender:
+
+- the main-track proof should be attached to a real existing workstream/product context rather than presented as an isolated payment demo;
+- the bounty work should optimize for upstream usefulness and mergeability, not for Tender-specific cleverness;
+- these are two parallel workstreams and should remain separately packaged.
+
 ## What previous KeeperHub winners teach us
 
-KeeperHub's OpenAgents review covered all 180 submissions. The strongest signal was not visual polish; it was whether KeeperHub could merge, adopt, or build on the work directly.
+KeeperHub says it reviewed all 180 ETHGlobal Open Agents submissions. The strongest winner signal was production seriousness and downstream usefulness rather than surface polish.
 
 Patterns to preserve:
 
@@ -41,117 +51,178 @@ Patterns to preserve:
 Examples cited by KeeperHub:
 
 - Tradewise Agentlab: live x402 + KeeperHub flows, 125 tests, reproducible issue reports.
-- Keeper-Gate: framework-agnostic core with thin LangChain / ElizaOS / OpenClaw adapters.
+- Keeper-Gate: framework-agnostic core with thin framework adapters.
 - ZW.ARM: live Base activity plus an independent critique agent before execution.
-- Later Agents Onchain signal: n8n-nodes-keeperhub was adopted upstream by n8n; KeeperHub reports 64 PRs landed during that event.
+- Later Agents Onchain signal: n8n-nodes-keeperhub was adopted upstream by n8n; KeeperHub says 64 PRs landed during that event.
+
+This reinforces one rule: **a feature that maintainers can reuse is strategically stronger than a flashy wrapper around an existing route.**
 
 ## Current submission map — crowded territory
 
-### Landed
-
-Uses KeeperHub inside Lucid Agents. Strong on `simulate -> broadcast -> verified receipt`, stable references, idempotency, x402 settlement and proof. Conclusion: **verified landing + reference-based retry alone is not unique enough for Tender**.
-
-### Nyrvok
-
-Wayfinder route ingestion, sequential preflight simulation, invariant guard, KeeperHub execution, Base receipt confirmation and ERC-8004 reputation telemetry. Conclusion: **do not turn Tender into another simulation / execution firewall**.
-
 ### FINALTab
 
-Strong settlement intent, deterministic allocation/netting, review stages, frozen ledger, external-wallet consent, KeeperHub execution, independent chain verification and crash/replay recovery. Conclusion: **generic durable settlement intent + public proof is already crowded**.
+Deterministic receipt allocation/netting, review stages, frozen ledger, external-wallet consent, KeeperHub execution, independent chain verification and crash/replay recovery.
 
-### Gavel
-
-Focuses on detecting executable Safe transactions with a pure decision function and named refusal outcomes. The useful lesson is methodological: measure false positives, distinguish live-observed claims from test-covered claims, and make refusal states first-class.
+Conclusion: **generic durable settlement intent + consent + proof + replay recovery is already crowded.**
 
 ### AgentKeeper-MCP
 
-Guarded MCP execution gateway with dry-run, idempotency, x402, Merkle audit, multi-chain budgeting and an upstream KeeperHub PR. Conclusion: **do not compete on generic guarded gateway / Merkle audit framing**.
+Guarded MCP transaction gateway with dry-run, idempotency, x402, Merkle audit, multi-chain controls and an upstream KeeperHub contribution.
+
+Conclusion: **do not compete on generic gateway / Merkle audit / bounded execution framing.**
+
+### Landed
+
+Strong on `simulate -> broadcast -> verified receipt`, stable references and recovery semantics.
+
+Conclusion: **verified landing + a stable external reference alone is not enough to make Tender unique.**
+
+### Nyrvok
+
+Sequential preflight, invariant guard, KeeperHub execution and execution telemetry.
+
+Conclusion: **do not turn Tender into another simulation / execution firewall.**
+
+### Gavel-style refusal systems
+
+Pure decision functions, named refusal outcomes and empirical false-positive reduction are useful methodological patterns.
+
+Conclusion: keep refusal states explicit, but Tender should not become a generic transaction classifier.
 
 ## Recurring KeeperHub problems found in current issues
 
-The issue corpus shows several repeated families rather than isolated bugs.
+The issue corpus shows repeated families rather than isolated bugs.
 
 ### 1. Durable execution identity, replay and ambiguous outcomes
 
 Examples:
 
-- #2495: a partially failed payout run cannot safely resume; rerunning may pay a settled leg again.
-- #1840: reusing an idempotency key can replay a stale failure after the chain precondition has changed.
-- #2373: a held idempotency record can outlive the moment a reconciler proves a definite failure.
-- #2211: For Each could continue downstream after an iteration failure.
+- #2495: a partially failed payout run cannot safely resume; rerunning can repay a settled leg.
+- #1840: a reused idempotency key can replay a stale failure after chain preconditions change.
+- #2373: a held idempotency record can outlive the point where reconciliation proves a definite failure.
+- direct-execution docs now explicitly warn that the 24-hour replay window expires and the same key can execute again afterwards.
 
-Signal: transport idempotency and business-level identity are not the same problem.
+Signal: **transport idempotency and long-lived logical work identity are different concerns.**
 
-### 2. Simulation fidelity
-
-Examples include sequential state propagation, cleared storage slots, transport errors being confused with reverts, and workflow nodes being simulated independently of prior writes.
-
-Signal: high value, but very crowded and technically broad. **Not the current bounty direction.**
-
-### 3. Proof, receipts and execution interpretation
+### 2. Ambiguous status and proof semantics
 
 Examples:
 
-- #2395: bounded direct-execution receipt export.
-- #2503: verify the executed call matched the expected chain / contract / function.
-- #2428: expose the acting wallet for sponsored execution.
 - #2408: a softened write error can disappear at execution-level status.
+- #2428: sponsored execution can make the explorer sender misleading unless the acting address is surfaced.
+- #2395: integrations want bounded portable receipt evidence.
+- KeeperHub's own recovery docs distinguish `completed` from independently verified successful receipt evidence.
 
-Signal: developers need more than a transaction hash; they need evidence with the right semantics. Several obvious versions are already filed.
+Signal: transaction hash, execution status and business completion are separate layers. Tender should continue to make this separation visible.
 
-### 4. Machine-readable schemas and agent discoverability
+### 3. Simulation fidelity
 
-Examples include missing units, advertised output paths that do not exist at runtime, missing direct-execution capability flags, undocumented simulate response shapes, manual inputSchema friction, and misleading template errors.
+Current issues cover sequential state propagation, cleared storage slots, transport errors being confused with reverts, and workflow nodes simulated independently of earlier state changes.
 
-Signal: agents fail when a platform's semantic contract is implicit even if the raw API works.
+Signal: high value but crowded and technically broad. **Not the current bounty direction.**
+
+### 4. Machine-readable contracts for agents
+
+Examples include:
+
+- missing units in action schemas;
+- advertised output paths that do not exist at runtime;
+- missing direct-execution capability flags;
+- undocumented simulate response shape;
+- template rendering inconsistencies;
+- direct protocol actions that look callable but 501 at runtime.
+
+Signal: agent systems fail when semantics are implicit even when the raw API technically works.
 
 ### 5. Trigger liveness / observability
 
-State-threshold, trace triggers, silent event-registration failure and invisible event firing rates all recur.
+State thresholds, trace triggers, event registration visibility and event-rate previews recur.
 
-Signal: meaningful but large/crowded for this deadline.
+Signal: useful but large/crowded for this deadline.
 
 ### 6. Authorization clarity
 
-Missing signer routing can validate cleanly; there is also an active proposal for a generic EVM sign-and-hold primitive.
+Missing signer routing, permission-card proposals and sign-and-hold work show repeated demand for explicit authority boundaries.
 
-Signal: do not duplicate generic human-approval / permission-card / hold work.
+Signal: do not duplicate generic human approval. Tender's authority model should remain domain-specific: acceptance -> obligation -> explicit settlement authorization.
 
-## Adjacent platform lessons
+## Lessons from adjacent KeeperHub-like systems
 
-The useful mechanisms from KeeperHub-like products are architectural, not features to copy wholesale.
+KeeperHub itself groups its landscape around Chainlink Automation, OpenZeppelin Defender/Relayer, Hypernative, Almanak, Orbs and Ava Protocol. That comparison is vendor-authored and therefore not neutral, but it is still useful for identifying mechanism boundaries.
 
-- Chainlink Automation / CRE: separate deterministic upkeep execution from arbitrary agent reasoning; liveness/funding are explicit.
-- OpenZeppelin Relayer: current issues around nonce drift, stale receipts and submission statuses show that transaction-state ambiguity is an industry problem, not a KeeperHub-only bug.
-- OpenZeppelin Monitor / Hypernative: keep detection distinct from execution; machine-to-machine alert context and retry semantics matter.
-- Almanak: strategy simulation and human gates belong above the execution plane.
-- Orbs / AVS-style systems: multiple independent checks can improve trust, but are much heavier than this bounty needs.
+### Chainlink Automation / deterministic keepers
 
-A recurring adjacent-system lesson is: **never derive business truth from a transient transport state**.
+Useful mechanism: deterministic, bounded execution separate from open-ended agent reasoning.
+
+Tender implication: keep policy, acceptance and settlement rules deterministic and inspectable even if AI helps with intake or analysis.
+
+### OpenZeppelin Relayer / Defender successor path
+
+Useful mechanism: explicit nonce, transaction-state and recovery discipline. Industry-wide relayer problems around stale receipts, unknown outcomes and retry safety reinforce KeeperHub's own issue pattern.
+
+Tender implication: never translate a transport failure into a business truth such as `not paid` unless the settlement outcome is actually known.
+
+### Hypernative / OpenZeppelin Monitor
+
+Useful mechanism: detection and execution are separate planes.
+
+Tender implication: acceptance evidence should remain separate from settlement execution; the executor should not be allowed to redefine why money is owed.
+
+### Almanak
+
+Useful mechanism: strategy simulation and human approval gates live above the execution plane.
+
+Tender implication: Tender can own economic-policy review and authorization while KeeperHub remains the executor.
+
+### Orbs / AVS-style systems
+
+Useful mechanism: independent validators can improve trust in high-value actions.
+
+Tender implication: useful for future high-assurance modes, but too heavy for the current bounty. Tender's existing independent chain verification already gives a simpler second source of truth.
+
+### Common adjacent-system law
+
+**Never derive durable business truth from a transient transport state.**
+
+This is now a canonical design principle for Tender.
+
+## Mechanisms worth adopting into Tender without copying competitors
+
+These mechanisms strengthen Tender while preserving its own category:
+
+1. **Authority separation:** keep acceptance, obligation creation, settlement authorization and execution as separate named stages.
+2. **Explicit non-terminal states:** unknown/unconfirmed must never be presented as failed or settled.
+3. **Independent proof:** KeeperHub's response is operational evidence; onchain verification remains independent evidence.
+4. **Stable domain identity:** the Tender Claim remains the long-lived economic identity, separate from execution IDs and transport retry keys.
+5. **Poll/recovery discipline:** public proof can show exactly which states are terminal and which require more evidence.
+6. **Live-product binding:** add at least one real acceptance adapter from an existing product/workstream so Tender demonstrates economic clearing in context, not only as an isolated demo.
+
+Do not copy generic permission cards, generic audit exports, generic simulation dashboards or generic transaction relays. Translate useful mechanics into Tender's domain-native clearing model.
 
 ## Tender uniqueness guardrail
 
-Tender must remain one layer above KeeperHub:
+Tender remains one layer above KeeperHub:
 
 `ACCEPTANCE EVIDENCE -> ECONOMIC OBLIGATION IDENTITY -> AUTHORIZATION -> KEEPERHUB EXECUTION -> RECEIPT / CHAIN PROOF`
 
 Tender answers:
 
-> Does this accepted work create this exact economic obligation, and has that exact obligation been discharged?
+> Does this accepted work create this exact economic obligation, under which policy, and has that exact obligation been discharged?
 
 KeeperHub answers:
 
-> Can this transaction be executed and reconciled reliably?
+> Can this authorized transaction be executed and reconciled reliably?
 
-Therefore Tender must not be reframed as generic merge-to-pay, generic settlement verification, a simulator, a relayer, a bounty marketplace, or another execution firewall.
+Therefore Tender must not be reframed as generic merge-to-pay, generic settlement verification, a simulator, a relayer, a bounty marketplace or another execution firewall.
 
-The durable differentiator remains:
+Durable differentiator:
 
 - policy precedes acceptance;
 - acceptance creates an obligation only under that policy;
 - the obligation has deterministic economic identity;
 - changing economics creates a different Claim requiring new acceptance;
-- settled history is immutable.
+- settled history is immutable;
+- corrections create linked new claims rather than mutating settled history.
 
 ## Bounty whitespace candidate — provisional
 
@@ -159,114 +230,119 @@ The durable differentiator remains:
 
 Problem hypothesis:
 
-KeeperHub's idempotency mechanism is excellent transport safety, but it is time-bounded and scoped to an execution request. Integrations repeatedly invent a longer-lived domain reference (`reference`, `runKey`, settlement intent, claim id) outside KeeperHub so they can answer: "which execution discharged this logical piece of work?"
+KeeperHub's idempotency mechanism is strong transport safety but time-bounded. Integrations repeatedly invent longer-lived caller state (`reference`, `runKey`, settlement intent, claim ID) so they can answer which execution discharged a logical piece of work.
 
 Potential minimal feature:
 
-- optional caller-supplied `reference` on value-moving direct execution;
-- durable `(organization, reference)` binding to a canonical effect fingerprint and `executionId`;
-- same reference + same effect => return / resolve the original execution and proof;
-- same reference + different effect => fail closed with a typed conflict;
-- expose reference in execution status and a read-only lookup-by-reference surface;
-- do not interpret invoices, accepted work, payroll, bounties or obligations inside KeeperHub.
+- optional caller-supplied durable reference on value-moving direct execution;
+- durable organization-scoped binding to a deterministic exact-request/effect fingerprint and execution ID;
+- same reference + same bound request/effect -> resolve original execution/proof;
+- same reference + changed bound request/effect -> typed conflict, no broadcast;
+- expose reference in status and a read-only lookup path;
+- leave existing 24-hour `Idempotency-Key` semantics unchanged;
+- do not interpret invoices, work acceptance, payroll, bounties or obligations inside KeeperHub.
 
-Why it may be useful:
+### Why the need may be real
 
-- Tender has a long-lived Claim identity that should outlive a 24-hour retry cache;
-- Landed independently uses a stable external `reference`;
-- FINALTab maintains durable settlement-intent state;
-- #2495 proposes a `runKey` specifically to identify payout legs across executions.
+- Tender needs Claim identity to outlive retry cache duration.
+- #2495 independently proposes `runKey` across executions for payout recovery.
+- FINALTab independently persists a settlement-intent journal.
+- Landed uses stable external references around execution/recovery.
 
-These independent implementations suggest a generic platform seam: **logical effect identity can outlive request idempotency**.
+These are independent reimplementations of a similar seam: **logical effect identity can outlive request idempotency**.
 
-### Current validation status
+### Source-level validation
 
-- No open or closed KeeperHub issue was found using the exact terms `external reference`, `business reference`, or `intentId`.
-- Direct execution already persists execution status, input/output, transaction hash/receipts, retry count and network.
-- KeeperHub maintains a separate idempotency record keyed by organization + scope + idempotency key + request hash with expiry.
-- Source-level feasibility inspection is now complete enough to draft a bounded issue; a final PR/issue-name overlap sweep and maintainer critique are still required before filing.
+KeeperHub `staging` direct execution was inspected directly:
 
-### Source-level validation — 2026-09-17
+- `directExecutions` is the durable organization-scoped audit record;
+- status lookup is by internal execution ID and has no caller-defined durable reference;
+- the direct-execution row is created atomically at the value-cap reservation boundary;
+- idempotency already provides deterministic request-hash conflict behavior;
+- completed/failed idempotency records are replayable for 24 hours, then expire;
+- direct write routes reserve idempotency before state-changing work.
 
-KeeperHub `staging` was inspected directly at the direct-execution boundary.
-
-Observed architecture:
-
-- `app/api/execute/_lib/execution-service.ts` creates a durable `directExecutions` row with organization, API key, execution type, network, redacted input and lifecycle status; it later persists transaction hash, independently verified receipts, gas/cost fields, output, error and completion time.
-- `app/api/execute/[executionId]/status/route.ts` returns the execution by internal `executionId` and organization. Its public status contract currently has no caller-defined durable reference.
-- `app/api/execute/_lib/spending-cap.ts` creates the direct-execution row atomically inside the value-cap reservation transaction. That is the correct concurrency boundary if a future reference must be reserved before value can move.
-- `lib/idempotency.ts` already provides organization + scope + key + deterministic request-hash conflict semantics, but completed/failed records expire after **24 hours**. It is intentionally transport/retry safety, not durable domain identity.
-- The transfer route reserves idempotency before cap reservation/broadcast, and its idempotency hash is based on the request body. Replays and conflicting bodies are already typed and fail closed.
-
-This validates the core distinction:
+Core distinction:
 
 `Idempotency-Key = short-lived safe retry identity`
 
-`Execution Reference = durable logical execution identity`
+`Execution Reference = durable caller-owned logical execution identity`
 
-A useful bounty feature should **compose with** existing idempotency rather than replace or extend its TTL globally.
+The proposed feature must compose with idempotency rather than extend its TTL globally.
+
+### Final overlap sweep — 2026-09-17
+
+Open/closed KeeperHub issue and PR searches were repeated for:
+
+- `execution reference`
+- `effect reference`
+- `durable reference`
+- `reference lookup`
+
+No direct duplicate was found. Search results did return related recovery/idempotency work, so the candidate is **not yet cleared for filing**; semantic overlap still needs independent critique.
 
 ### Likely minimal implementation seam
 
-The smallest credible shape is now:
+1. Optional `reference`/`executionReference` on a bounded set of direct write routes.
+2. Persist it with deterministic exact-request hash at the direct-execution reservation boundary.
+3. Organization-scoped uniqueness.
+4. Existing same reference + same request -> resolve original execution.
+5. Existing same reference + different request -> typed conflict.
+6. Additive status field and one read-only lookup path.
+7. Keep current idempotency behavior and TTL unchanged.
 
-1. Add an optional `reference` (final name still subject to upstream naming review) to value-moving direct-execution requests.
-2. Persist it with a deterministic request/effect hash at the direct-execution reservation boundary.
-3. Enforce uniqueness at organization scope so concurrent callers cannot bind the same reference twice.
-4. On an existing reference:
-   - same bound effect/request => resolve the existing execution instead of broadcasting;
-   - changed effect/request => typed conflict and no broadcast.
-5. Surface `reference` on execution status and provide a read-only lookup path or query form.
-6. Keep existing 24-hour `Idempotency-Key` semantics unchanged.
+Current mergeability bias: **exact-request binding in v1**, not a universal semantic effect canonicalizer.
 
-### Design questions to settle before filing
+### Open design questions
 
-- **Name:** `reference`, `executionReference`, or `effectReference`. Avoid `intentId` if it suggests KeeperHub owns business intent semantics.
-- **Fingerprint semantics:** reusing the existing deterministic request hash is maximally mergeable but binds transport-level fields too. A separate canonical effect hash is semantically cleaner but increases route-specific normalization scope.
-- **API surface:** dedicated `GET .../by-reference/{reference}` vs a query parameter on the existing status surface.
-- **Retention:** direct-execution rows appear to be the durable audit record; confirm maintainers are comfortable with reference lifetime matching that record rather than inventing a second TTL.
-- **Routes in v1:** transfer only is smaller but may look product-specific; all value-moving direct-execution routes are more reusable but widen the change. Ask maintainers before coding.
+- final name: `reference`, `executionReference`, or `effectReference`;
+- whether route/action type participates in uniqueness scope;
+- direct column vs separate binding table;
+- lookup route shape;
+- retention semantics;
+- transfer-only v1 vs all value-moving direct-execution routes;
+- validation/redaction rules to prevent sensitive caller references from leaking into logs.
 
-Current bias for mergeability: start with **exact-request binding** rather than claiming a universal cross-route semantic effect canonicalizer. The user value is durable correlation and conflict safety; a richer effect normalizer can follow separately if KeeperHub wants it.
-
-### Important boundary
-
-This feature must not absorb Tender's semantics. KeeperHub would bind a caller's reference to an **execution effect/request**. Tender remains responsible for deciding whether the underlying **economic obligation exists**.
-
-## Explicit no-go list for bounty ideation
+## Explicit no-go list
 
 Do not file another version of:
 
-- partial payout resume / `web3/disburse` (#2495);
-- generic preflight firewall or sequential simulator;
-- receipt export (#2395);
-- direct-call verification (#2503);
-- permission / generative cards (#2398);
-- multi-model consensus node (#2318);
-- chain-agnostic sign-and-hold (#2479);
-- generic framework adapter / connector unless a real unserved framework is proven;
+- #2495 partial payout resume / `web3/disburse`;
+- generic sequential simulation or preflight firewall;
+- #2395 receipt export;
+- #2503 direct-call verification;
+- #2398 permission/generative cards;
+- #2318 multi-model consensus node;
+- #2479 chain-agnostic sign-and-hold;
+- generic framework adapter;
 - generic Merkle audit trail;
 - generic cross-chain status;
-- another protocol integration simply because it is easy.
+- a random protocol integration chosen only because it is easy.
 
-## External LLM review plan
+## External LLM review gate
 
-Before an upstream issue is filed, prepare one evidence packet and ask independent models to attack it from different angles:
+A ready-to-use critique packet now exists at:
 
-- Claude: maintainer/reviewer critique — scope, mergeability, hidden coupling.
-- Gemini: API/schema critique — compatibility, data model, migration and DX.
-- Grok: adversarial uniqueness critique — find duplicates, competing submissions and obvious objections.
-- Final synthesis: keep only claims supported by source/reproduction evidence.
+`docs/EXTERNAL-LLM-CRITIQUE-PACKET.md`
 
-Status: **planned, not yet executed in this chat**. No direct Claude/Gemini/Grok connector is currently available here, so do not represent an external-model review as completed until outputs are actually obtained.
+Planned roles:
+
+- Claude: KeeperHub maintainer / mergeability attack.
+- Gemini: API/schema/migration/concurrency attack.
+- Grok: adversarial uniqueness / duplicate / competing-submission attack.
+
+The plugin directory was checked in this ChatGPT session and no direct Claude/Gemini/Grok provider integration surfaced. Therefore no external-model review is being represented as complete here.
+
+Synthesis rule: a single evidence-backed fatal objection beats majority agreement. Do not average model opinions.
 
 ## Next gate
 
-1. Repeat open/closed KeeperHub issue and PR overlap search with the final candidate names (`executionReference`, `effectReference`, `reference lookup`, `durable reference`).
-2. Draft a KeeperHub issue in required Reason / Scope / Plan form using Tender plus independent current integrations as evidence that the need recurs.
-3. Prepare the external-LLM critique packet and run it outside this chat if necessary.
-4. Incorporate only evidence-backed criticism.
-5. File only if the overlap check remains clean.
-6. Wait for `accepted` before implementing any KeeperHub code.
+1. Run the external LLM packet.
+2. Record outputs in `docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md`.
+3. Accept only evidence-backed scope changes.
+4. Draft the final KeeperHub Reason / Scope / Plan issue.
+5. Re-run one last upstream issue/PR overlap check immediately before filing.
+6. File only if still distinct.
+7. Wait for `accepted` before implementing any KeeperHub code.
 
 Tender main-track runtime stays locked while this research proceeds.
