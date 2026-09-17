@@ -65,11 +65,12 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: external_review_in_progress_gemini_perplexity_kimi_fact_checked
+  status: multi_llm_whitespace_discovery_all_reviewers_including_deepseek
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
   external_review_synthesis: docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
+  whitespace_packet: docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md
   keeperhub_contribution_rule: "Issue first -> Reason/Scope/Plan -> wait for accepted -> implement -> PR to staging"
 
   external_review_results:
@@ -144,14 +145,19 @@ keeperhub_bounty_handoff:
     - generic cross-chain status
     - universal semantic-effect fingerprinting
 
-  pending_external_reviews:
+  reviewer_roster:
     - Claude: maintainer / mergeability / hidden coupling
+    - Gemini: systems / API / schema / concurrency
     - Grok: adversarial duplicate / competition / recurrence
+    - Perplexity: evidence / adjacent systems / independent recurrence
+    - Kimi: product boundary / semantics / DX
+    - DeepSeek: source-level reliability / cross-surface parity / race windows
+    - ChatGPT: source fact-check / cross-model synthesis / final overlap gate
   synthesis_rule: one evidence-backed fatal objection defeats majority agreement
   next_bounty_search_rule:
     - Do not rescue the rejected reference idea.
     - Do not take "#2408"; it is closed and its remaining implementation direction is owned by the core team.
-    - Use Claude/Grok to discover a different narrow whitespace candidate.
+    - Use the full reviewer roster to discover a different narrow whitespace candidate.
     - Candidate must be independently evidenced, unclaimed, small, backward-compatible, testable and useful beyond Tender.
     - If no candidate survives, skip the bounty rather than duplicate active work.
 
@@ -162,7 +168,7 @@ remaining_work:
   - QA loading/error/failure states and navigation after UI changes.
   - Lock <=3 minute demo narrative and video.
   - Final submission copy and packaging.
-  - Complete Claude/Grok bounty critique and then run a fresh whitespace sweep.
+  - Complete the full multi-LLM whitespace review and fact-check every surviving candidate.
 
 runtime_lock_rule:
   - Treat settlement/runtime/proof behavior as locked unless a real bug appears.
@@ -182,7 +188,8 @@ do_not:
 next_exact_actions:
   - Keep Tender runtime/proof locked.
   - Continue Benita UI/UX work and main-track live-product binding.
-  - Run the same critique packet through Claude and Grok.
-  - Fact-check both outputs.
-  - Run a fresh KeeperHub whitespace search only after those reviews.
+  - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi and DeepSeek.
+  - Give DeepSeek the source-level reliability role defined in the packet.
+  - Fact-check all outputs against current KeeperHub source/issues/PRs.
+  - Cross-examine duplicate claims before selecting any primary candidate.
   - File nothing upstream until a distinct, unclaimed, evidence-backed candidate survives.
