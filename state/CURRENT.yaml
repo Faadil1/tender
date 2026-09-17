@@ -4,7 +4,7 @@ repository:
   visibility: private
   default_branch: main
 branch: main
-main_sha_before_state_update: b669239f2f46b1fac1e1a6cd0aeb7abf5094ecaa
+main_sha_before_state_update: 0f160887171dd49315660fdd37ac9049a4076d17
 current_gate: GATE_8_PRODUCT_QA_DEMO_AND_SUBMISSION
 category: economic clearing for accepted work
 north_star: "Accepted once. Owed once. Settled once."
@@ -134,34 +134,58 @@ ui_ux:
     - Improve information architecture, operator experience, proof/verification surface, responsive behavior, and demo readability.
 
 keeperhub_bounty_intelligence:
-  status: research_in_progress
+  status: competitive_scan_expanded_external_review_ready
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
+  external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
   upstream_rule:
     - Behavior-changing work requires a KeeperHub issue first.
     - Issue must contain Reason, Scope, and Plan.
     - Do not code until the issue is labeled accepted.
     - Target KeeperHub staging and implement the accepted plan, not a speculative variant.
+  hackathon_signal:
+    - Main track favors KeeperHub integrated into a live project/product instead of another standalone demo.
+    - Separate feature bounty favors a feature KeeperHub can merge.
+    - Tender main-track and bounty work must remain separately packaged.
+  winner_signal:
+    - production seriousness
+    - live/reproducible proof
+    - reusable primitives
+    - test depth
+    - real integration feedback
+    - upstream usefulness
   recurring_problem_clusters:
     - durable execution identity, replay, and ambiguous outcomes
+    - ambiguous status/proof interpretation
     - simulation fidelity and state propagation
-    - receipt/proof interpretation
-    - machine-readable action schemas and agent discoverability
+    - machine-readable action contracts and agent discoverability
     - trigger liveness and observability
     - signer and authorization clarity
   current_submission_overlap:
-    landed: verified landing, stable references, x402, dual-layer idempotency
-    nyrvok: route simulation, invariant firewall, KeeperHub custody, reputation telemetry
-    finaltab: durable settlement intent, frozen ledger, consent, proof, replay/crash recovery
-    gavel: pure decision/refusal semantics and empirical false-positive reduction
-    agentkeeper_mcp: guarded MCP execution, x402, Merkle audit, multi-chain budgeting
+    finaltab: durable settlement intent, consent, chain proof, replay/crash recovery
+    agentkeeper_mcp: guarded MCP execution, dry-run, idempotency, x402, Merkle audit, multi-chain controls
+    landed: verified landing, stable references, recovery semantics
+    nyrvok: sequential preflight and invariant firewall
+  adjacent_platform_lessons:
+    - Chainlink-style deterministic execution should remain separate from open-ended reasoning.
+    - OpenZeppelin-style relayer/recovery issues reinforce explicit unknown/unconfirmed states and retry discipline.
+    - Hypernative/Monitor reinforce detection-execution separation.
+    - Almanak reinforces strategy/human approval above the execution plane.
+    - Do not derive durable business truth from a transient transport state.
+  tender_adoptable_mechanisms:
+    - explicit authority separation across acceptance, obligation, authorization, execution, proof
+    - explicit non-terminal unknown/unconfirmed states
+    - independent chain proof
+    - stable Claim identity separate from execution IDs and retry keys
+    - clear polling/recovery semantics
+    - bind at least one real existing product/workstream through an acceptance adapter for main-track proof
   uniqueness_guardrail:
     - Tender remains the economic-obligation layer above execution.
-    - Do not compete on generic settlement verification, generic idempotency, simulation firewall, Merkle audit, or framework wrappers.
+    - Do not compete on generic settlement verification, generic idempotency, simulation firewall, Merkle audit, permission cards, or framework wrappers.
     - Preserve the distinction: accepted work creates an obligation; KeeperHub executes an already-authorized effect.
   provisional_bounty_candidate:
     name: Effect-Bound Execution Reference
-    status: source_level_feasibility_validated_pending_final_overlap_and_external_review
+    status: source_validated_final_name_sweep_clean_pending_external_critique
     hypothesis: logical effect identity can outlive transport idempotency and is repeatedly reimplemented as reference/runKey/settlement-intent state by integrations
     source_validation:
       direct_execution_row_is_durable_audit_record: true
@@ -171,34 +195,36 @@ keeperhub_bounty_intelligence:
       atomic_execution_reservation_boundary: checkAndReserveExecution
       caller_defined_durable_reference_exists_today: false
       candidate_can_compose_with_existing_idempotency: true
+    final_overlap_sweep:
+      date: 2026-09-17
+      terms:
+        - execution reference
+        - effect reference
+        - durable reference
+        - reference lookup
+      issue_direct_duplicate_found: false
+      pr_direct_duplicate_found: false
+      semantic_overlap_still_requires_review: true
     minimal_shape:
-      - optional durable reference on value-moving direct execution
-      - bind organization+reference to exact request/effect hash and executionId
-      - same reference + same bound request/effect resolves original execution/proof
-      - same reference + changed request/effect fails closed with typed conflict
-      - expose reference in status and read-only lookup
+      - optional durable reference on a bounded set of value-moving direct execution routes
+      - bind organization+reference to deterministic exact request hash and executionId
+      - same reference + same bound request resolves original execution/proof
+      - same reference + changed request fails closed with typed conflict
+      - expose reference in status and one read-only lookup path
       - keep existing 24h Idempotency-Key behavior unchanged
       - no invoice/work/obligation interpretation inside KeeperHub
     mergeability_bias:
-      - Prefer exact-request binding for v1 over a universal cross-route semantic effect canonicalizer.
-      - Use organization scope so the reference survives API-key rotation.
+      - Prefer exact-request binding for v1 over a universal semantic effect canonicalizer.
+      - Scope reference to organization, not API key.
       - Reserve the reference at the same atomic boundary that creates the direct execution row.
     open_design_questions:
-      - final field name: reference vs executionReference vs effectReference
-      - exact-request hash vs canonical effect hash
-      - dedicated lookup route vs status query parameter
-      - reference lifetime matching direct execution retention
-      - transfer-only v1 vs all value-moving direct execution routes
-    exact_overlap_search:
-      open_closed_terms_checked:
-        - external reference
-        - business reference
-        - intentId
-      exact_match_found: false
-    related_but_not_duplicate:
-      - "#2495 web3/disburse uses runKey across payout executions"
-      - "#2395 receipt export"
-      - "#2503 direct execution call verification"
+      - final field name
+      - whether route/action participates in uniqueness scope
+      - direct execution column vs separate binding table
+      - lookup route shape
+      - retention semantics
+      - v1 route set
+      - validation/redaction of caller references
     issue_filed: false
     implementation_started: false
   no_go_bounty_duplicates:
@@ -209,30 +235,31 @@ keeperhub_bounty_intelligence:
     - "#2398 permission/generative cards"
     - "#2318 multi-model consensus node"
     - "#2479 chain-agnostic sign-and-hold"
+    - generic framework connector
     - generic Merkle audit
     - generic cross-chain status
-  adjacent_platform_signal:
-    - Chainlink/CRE reinforces deterministic execution separate from agent reasoning.
-    - OpenZeppelin Relayer issues reinforce nonce drift, stale-receipt, and ambiguous transaction-state failure classes.
-    - Hypernative/OpenZeppelin Monitor reinforce detection-execution separation and machine-to-machine context.
   external_llm_review:
-    status: planned_not_executed
-    direct_provider_connector_available_in_chat: false
+    status: packet_ready_not_executed
+    packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
+    plugin_directory_check: no_direct_claude_gemini_grok_provider_integration_surfaced
     planned_reviewers:
       - Claude for maintainer/mergeability critique
-      - Gemini for API/schema/migration critique
+      - Gemini for API/schema/migration/concurrency critique
       - Grok for adversarial uniqueness/duplicate search
+    synthesis_rule: one evidence-backed fatal objection defeats majority agreement
     rule: do not claim external-model review is complete until actual outputs are obtained
   next_gate:
-    - Repeat open/closed issue and PR overlap search with final candidate names.
-    - Draft KeeperHub Reason/Scope/Plan issue from real Tender and independent integration evidence.
-    - Prepare and run external-LLM critique packet.
-    - File only if overlap remains clean, then wait for accepted before code.
+    - Run the external-LLM critique packet.
+    - Record evidence-backed synthesis.
+    - Draft KeeperHub Reason/Scope/Plan issue only after critique.
+    - Re-run final upstream overlap immediately before filing.
+    - File only if still distinct, then wait for accepted before code.
 
 remaining_qa:
   - QA redesigned product on desktop/mobile and reduced motion.
   - QA loading/error/failure states and navigation after UI changes.
   - Lock demo narrative/video and final submission packaging.
+  - Bind Tender to a real existing product/workstream through an acceptance adapter for stronger main-track evidence.
 
 local_worktree_note:
   - npm run verify regenerates evidence/settlement-replay-harness.json timestamp locally.
@@ -248,4 +275,4 @@ do_not:
   - Do not change locked Tender runtime semantics merely to chase the KeeperHub bounty.
   - Do not implement an upstream KeeperHub feature before its issue is accepted.
 
-next_action: Continue UI/UX redesign in parallel. For the bounty, source-level feasibility is now validated; finalize naming/overlap, draft the Reason/Scope/Plan issue, run external critique, and file only if still distinct. Preserve the locked Tender runtime and canonical proof.
+next_action: Keep the verified Tender runtime locked. Continue Benita UI/UX work, bind Tender to one real existing workstream for main-track proof, and run the external LLM critique packet before drafting or filing the KeeperHub bounty issue.
