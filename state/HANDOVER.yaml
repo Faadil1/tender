@@ -139,7 +139,7 @@ pr_2_gate_review_delta:
     - tests/settlementEngine.test.ts covers forged auth, wrong linked claim, wrong candidate claim, and auth reuse.
     - .github/workflows/verify.yml runs on pull_request to main.
   measured_proof:
-    unit_tests: 26/26
+    unit_tests: 32/32
     replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
   safety:
     canonical_keeperhub_live_proof_preserved: true
@@ -149,3 +149,21 @@ pr_2_gate_review_delta:
     - Push PR #2 branch update.
     - Wait for GitHub Actions verify on the PR.
     - Review operator KV/token configuration before any production operator deploy.
+
+second_gate_review_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push
+  completed_work:
+    - Made REQUIRES_ACCEPTANCE sticky on retry unless exact stored authorization is consumed.
+    - Routed operator reconciliation through SettlementEngine.reconcile so Tender Receipt finalization is preserved.
+    - Enforced locked/precommitted policies before obligation creation and settlement; locked versions cannot be overwritten.
+    - Added strong-store authorization consumption contract; workflow settlement fails closed on eventual KV-only store.
+    - Preserved engine statuses in operator obligation projections.
+  verification:
+    command: npm run verify
+    status: pass
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  keeperhub_live_proof:
+    preserved: true
+    no_new_payment_executed: true
