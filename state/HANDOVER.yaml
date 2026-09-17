@@ -14,6 +14,8 @@ current_state:
   branch: main
   remote_history_pushed: true
   canonical_live_proof_complete: true
+  judge_ui_bound_to_canonical_evidence: true
+  cloudflare_deploy_prepared: true
   uncommitted_work_expected: false
 important_files:
   - src/domain/types.ts
@@ -24,9 +26,16 @@ important_files:
   - scripts/live-proof.ts
   - .github/workflows/tender-preflight-diagnostic.yml
   - .github/workflows/tender-live-proof.yml
+  - .github/workflows/verify.yml
   - evidence/settlement-replay-harness.json
   - evidence/keeperhub-calibration.json
   - evidence/live-proof.json
+  - public/live-proof.json
+  - public/index.html
+  - public/main.js
+  - public/styles.css
+  - wrangler.jsonc
+  - DEPLOYMENT.md
   - docs/WINNING-INTELLIGENCE.md
   - docs/PRD.md
   - docs/ARCHITECTURE.md
@@ -42,7 +51,8 @@ gates:
   GATE_6: completed_replay_harness
   GATE_6_5: completed_live_proof_hardening_and_preflight
   GATE_7: completed_tender_caused_live_proof
-  GATE_8: pending_deployment_video_and_submission_lock
+  GATE_7_5: completed_judge_facing_evidence_binding_and_cloudflare_prep
+  GATE_8: pending_publish_qa_video_and_submission_lock
 keeperhub:
   workflow: "Tender: Settle Claim"
   workflow_id: yy4ml6aevkov3zaukpx15
@@ -66,6 +76,19 @@ canonical_live_proof:
   additional_keeperhub_executions: 0
   additional_movement: "$0"
   evidence_file: evidence/live-proof.json
+judge_ui:
+  evidence_source: public/live-proof.json
+  default_state: SETTLED
+  replay_playback: ALREADY_SETTLED_NO_BROADCAST
+  proof_links:
+    - BaseScan canonical transaction
+    - live-proof JSON
+deployment:
+  target: Cloudflare Workers Static Assets
+  config: wrangler.jsonc
+  output_directory: dist/public
+  command: npm run deploy:cloudflare
+  status: prepared_waiting_for_cloudflare_authorization
 measured_proof:
   unit_tests: 13/13
   replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
@@ -76,7 +99,9 @@ do_not:
   - Do not weaken the product into a generic merge-to-pay or bounty marketplace.
   - Do not replace deterministic Tender Claim identity with GitHub delivery or Action run identity.
 next_exact_actions:
-  - Build/refine the judge-facing UI around the real Tender Receipt and replay proof.
-  - Deploy the judge-facing product, preferring Cloudflare if practical.
-  - Capture the demo/video using the real canonical evidence rather than running another payment.
-  - Finalize README/SUBMISSION/DoraHacks copy and submission links.
+  - From an authenticated local clone, git pull and npm run verify.
+  - Authorize Cloudflare with npx wrangler login.
+  - Run npm run deploy:cloudflare once and capture the workers.dev URL.
+  - QA desktop/mobile/reduced-motion and canonical transaction/evidence links.
+  - Capture the demo/video from the deployed canonical evidence; do not run another payment.
+  - Lock final DoraHacks copy, production URL, demo URL, and repository visibility requirements.
