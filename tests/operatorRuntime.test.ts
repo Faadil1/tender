@@ -36,6 +36,15 @@ const policyInput = {
   createdBy: "operator"
 };
 
+async function authorizeInitialClaim(operator: TenderOperatorService, claimId: string) {
+  return operator.authorizeClaim({
+    candidateClaimId: claimId,
+    kind: "initial_claim",
+    authorizedBy: "maintainer",
+    reason: "accepted contribution is owed under locked policy"
+  });
+}
+
 test("operator-created policies require a policy digest", async () => {
   const operator = new TenderOperatorService(new MemoryOperatorStore());
   await assert.rejects(
@@ -76,6 +85,7 @@ test("operator runtime creates policy, locks it, ingests acceptance, creates obl
   const locked = await operator.lockPolicy(policy.version);
   const acceptance = await operator.ingestAcceptance(demoAcceptance());
   const obligation = await operator.createObligation(demoContribution, acceptance, locked.version);
+  await authorizeInitialClaim(operator, obligation.claimId);
   const executor = new OperatorExecutor();
   const record = await operator.settleClaim(obligation.claimId, executor);
 
@@ -86,6 +96,42 @@ test("operator runtime creates policy, locks it, ingests acceptance, creates obl
   assert.equal((await operator.status(obligation.claimId)).settlement?.status, "SETTLED");
 });
 
+test("operator settlement requires explicit initial claim authorization", async () => {
+  const operator = new TenderOperatorService(new MemoryOperatorStore());
+  const policy = await operator.createPolicy({ ...policyInput, version: "policy.operator.initial-auth-required" });
+  await operator.lockPolicy(policy.version);
+  const obligation = await operator.createObligation(demoContribution, demoAcceptance(), policy.version);
+  const executor = new OperatorExecutor();
+
+  await assert.rejects(
+    operator.settleClaim(obligation.claimId, executor),
+    /claim_authorization_required/
+  );
+  assert.equal(executor.calls, 0);
+});
+
+test("two operator runtime instances cannot both execute the same first-time claim", async () => {
+  const store = new MemoryOperatorStore();
+  const setupOperator = new TenderOperatorService(store);
+  await setupOperator.createPolicy({ ...policyInput, version: "policy.operator.first-runtime-race" });
+  await setupOperator.lockPolicy("policy.operator.first-runtime-race");
+  const obligation = await setupOperator.createObligation(demoContribution, demoAcceptance(), "policy.operator.first-runtime-race");
+  await authorizeInitialClaim(setupOperator, obligation.claimId);
+
+  const executor = new OperatorExecutor();
+  const runtimeA = new TenderOperatorService(store);
+  const runtimeB = new TenderOperatorService(store);
+  const results = await Promise.allSettled([
+    runtimeA.settleClaim(obligation.claimId, executor),
+    runtimeB.settleClaim(obligation.claimId, executor)
+  ]);
+
+  assert.equal(executor.calls, 1);
+  assert.equal(results.filter((result) => result.status === "fulfilled" && result.value.status === "SETTLED").length, 1);
+  assert.equal(results.filter((result) => result.status === "rejected" && /claim_settlement_already_reserved/.test(String(result.reason))).length, 1);
+  assert.equal((await setupOperator.status(obligation.claimId)).settlement?.status, "SETTLED");
+});
+
 test("operator authorization is bound to the exact corrective candidate and consumed once", async () => {
   const store = new MemoryOperatorStore();
   const operator = new TenderOperatorService(store);
@@ -94,6 +140,7 @@ test("operator authorization is bound to the exact corrective candidate and cons
 
   const executor = new OperatorExecutor();
   const original = await operator.createObligation(demoContribution, demoAcceptance(), policyInput.version);
+  await authorizeInitialClaim(operator, original.claimId);
   const settled = await operator.settleClaim(original.claimId, executor);
   assert.equal(settled.status, "SETTLED");
 
@@ -140,6 +187,7 @@ test("operator reconciliation routes through Tender receipt finalization without
   await operator.createPolicy({ ...policyInput, version: "policy.operator.reconcile" });
   await operator.lockPolicy("policy.operator.reconcile");
   const obligation = await operator.createObligation(demoContribution, demoAcceptance(), "policy.operator.reconcile");
+  await authorizeInitialClaim(operator, obligation.claimId);
   const executor = new OperatorExecutor();
   executor.mode = "running";
   const settling = await operator.settleClaim(obligation.claimId, executor);
@@ -159,6 +207,7 @@ test("operator projection preserves retryable failure status", async () => {
   await operator.createPolicy({ ...policyInput, version: "policy.operator.failure" });
   await operator.lockPolicy("policy.operator.failure");
   const obligation = await operator.createObligation(demoContribution, demoAcceptance(), "policy.operator.failure");
+  await authorizeInitialClaim(operator, obligation.claimId);
   const executor = new OperatorExecutor();
   executor.mode = "failed";
   const failed = await operator.settleClaim(obligation.claimId, executor);
@@ -173,6 +222,7 @@ test("strong operator store consumes only one concurrent authorization attempt",
   await operator.lockPolicy("policy.operator.concurrent");
   const executor = new OperatorExecutor();
   const original = await operator.createObligation(demoContribution, demoAcceptance(), "policy.operator.concurrent");
+  await authorizeInitialClaim(operator, original.claimId);
   const settled = await operator.settleClaim(original.claimId, executor);
   const correction = await operator.createCorrectiveClaim({
     linkedClaimId: settled.claim.claimId,
@@ -200,4 +250,37 @@ test("strong operator store consumes only one concurrent authorization attempt",
   ]);
   assert.equal([a.ok, b.ok].filter(Boolean).length, 1);
   assert.equal([a, b].filter((result) => !result.ok && result.error === "authorization_already_consumed").length, 1);
+});
+
+test("two operator runtime instances cannot both settle the same authorized corrective claim", async () => {
+  const store = new MemoryOperatorStore();
+  const setupOperator = new TenderOperatorService(store);
+  await setupOperator.createPolicy({ ...policyInput, version: "policy.operator.two-runtimes" });
+  await setupOperator.lockPolicy("policy.operator.two-runtimes");
+
+  const executor = new OperatorExecutor();
+  const original = await setupOperator.createObligation(demoContribution, demoAcceptance(), "policy.operator.two-runtimes");
+  await authorizeInitialClaim(setupOperator, original.claimId);
+  const settled = await setupOperator.settleClaim(original.claimId, executor);
+  const correction = await setupOperator.createCorrectiveClaim({
+    linkedClaimId: settled.claim.claimId,
+    contribution: { ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }] },
+    acceptance: demoAcceptance({ acceptanceKind: "operator_correction", action: "operator.accepted" }),
+    policyVersion: "policy.operator.two-runtimes",
+    authorizedBy: "maintainer",
+    reason: "accepted concurrent runtime correction"
+  });
+
+  const runtimeA = new TenderOperatorService(store);
+  const runtimeB = new TenderOperatorService(store);
+  const beforeCorrectionCalls = executor.calls;
+  const results = await Promise.allSettled([
+    runtimeA.settleClaim(correction.obligation.claimId, executor),
+    runtimeB.settleClaim(correction.obligation.claimId, executor)
+  ]);
+
+  assert.equal(results.filter((result) => result.status === "fulfilled" && result.value.status === "SETTLED").length, 1);
+  assert.equal(results.filter((result) => result.status === "rejected" && /claim_settlement_already_reserved/.test(String(result.reason))).length, 1);
+  assert.equal(executor.calls - beforeCorrectionCalls, 1);
+  assert.equal((await setupOperator.status(correction.obligation.claimId)).settlement?.status, "SETTLED");
 });
