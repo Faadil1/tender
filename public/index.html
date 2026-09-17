@@ -3,57 +3,97 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tender</title>
+    <meta name="description" content="Tender settles accepted software contributions exactly once through KeeperHub." />
+    <title>Tender — Accepted work becomes a claim</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main>
+    <main class="packet">
+      <div class="evidence-bar" aria-label="Canonical proof metadata">
+        <span>CANONICAL EVIDENCE</span>
+        <span>BASE SEPOLIA</span>
+        <span>GITHUB RUN 35162003096</span>
+      </div>
+
       <header class="hero">
-        <p class="eyebrow">Contribution settlement protocol</p>
+        <p class="eyebrow">Contribution settlement infrastructure</p>
         <h1>Tender</h1>
-        <p class="promise">No bounty. No race. Accepted work becomes a claim.</p>
+        <p class="promise">No bounty. No race.<br />Accepted work becomes a claim.</p>
+        <p class="dek">GitHub proves what work was accepted. Tender determines what is economically owed. KeeperHub proves it was settled.</p>
         <div class="actions">
-          <button data-action="merge">Merge PR and settle</button>
-          <button data-action="replay">Replay same event</button>
-          <button data-action="checks">Fail required checks</button>
-          <button data-action="wallet">Invalid wallet</button>
+          <a class="button primary" id="tx-link" href="#" target="_blank" rel="noreferrer">Inspect onchain transaction</a>
+          <button class="button" id="replay-button" type="button">Replay same claim</button>
+          <a class="button" href="/live-proof.json" target="_blank" rel="noreferrer">Open evidence JSON</a>
         </div>
+        <p class="microcopy">The replay control plays back the already-recorded canonical evidence. It never broadcasts another payment.</p>
       </header>
 
       <section class="ledger" aria-live="polite">
         <div>
           <p class="label">Economic state</p>
-          <h2 id="status">NOT YET OWED</h2>
+          <h2 id="status">SETTLED</h2>
+          <p class="settlement-line"><strong id="amount">0.01 USDC</strong> · accepted obligation cleared through KeeperHub</p>
         </div>
-        <div class="stamp" id="stamp">PENDING</div>
+        <div class="stamp SETTLED" id="stamp" data-state="SETTLED">SETTLED<br />ONCHAIN</div>
       </section>
 
-      <section class="record">
-        <div class="sheet">
-          <h3>Tender Claim</h3>
-          <dl id="facts"></dl>
+      <section class="proof-grid">
+        <article class="sheet claim-sheet">
+          <div class="sheet-head">
+            <p class="label">Economic identity</p>
+            <h3>Tender Claim</h3>
+          </div>
+          <dl id="claim-facts"></dl>
+        </article>
+
+        <article class="sheet receipt-sheet">
+          <div class="sheet-head">
+            <p class="label">Settlement artifact</p>
+            <h3>Tender Receipt</h3>
+          </div>
+          <dl id="receipt-facts"></dl>
+        </article>
+      </section>
+
+      <section class="replay-panel" id="replay-panel">
+        <div>
+          <p class="label">Exactly-once proof</p>
+          <p class="proof" id="proof">Same accepted work. Same claim. No second settlement.</p>
         </div>
-        <div class="sheet">
-          <h3>Tender Receipt</h3>
-          <dl id="receipt"></dl>
+        <div class="replay-numbers" aria-label="Replay result">
+          <div><strong id="same-claim">TRUE</strong><span>same claim</span></div>
+          <div><strong id="extra-executions">0</strong><span>extra executions</span></div>
+          <div><strong id="extra-movement">$0</strong><span>extra movement</span></div>
         </div>
       </section>
 
-      <section class="record">
-        <div class="sheet">
-          <h3>Causal timeline</h3>
-          <ol id="timeline"></ol>
-        </div>
-        <div class="sheet">
-          <h3>Replay proof</h3>
-          <p class="proof" id="proof">Replay the same accepted contribution to prove same claim and $0 additional movement.</p>
-        </div>
+      <section class="proof-grid lower-grid">
+        <article class="sheet">
+          <div class="sheet-head">
+            <p class="label">Causal chain</p>
+            <h3>Accepted → settled</h3>
+          </div>
+          <ol class="timeline" id="timeline"></ol>
+        </article>
+
+        <article class="sheet metrics-sheet">
+          <div class="sheet-head">
+            <p class="label">Measured reliability</p>
+            <h3>Failure-first evidence</h3>
+          </div>
+          <div class="metrics">
+            <div><strong>13/13</strong><span>unit tests pass</span></div>
+            <div><strong>10</strong><span>settlement scenarios replayed</span></div>
+            <div><strong>0</strong><span>duplicate payouts</span></div>
+          </div>
+        </article>
       </section>
 
-      <section class="sheet">
-        <h3>Replay and execution history</h3>
-        <div id="attempts" class="attempts"></div>
-      </section>
+      <footer>
+        <span>Tender</span>
+        <span>WORK → ACCEPTANCE → CLAIM → SETTLEMENT → RECEIPT</span>
+        <span id="proof-time">Canonical proof</span>
+      </footer>
     </main>
     <script type="module" src="/main.js"></script>
   </body>
