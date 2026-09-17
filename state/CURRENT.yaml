@@ -3,55 +3,65 @@ repository:
   canonical: https://github.com/Faadil1/tender
   visibility: private
   default_branch: main
-  remote_configured: true
-  remote_verified_with_github_connector: true
-  terminal_git_push_status: pushed_history_preserved
+  remote_history_pushed: true
 branch: main
 baseline_before_delta: 7361422c9ae2ed20e2bef67cf078ee8495dc72a8
-last_verified_remote_commit_before_hardening: 1081597c290c03b385ad81379a5bf5fda86d8555
-current_gate: GATE_6_5_LIVE_PROOF_HARDENING
+current_gate: GATE_8_DEPLOYMENT_AND_SUBMISSION
 completed_work:
-  - Existing local history preserved and pushed to canonical GitHub main.
+  - Git history preserved and pushed to canonical GitHub main.
   - Tender positioned as settlement infrastructure for accepted software contributions.
-  - Tender Claim identity includes acceptance kind, accepted-work identity, policy version, recipients, asset and amount.
-  - Tender Receipt added as signature settlement artifact.
-  - In-process same-claim lock added for concurrent worker protection.
-  - GitHub Actions live-proof workflow added for Tender-caused KeeperHub execution.
-  - Manual KeeperHub calibration evidence recorded.
-  - Replay Harness generated measured evidence.
-  - Live-proof hardening adds stable accepted-work-derived IDs, workflow simulation preflight, nested KeeperHub input payloads and reconcile-before-rebroadcast behavior.
+  - Tender Claim is the deterministic economic primitive.
+  - Tender Receipt is the signature settlement artifact.
+  - Exactly-once hardening covers concurrency, replay, reconciliation, and fail-closed in-flight handling.
+  - KeeperHub Manual trigger uses required dynamic recipient and amount inputs.
+  - Read-only KeeperHub preflight passed with workflow visibility and ERC20 dry-run wouldRevert=false.
+  - Canonical Tender-caused live settlement completed through GitHub Actions.
+  - Canonical replay returned ALREADY_SETTLED with zero additional KeeperHub executions and $0 additional movement.
+  - Canonical live-proof artifact preserved in evidence/live-proof.json.
 verification:
-  last_known_command: npm run verify
-  last_known_status: pass
-  last_known_unit_tests: 12/12
-  replay_harness: 10 settlement scenarios replayed · 0 duplicate payouts
-  hardening_verification: pending_local_pull_and_verify
+  local_verify_status: pass
+  unit_tests: 13/13
+  replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
+  live_proof_run_id: 35162003096
 keeperhub:
-  status: calibration_complete_live_proof_not_yet_run
+  status: canonical_live_proof_complete
   base_url: https://app.keeperhub.com
-  workflow: Tender -- Settle Claim
-  workflow_id: yy4ml6aevkov3zaulkpx15
+  workflow: "Tender: Settle Claim"
+  workflow_id: yy4ml6aevkov3zaukpx15
   network: Base Sepolia
   chain_id: 84532
   asset: USDC
+  inputs:
+    recipient: Manual.data.recipient
+    amount: Manual.data.amount
   calibration:
     status: success
     amount: 0.01 USDC
-    gas_sponsored: true
-    gas_used: 106902
     transaction_hash: 0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0
     evidence_file: evidence/keeperhub-calibration.json
 live_proof:
-  status: pending
-  expected_replay_result: same claim -> ALREADY_SETTLED -> $0 additional movement
-  do_not_run_until:
-    - hardening commit is pulled and npm run verify passes
-    - KeeperHub Manual trigger fields are bound dynamically to recipient and amount inputs
-    - workflow simulation succeeds with the canonical 0.01 USDC proof input
+  status: complete
+  run_id: 35162003096
+  accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
+  claim_id: tclaim_94eb021e7894252897176543cc9d7b49
+  receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
+  keeperhub_execution_id: 7k14qt2a1989rrc5r370d
+  transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
+  settlement_status: SETTLED
+  replay_status: ALREADY_SETTLED
+  same_claim: true
+  additional_keeperhub_executions: 0
+  additional_movement: "$0"
+  evidence_file: evidence/live-proof.json
 deployment:
-  status: not_deployed
+  status: pending
   preferred: Cloudflare
 active_blockers:
-  - KeeperHub workflow still needs dynamic trigger bindings for recipient and amount before canonical Tender-caused settlement.
-  - Hardening commit must be locally verified before the live-proof Action is allowed to move value.
-next_action: Pull the hardening commit, run npm run verify, then update KeeperHub trigger bindings and simulate before one canonical live settlement.
+  - Judge-facing production deployment is not yet complete.
+  - Final demo/video and DoraHacks submission packaging remain.
+do_not:
+  - Do not repeat the manual calibration payment.
+  - Do not rerun the canonical value-moving live proof without a new explicit proof objective.
+  - Do not expose KeeperHub API keys.
+  - Do not frame Tender as a bounty marketplace.
+next_action: Deploy the judge-facing Tender experience, bind the real Tender Receipt evidence into the UI, then lock the demo/video and final submission pack.
