@@ -4,7 +4,7 @@ repository:
   visibility: private
   default_branch: main
 branch: main
-main_sha_before_state_update: 4d2fef07f54a88ca7093dc7ae49677423500d0a3
+main_sha_before_state_update: b669239f2f46b1fac1e1a6cd0aeb7abf5094ecaa
 current_gate: GATE_8_PRODUCT_QA_DEMO_AND_SUBMISSION
 category: economic clearing for accepted work
 north_star: "Accepted once. Owed once. Settled once."
@@ -161,15 +161,34 @@ keeperhub_bounty_intelligence:
     - Preserve the distinction: accepted work creates an obligation; KeeperHub executes an already-authorized effect.
   provisional_bounty_candidate:
     name: Effect-Bound Execution Reference
-    status: overlap_and_feasibility_validation_required
+    status: source_level_feasibility_validated_pending_final_overlap_and_external_review
     hypothesis: logical effect identity can outlive transport idempotency and is repeatedly reimplemented as reference/runKey/settlement-intent state by integrations
+    source_validation:
+      direct_execution_row_is_durable_audit_record: true
+      status_lookup_is_internal_execution_id_only: true
+      idempotency_completed_ttl: 24h
+      idempotency_request_hash_exists: true
+      atomic_execution_reservation_boundary: checkAndReserveExecution
+      caller_defined_durable_reference_exists_today: false
+      candidate_can_compose_with_existing_idempotency: true
     minimal_shape:
       - optional durable reference on value-moving direct execution
-      - bind organization+reference to canonical effect fingerprint and executionId
-      - same reference + same effect resolves original execution/proof
-      - same reference + different effect fails closed with typed conflict
+      - bind organization+reference to exact request/effect hash and executionId
+      - same reference + same bound request/effect resolves original execution/proof
+      - same reference + changed request/effect fails closed with typed conflict
       - expose reference in status and read-only lookup
+      - keep existing 24h Idempotency-Key behavior unchanged
       - no invoice/work/obligation interpretation inside KeeperHub
+    mergeability_bias:
+      - Prefer exact-request binding for v1 over a universal cross-route semantic effect canonicalizer.
+      - Use organization scope so the reference survives API-key rotation.
+      - Reserve the reference at the same atomic boundary that creates the direct execution row.
+    open_design_questions:
+      - final field name: reference vs executionReference vs effectReference
+      - exact-request hash vs canonical effect hash
+      - dedicated lookup route vs status query parameter
+      - reference lifetime matching direct execution retention
+      - transfer-only v1 vs all value-moving direct execution routes
     exact_overlap_search:
       open_closed_terms_checked:
         - external reference
@@ -205,10 +224,9 @@ keeperhub_bounty_intelligence:
       - Grok for adversarial uniqueness/duplicate search
     rule: do not claim external-model review is complete until actual outputs are obtained
   next_gate:
-    - Bound the smallest Effect-Bound Execution Reference patch against current directExecutions and idempotency code.
-    - Repeat open/closed issue and PR overlap search using final field/API names.
-    - Draft KeeperHub Reason/Scope/Plan issue from real Tender integration evidence.
-    - Run independent external-LLM critique before filing.
+    - Repeat open/closed issue and PR overlap search with final candidate names.
+    - Draft KeeperHub Reason/Scope/Plan issue from real Tender and independent integration evidence.
+    - Prepare and run external-LLM critique packet.
     - File only if overlap remains clean, then wait for accepted before code.
 
 remaining_qa:
@@ -230,4 +248,4 @@ do_not:
   - Do not change locked Tender runtime semantics merely to chase the KeeperHub bounty.
   - Do not implement an upstream KeeperHub feature before its issue is accepted.
 
-next_action: Continue UI/UX redesign in parallel while validating the Effect-Bound Execution Reference bounty candidate at source level. Preserve the locked Tender runtime and canonical proof. Draft but do not file the KeeperHub issue until overlap, scope, and external critique gates are complete.
+next_action: Continue UI/UX redesign in parallel. For the bounty, source-level feasibility is now validated; finalize naming/overlap, draft the Reason/Scope/Plan issue, run external critique, and file only if still distinct. Preserve the locked Tender runtime and canonical proof.
