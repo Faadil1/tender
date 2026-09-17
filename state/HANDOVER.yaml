@@ -1,39 +1,151 @@
 project: Tender
-branch: work-winning-delta
 summary: >
-  Product-hardening branch for Tender. It preserves the canonical live KeeperHub proof and adds explicit operator/public authority separation plus changed-economics correction semantics.
-canonical_invariant: one accepted obligation -> one settlement
-product_sentence: "Accepted once. Owed once. Settled once."
-canonical_proof_preserved:
-  claim_id: tclaim_94eb021e7894252897176543cc9d7b49
-  receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
-  keeperhub_execution_id: 7k14qt2a1989rrc5r370d
-  transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
-  replay: ALREADY_SETTLED
-  additional_executions: 0
-  additional_movement: "$0"
-changed_files_intended:
+  Tender is the economic clearing layer for accepted work. GitHub or another
+  acceptance adapter proves what work was accepted; Tender determines whether
+  that acceptance creates an economic obligation and gives it one deterministic
+  identity; KeeperHub settles it; independent chain evidence verifies what landed.
+core:
+  category: economic clearing for accepted work
+  primitive: Tender Claim
+  invariant: one accepted obligation -> one settlement
+  signature_artifact: Tender Receipt
+  acceptance_artifact: Acceptance Packet
+  north_star: "Accepted once. Owed once. Settled once."
+  replay_statement: same claim -> ALREADY_SETTLED -> 0 additional executions -> $0 movement
+  mutation_statement: changed economics -> NEW_CLAIM -> REQUIRES_ACCEPTANCE -> $0 movement
+resume_rule: Preserve current Git history and canonical evidence. Do not recreate or rerun completed value-moving proof.
+canonical_repository: https://github.com/Faadil1/tender
+current_state:
+  branch: main
+  canonical_live_proof_complete: true
+  winning_delta_merged: true
+  winning_delta_merge_sha: e5b99bc1428d2812a066a2f6a47cdba47402ed44
+  local_verification_reported: "16/16 tests; 10 replay scenarios; 0 duplicate payouts"
+  cloudflare_url: https://tender-settlement.faadil-casecraft.workers.dev
+  latest_main_redeploy_pending: true
+important_files:
   - src/domain/types.ts
   - src/domain/identity.ts
   - src/domain/obligationVerifier.ts
   - src/domain/settlementEngine.ts
-  - tests/identity.test.ts
-  - tests/settlementEngine.test.ts
+  - src/domain/operatorRuntime.ts
+  - src/adapters/keeperhub.ts
+  - src/cloudflare/index.ts
   - scripts/replay-harness.ts
+  - scripts/live-proof.ts
+  - .github/workflows/tender-preflight-diagnostic.yml
+  - .github/workflows/tender-live-proof.yml
+  - .github/workflows/verify.yml
+  - evidence/settlement-replay-harness.json
+  - evidence/keeperhub-calibration.json
+  - evidence/live-proof.json
+  - public/live-proof.json
+  - public/index.html
+  - public/main.js
+  - public/styles.css
+  - public/delta.css
+  - wrangler.jsonc
+  - DEPLOYMENT.md
+  - docs/WINNING-INTELLIGENCE.md
+  - docs/COMPETITIVE-WINNING-DELTA.md
   - docs/PRD.md
   - docs/ARCHITECTURE.md
-  - docs/COMPETITIVE-WINNING-DELTA.md
+  - docs/DESIGN-DIRECTION.md
   - docs/OPERATOR-RUNTIME.md
-  - state/CURRENT.yaml
-  - state/HANDOVER.yaml
-verified:
-  command: npm run verify
-  result: pass
-  tests: 18/18
-  replay_harness: "11 settlement scenarios replayed · 0 duplicate payouts"
+  - SUBMISSION.md
+gates:
+  GATE_0: completed_research
+  GATE_1: completed_product_thesis
+  GATE_2: completed_architecture
+  GATE_3: completed_core_settlement_engine
+  GATE_4: completed_github_acceptance_adapter
+  GATE_5: completed_keeperhub_calibration
+  GATE_6: completed_replay_harness
+  GATE_6_5: completed_live_proof_hardening_and_preflight
+  GATE_7: completed_tender_caused_live_proof
+  GATE_7_5: completed_dynamic_judge_runtime
+  GATE_7_75: completed_winning_delta_merge
+  GATE_8: pending_latest_redeploy_live_qa_video_and_submission_lock
+keeperhub:
+  workflow: "Tender: Settle Claim"
+  workflow_id: yy4ml6aevkov3zaukpx15
+  base_url: https://app.keeperhub.com
+  chain_id: 84532
+  network: Base Sepolia
+  asset: USDC
+  calibration_tx: 0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0
+canonical_live_proof:
+  github_actions_run_id: 35162003096
+  accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
+  claim_id: tclaim_94eb021e7894252897176543cc9d7b49
+  receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
+  execution_id: 7k14qt2a1989rrc5r370d
+  transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
+  settlement_status: SETTLED
+  replay_status: ALREADY_SETTLED
+  additional_keeperhub_executions: 0
+  additional_movement: "$0"
+  evidence_file: evidence/live-proof.json
+judge_runtime:
+  target: Cloudflare Worker + Static Assets
+  public_value_movement: disabled
+  endpoints:
+    runtime: GET /api/runtime
+    proof: GET /api/proof
+    replay: POST /api/replay
+    claim_verifier: POST /api/claim/verify
+    acceptance_packet: GET /api/acceptance-packet
+    chain_proof: GET /api/chain-proof
+  product_surface:
+    - Acceptance Packet explains why the obligation exists.
+    - Tender Claim is the normalized deterministic economic fingerprint.
+    - Tender Receipt proves the obligation was discharged.
+    - Independent chain proof checks the Base Sepolia USDC Transfer rather than trusting KeeperHub self-report alone.
+    - Same-vs-altered Claim inspector turns identity and authorization into a judge-visible interaction.
+winning_patterns_applied:
+  - production seriousness and measured evidence rather than shallow integration
+  - reusable core primitives instead of one-off workflow glue
+  - deterministic planning and fail-closed behavior
+  - independent verification of execution outcome
+  - live runtime evidence plus explicit negative-path proof
+  - narrow memorable primitive rather than feature-count competition
+measured_proof:
+  unit_tests: 16/16
+  replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
 do_not:
-  - Do not rerun canonical value-moving proof.
-  - Do not expose KeeperHub credentials.
-  - Do not give public runtime a KeeperHub broadcast adapter.
-  - Do not rewrite settled receipts; create linked corrective claims.
-next_exact_action: Review and merge PR, redeploy Cloudflare safe runtime, run endpoint and device QA, then finalize demo/submission assets.
+  - Do not repeat the manual calibration payment.
+  - Do not rerun the canonical value-moving proof without a distinct explicit reason.
+  - Do not expose KeeperHub API keys.
+  - Do not weaken the product into a generic merge-to-pay, bounty marketplace, DeFi firewall, or MCP gateway.
+  - Do not give the judge runtime a value-moving execution adapter.
+next_exact_actions:
+  - Locally restore evidence/settlement-replay-harness.json if npm run verify changed only its generated timestamp.
+  - Checkout main, pull latest main, and run npm run verify once.
+  - Run npm run deploy:cloudflare to update the existing workers.dev URL.
+  - QA /api/runtime, /api/proof, /api/replay, /api/claim/verify, /api/acceptance-packet, and /api/chain-proof.
+  - QA clearing desk on desktop/mobile/reduced-motion.
+  - If schedule permits, integrate a real live project acceptance event to strengthen the named-project evidence.
+  - Lock demo/video and final DoraHacks copy; do not run another payment.
+
+pr_2_gate_review_delta:
+  branch: work-winning-delta
+  gate_review_comment: "Gate Review — changes required before merge"
+  implemented:
+    - src/domain/operatorRuntime.ts adds a real authenticated write-path service over a durable-store interface.
+    - src/cloudflare/index.ts exposes /api/operator/* endpoints behind bearer auth and KV storage while leaving public proof endpoints non-value-moving.
+    - src/domain/settlementEngine.ts now requires verified, one-time operator authorization for corrective claims.
+    - EconomicAuthorization now binds authorizedClaimId to the exact candidate Tender Claim.
+    - tests/operatorRuntime.test.ts covers operator policy/acceptance/obligation/authorization/settlement/supersession flows.
+    - tests/settlementEngine.test.ts covers forged auth, wrong linked claim, wrong candidate claim, and auth reuse.
+    - .github/workflows/verify.yml runs on pull_request to main.
+  measured_proof:
+    unit_tests: 26/26
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  safety:
+    canonical_keeperhub_live_proof_preserved: true
+    no_new_value_moving_execution: true
+    public_judge_runtime_has_no_broadcast_path_by_default: true
+  remaining_before_merge:
+    - Push PR #2 branch update.
+    - Wait for GitHub Actions verify on the PR.
+    - Review operator KV/token configuration before any production operator deploy.
