@@ -1,12 +1,17 @@
 import { acceptedWorkIdentity, claimIdFor, idempotencyKeyFor } from "./identity.js";
 import { validateContribution } from "./validation.js";
-import type { AcceptanceEvidence, Contribution, SettlementExecutor, SettlementPolicy, SettlementRecord, SettlementRepository, TimelineEvent } from "./types.js";
+import type { AcceptanceEvidence, Contribution, EconomicAuthorizationVerifier, SettlementExecutor, SettlementPolicy, SettlementRecord, SettlementRepository, TimelineEvent } from "./types.js";
 
 function now() { return new Date().toISOString(); }
 function event(type: TimelineEvent["type"], label: string, detail: string): TimelineEvent { return { at: now(), type, label, detail }; }
 
 export class SettlementEngine {
-  constructor(private readonly repo: SettlementRepository, private readonly executor: SettlementExecutor, private readonly policy: SettlementPolicy) {}
+  constructor(
+    private readonly repo: SettlementRepository,
+    private readonly executor: SettlementExecutor,
+    private readonly policy: SettlementPolicy,
+    private readonly authorizationVerifier?: EconomicAuthorizationVerifier
+  ) {}
   private readonly locks = new Map<string, Promise<SettlementRecord>>();
 
   async handleAcceptance(contribution: Contribution, acceptance: AcceptanceEvidence) {
@@ -35,7 +40,7 @@ export class SettlementEngine {
     if (existing?.status === "SETTLED" || existing?.status === "ALREADY_SETTLED") return this.markReplay(existing, "Replay mapped to the same Tender Claim; $0 moved.");
     if (!existing) {
       const unauthorized = await this.findConflictingSettledObligation(claimId, contribution, acceptance);
-      if (unauthorized) return this.requiresAcceptance(claimId, contribution, acceptance, unauthorized.claim.claimId);
+      if (unauthorized) return this.requiresAcceptance(claimId, contribution, acceptance, unauthorized.claim.claimId, unauthorized.reason);
     }
     if (existing?.status === "SETTLING") {
       if (!existing.keeperHubExecutionId) {
@@ -101,15 +106,28 @@ export class SettlementEngine {
       return priorWork === acceptedWork && record.claim.contribution.repository.toLowerCase() === contribution.repository.toLowerCase() && record.claim.claimId !== claimId && (record.status === "SETTLED" || record.status === "ALREADY_SETTLED");
     });
     if (!conflict) return undefined;
-    if (authorization?.kind === "corrective_claim" && authorization.linkedClaimId === conflict.claim.claimId) return undefined;
-    return conflict;
+    if (!authorization) return { claim: conflict.claim, reason: "changed economics require operator authorization" };
+    if (authorization.kind !== "corrective_claim") return { claim: conflict.claim, reason: "authorization kind cannot settle a corrective obligation" };
+    if (authorization.linkedClaimId !== conflict.claim.claimId) return { claim: conflict.claim, reason: "authorization is not linked to the settled claim" };
+    if (authorization.authorizedClaimId !== claimId) return { claim: conflict.claim, reason: "authorization is not bound to this candidate Tender Claim" };
+    if (!this.authorizationVerifier) return { claim: conflict.claim, reason: "operator authorization verifier is not configured" };
+
+    const decision = await this.authorizationVerifier.consume(authorization, {
+      candidateClaimId: claimId,
+      linkedClaimId: conflict.claim.claimId,
+      contribution,
+      acceptance,
+      policy: this.policy
+    });
+    if (!decision.ok) return { claim: conflict.claim, reason: decision.error };
+    return undefined;
   }
 
-  private async requiresAcceptance(claimId: string, contribution: Contribution, acceptance: AcceptanceEvidence, linkedClaimId: string) {
+  private async requiresAcceptance(claimId: string, contribution: Contribution, acceptance: AcceptanceEvidence, linkedClaimId: string, reason = `Settled claim ${linkedClaimId} is immutable; create a linked corrective obligation before settlement.`) {
     const record: SettlementRecord = {
       claim: { claimId, settlementId: claimId, idempotencyKey: idempotencyKeyFor(claimId), contribution, acceptance, policyVersion: this.policy.version, status: "REQUIRES_ACCEPTANCE", createdAt: now(), linkedClaimId },
       status: "REQUIRES_ACCEPTANCE", attempts: [], replayCount: 0, duplicatePayoutsPrevented: 0,
-      timeline: [event("REQUIRES_ACCEPTANCE", "Changed economics require acceptance", `Settled claim ${linkedClaimId} is immutable; create a linked corrective obligation before settlement.`)],
+      timeline: [event("REQUIRES_ACCEPTANCE", "Changed economics require acceptance", reason)],
       updatedAt: now()
     };
     await this.repo.put(record); return record;
