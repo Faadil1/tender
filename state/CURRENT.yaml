@@ -275,4 +275,26 @@ do_not:
   - Do not change locked Tender runtime semantics merely to chase the KeeperHub bounty.
   - Do not implement an upstream KeeperHub feature before its issue is accepted.
 
-next_action: Keep the verified Tender runtime locked. Continue Benita UI/UX work, bind Tender to one real existing workstream for main-track proof, and run the external LLM critique packet before drafting or filing the KeeperHub bounty issue.
+external_review_progress_2026_09_17:
+  synthesis_doc: docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
+  gemini:
+    status: received_and_fact_checked
+    strongest_supported_objection: permanent unique reference plus request/effect binding risks creating a second long-lived idempotency/business-identity state machine inside KeeperHub
+    candidate_effect: original Effect-Bound Execution Reference enforcing form demoted_not_ready_to_file
+    surviving_shape: optional non-unique clientReferenceId/externalId metadata plus org-scoped lookup/status exposure
+    still_pending:
+      - Claude maintainer/mergeability critique
+      - Grok adversarial duplicate/competition critique
+  fact_check:
+    issue_1840: open_accepted_confirmed
+    pr_2372: open_mergeable_not_merged
+    issue_2373: open_confirmed_needs_discussion_not_accepted
+    issue_2373_takeover: no_go_already_active_with_existing_implementation_tests
+    client_reference_code_search: no current clientReferenceId/externalId/client_reference_id match found
+  rules:
+    - Do not cite unverified Gemini examples or repo details in an upstream issue.
+    - Do not pursue #2373 as our bounty contribution.
+    - Do not build semantic EVM effect fingerprinting.
+    - Do not file any KeeperHub issue until Claude and Grok reviews are synthesized.
+
+next_action: Keep Tender runtime/proof locked. Continue Benita UI/UX work. Obtain Claude and Grok critiques using the same packet, then synthesize whether metadata-only clientReferenceId survives or a stronger bounty candidate replaces it.
