@@ -11,23 +11,24 @@ north_star: "Accepted once. Owed once. Settled once."
 completed_work:
   - Git history preserved and pushed to canonical GitHub main.
   - Tender Claim is the deterministic economic primitive and Tender Receipt is the settlement artifact.
-  - Exactly-once hardening covers concurrency, replay, reconciliation, and fail-closed in-flight handling.
-  - KeeperHub Manual trigger uses required dynamic recipient and amount inputs.
-  - Read-only KeeperHub preflight passed with workflow visibility and ERC20 dry-run wouldRevert=false.
-  - Canonical Tender-caused live settlement completed through GitHub Actions.
-  - Canonical replay returned ALREADY_SETTLED with zero additional KeeperHub executions and $0 additional movement.
+  - Exactly-once hardening covers concurrency, replay, reconciliation, sticky REQUIRES_ACCEPTANCE, and fail-closed in-flight handling.
+  - Canonical Tender-caused live settlement completed through GitHub Actions and canonical replay returned ALREADY_SETTLED with zero additional KeeperHub executions and $0 additional movement.
   - Canonical live-proof artifact is preserved in evidence/live-proof.json.
-  - Cloudflare Worker runtime executes judge-safe Tender verification without a value-moving adapter.
-  - Winning delta PR #1 was locally verified with 16/16 tests and 10 replay scenarios with 0 duplicate payouts, then squash-merged to main.
-  - Economic identity now normalizes economically equivalent decimal amount formatting.
-  - Domain-level obligation verifier distinguishes SAME_CLAIM from NEW_CLAIM / REQUIRES_ACCEPTANCE.
-  - Pre-committed settlement policy artifact, Acceptance Packet, independent Base Sepolia chain proof, same-vs-altered Claim inspector, and clearing-desk UI are implemented.
-  - Competitive Winning Intelligence incorporates prior KeeperHub winner patterns and current-field overlap without copying competitor product surfaces.
+  - Cloudflare Worker judge runtime executes safe dynamic verification without a value-moving public adapter.
+  - Winning delta PR #1 merged to main.
+  - Operator hardening PR #2 passed final gate and was squash-merged to main as 3100b56755eb61a638836e34835889ca4c4b0d83.
+  - Authenticated operator write-path is implemented for policy creation/locking, acceptance ingestion, obligation creation, authorization, settlement, reconciliation, supersession, and corrective claims.
+  - EconomicAuthorization is bound to exact authorizedClaimId and linkedClaimId and supports one-time atomic consumption on a strong operator store.
+  - Operator reconciliation routes through SettlementEngine receipt finalization.
+  - Locked/pre-committed policy semantics are enforced before obligation creation and value movement.
+  - Workflow settlement fails closed on eventual KV-only storage; KV remains acceptable only for non-value-moving/dev/proof paths.
+  - PR CI runs on pull_request to main.
 verification:
   local_verify_status: pass
-  unit_tests: 16/16
-  replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
-  winning_delta_merge_sha: e5b99bc1428d2812a066a2f6a47cdba47402ed44
+  unit_tests: 32/32
+  replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  pr_2_ci_run_id: 35180959317
+  pr_2_merge_sha: 3100b56755eb61a638836e34835889ca4c4b0d83
   live_proof_run_id: 35162003096
 keeperhub:
   status: canonical_live_proof_complete
@@ -37,14 +38,6 @@ keeperhub:
   network: Base Sepolia
   chain_id: 84532
   asset: USDC
-  inputs:
-    recipient: Manual.data.recipient
-    amount: Manual.data.amount
-  calibration:
-    status: success
-    amount: 0.01 USDC
-    transaction_hash: 0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0
-    evidence_file: evidence/keeperhub-calibration.json
 live_proof:
   status: complete
   run_id: 35162003096
@@ -58,7 +51,6 @@ live_proof:
   same_claim: true
   additional_keeperhub_executions: 0
   additional_movement: "$0"
-  evidence_file: evidence/live-proof.json
 judge_runtime:
   mode: cloudflare_worker_dynamic_judge_safe
   value_moving_execution_enabled: false
@@ -69,69 +61,30 @@ judge_runtime:
     - POST /api/claim/verify
     - GET /api/acceptance-packet
     - GET /api/chain-proof
-  signature_interactions:
-    - verify same obligation -> SAME_CLAIM / ALREADY_SETTLED / $0 additional movement
-    - alter amount, recipient, policy, or accepted work -> NEW_CLAIM / REQUIRES_ACCEPTANCE / $0 movement
-  independent_proof: Base Sepolia ERC20 Transfer verification for canonical settlement
+operator_runtime:
+  implemented: true
+  auth: bearer_token_server_side
+  api_prefix: /api/operator/
+  kv_mode: non_value_moving_only
+  production_workflow_requirement: strongly_consistent_operator_store
+  production_workflow_status: blocked_until_strong_store_binding
+  canonical_payment_rerun: false
 deployment:
   target: Cloudflare Worker + Static Assets
   url: https://tender-settlement.faadil-casecraft.workers.dev
   config: wrangler.jsonc
   command: npm run deploy:cloudflare
-  status: prior_build_published_latest_main_redeploy_pending
+  status: latest_main_redeploy_pending
 active_blockers:
-  - Redeploy latest merged main to the existing Cloudflare Worker URL.
-  - QA runtime endpoints, independent chain proof, claim mutation inspector, desktop/mobile, and reduced-motion.
-  - Integrate Tender with a real live project acceptance event for stronger live-project evidence if time allows.
+  - Bind and review a real strongly consistent operator store before enabling production value-moving workflow mode.
+  - Configure operator token/secrets policy for production operator deploy.
+  - Redeploy latest main to the existing Cloudflare Worker URL.
+  - QA public endpoints plus operator non-value-moving endpoints, desktop/mobile, and reduced-motion.
   - Final demo/video and DoraHacks submission packaging remain.
 do_not:
   - Do not repeat the manual calibration payment.
-  - Do not rerun the canonical value-moving live proof without a new explicit proof objective.
-  - Do not expose KeeperHub API keys.
+  - Do not rerun the canonical value-moving live proof without a distinct explicit proof objective.
+  - Do not expose KeeperHub API keys or operator token.
+  - Do not enable workflow settlement on KV-only eventual storage.
   - Do not frame Tender as a bounty marketplace or generic merge-to-pay tool.
-  - Do not give the public judge runtime a value-moving KeeperHub adapter.
-next_action: Pull merged main, discard only the locally regenerated replay-harness timestamp artifact if needed, verify main, redeploy the existing Cloudflare Worker, then QA the live clearing-desk runtime before video lock.
-
-pr_2_gate_review_delta:
-  branch: work-winning-delta
-  status: implemented_locally_pending_push_second_gate
-  purpose: authenticated write-enabled operator runtime and authorization hardening
-  completed_work:
-    - Implemented authenticated operator runtime contract with policy creation/versioning/locking, acceptance ingestion, obligation creation, claim authorization, settlement, reconciliation, supersession, and corrective claims.
-    - Bound EconomicAuthorization to authorizedClaimId and linkedClaimId.
-    - Added durable one-time authorization consumption through the operator store verifier.
-    - Public judge runtime remains non-value-moving; operator endpoints are bearer-authenticated and fail closed without configured store/credentials.
-    - Restored settlement-engine assertions for idempotency key, reconciled transaction hash, and receipt presence.
-    - Added PR CI for pull_request on main.
-    - Extended replay harness with forged corrective authorization rejection.
-  verification:
-    command: npm run verify
-    status: pass
-    unit_tests: 32/32
-    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
-  keeperhub_live_proof:
-    preserved: true
-    no_new_payment_executed: true
-    claim_id: tclaim_94eb021e7894252897176543cc9d7b49
-    receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
-    keeperhub_execution_id: 7k14qt2a1989rrc5r370d
-    transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
-  next_action: Push branch updates to PR #2 and allow repository PR CI to verify before merge.
-
-second_gate_review_delta:
-  branch: work-winning-delta
-  status: implemented_locally_pending_push
-  completed_work:
-    - Made REQUIRES_ACCEPTANCE sticky on retry unless exact stored authorization is consumed.
-    - Routed operator reconciliation through SettlementEngine.reconcile so Tender Receipt finalization is preserved.
-    - Enforced locked/precommitted policies before obligation creation and settlement; locked versions cannot be overwritten.
-    - Added strong-store authorization consumption contract; workflow settlement fails closed on eventual KV-only store.
-    - Preserved engine statuses in operator obligation projections.
-  verification:
-    command: npm run verify
-    status: pass
-    unit_tests: 32/32
-    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
-  keeperhub_live_proof:
-    preserved: true
-    no_new_payment_executed: true
+next_action: Implement/bind the strongly consistent operator store, then redeploy latest main and run full runtime/device QA without rerunning the canonical KeeperHub payment.
