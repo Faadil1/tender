@@ -133,6 +133,7 @@ important_files:
   - docs/RUNTIME-PROOF-RESILIENCE.md
   - docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   - docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
+  - docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
   - state/CURRENT.yaml
   - state/HANDOVER.yaml
 
@@ -150,10 +151,11 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: competitive_scan_expanded_external_review_ready
+  status: external_review_in_progress_gemini_fact_checked
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
+  external_review_synthesis: docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
   keeperhub_contribution_rule: "Issue first -> Reason/Scope/Plan -> wait for accepted -> implement -> PR to staging"
   main_track_signal:
     - Current public framing prefers KeeperHub integrated into a live project/product rather than a standalone demo.
@@ -174,46 +176,43 @@ keeperhub_bounty_handoff:
     - explicit poll/recovery semantics
     - live-product acceptance adapter
   provisional_bounty_candidate:
-    name: Effect-Bound Execution Reference
-    status: source_validated_final_name_sweep_clean_pending_external_critique
-    core: "durable caller reference bound to exact request identity and original execution/proof"
-    same_reference_same_request: resolve original execution/proof without broadcast
-    same_reference_changed_request: typed conflict without broadcast
-    keeperhub_boundary: execution request/effect identity only
-    tender_boundary: obligation existence, policy, acceptance, correction semantics
-    source_findings:
-      - directExecutions already stores a durable organization-scoped audit row
-      - status lookup is currently by internal executionId and has no caller-defined durable reference
-      - checkAndReserveExecution inserts the direct execution at the atomic value-cap reservation boundary
-      - idempotency uses organization+scope+key+deterministic request hash and expires completed/failed records after 24 hours
-      - the candidate should compose with idempotency, not extend its TTL globally
-    overlap_sweep:
-      date: 2026-09-17
-      terms:
-        - execution reference
-        - effect reference
-        - durable reference
-        - reference lookup
-      issue_direct_duplicate_found: false
-      pr_direct_duplicate_found: false
-      semantic_overlap_review_still_required: true
-    mergeability_bias:
-      - Start with exact-request binding in v1 rather than universal semantic effect normalization.
-      - Reserve reference atomically with the direct execution row.
-      - Scope reference to organization, not API key.
-      - Keep Idempotency-Key semantics unchanged.
-    open_questions:
-      - final field name
-      - whether route/action participates in uniqueness scope
-      - direct column vs separate binding table
-      - lookup route shape
-      - retention semantics
-      - bounded v1 route set
-      - sensitive-reference validation/redaction
+    original_name: Effect-Bound Execution Reference
+    original_enforcing_shape_status: demoted_not_ready_to_file_after_gemini
+    reason: permanent uniqueness plus request/effect binding risks creating a second long-lived idempotency/business-identity state machine inside KeeperHub
+    surviving_narrow_shape:
+      working_name: clientReferenceId_or_externalId
+      semantics: caller-owned correlation metadata only
+      unique: false
+      effect_hash: false
+      deduplication: false
+      conflict_409: false
+      lookup: organization-scoped read/filter
+      status_surface: include reference
+      idempotency_behavior_changed: false
+      tender_business_semantics_inside_keeperhub: false
     issue_filed: false
     code_started: false
+  gemini_review_fact_check:
+    useful_supported_points:
+      - Do not make KeeperHub the permanent authority for Tender-style business identity.
+      - Do not attempt universal semantic EVM effect fingerprinting.
+      - Retry/lifecycle semantics make permanent reference uniqueness much harder than metadata correlation.
+      - Metadata-only client correlation is more mergeable than a new permanent dedup state machine.
+    corrections:
+      - "#1840 is an open accepted issue, not a merged PR."
+      - "PR #2372 is open, mergeable, and not merged."
+      - "#2373 is open, confirmed, needs-discussion, and not accepted."
+      - "#2373 already has implementation/tests available from active contributors; do not take it as our bounty."
+      - "Claims about abstain, Runlock, OpenClaw KeeperLink, reaper behavior, and exact schema names require independent verification before upstream use."
+    code_overlap_search:
+      terms:
+        - clientReferenceId
+        - externalId
+        - client_reference_id
+      matches_found: false
   known_no_go_overlaps:
     - "#2495 web3/disburse partial payout resume"
+    - "#2373 asynchronous idempotency release after reconciled conclusive failure"
     - "#2395 receipt export"
     - "#2503 executed-call verification"
     - "#2398 permission cards"
@@ -222,21 +221,20 @@ keeperhub_bounty_handoff:
     - generic simulator/firewall
     - generic framework connector
     - generic Merkle audit
-    - generic cross-chain status
+    - universal semantic-effect fingerprinting
   external_llm_gate:
-    status: packet_ready_not_executed
+    status: gemini_received_claude_and_grok_pending
     packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
+    synthesis: docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
     planned_models:
       - Claude: maintainer/mergeability critique
-      - Gemini: API/schema/migration/concurrency critique
+      - Gemini: completed and fact-checked
       - Grok: uniqueness/duplicate/adversarial critique
-    plugin_directory_check: no direct Claude/Gemini/Grok provider integration surfaced in this ChatGPT session
     synthesis_rule: one evidence-backed fatal objection defeats majority agreement
-    next_artifact: docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
   next_steps:
-    - Run the critique packet with Claude, Gemini and Grok.
-    - Synthesize only evidence-backed objections and scope changes.
-    - Draft KeeperHub Reason/Scope/Plan issue only after critique.
+    - Run the same critique packet through Claude and Grok.
+    - Fact-check their current KeeperHub claims before promotion.
+    - Decide whether metadata-only clientReferenceId survives or a stronger candidate replaces it.
     - Re-run final issue/PR overlap immediately before filing.
     - File only if still distinct.
     - Wait for accepted before any upstream implementation.
@@ -248,7 +246,7 @@ remaining_work:
   - QA loading/error/failure states and navigation after UI changes.
   - Lock <=3 minute demo narrative and video.
   - Final submission copy and packaging.
-  - Complete KeeperHub external critique/issue gate without changing Tender's locked runtime.
+  - Complete KeeperHub Claude/Grok critique gate without changing Tender's locked runtime.
 
 runtime_lock_rule:
   - Treat settlement/runtime/proof behavior as locked unless a real bug appears.
@@ -273,5 +271,6 @@ next_exact_actions:
   - Keep Tender runtime/proof locked.
   - Continue Benita UI/UX work.
   - Bind one real existing product/workstream to Tender through an acceptance adapter for main-track evidence.
-  - Run docs/EXTERNAL-LLM-CRITIQUE-PACKET.md through Claude, Gemini and Grok.
-  - Create evidence-backed synthesis before drafting or filing the KeeperHub bounty issue.
+  - Run docs/EXTERNAL-LLM-CRITIQUE-PACKET.md through Claude and Grok.
+  - Update docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md after each review.
+  - Do not file a KeeperHub bounty issue until the three-way synthesis is complete.
