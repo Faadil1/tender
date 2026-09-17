@@ -161,6 +161,31 @@ test("forged corrective authorization is rejected before KeeperHub execution", a
   assert.equal(executor.calls, 1);
 });
 
+test("REQUIRES_ACCEPTANCE remains sticky on retry without valid stored authorization", async () => {
+  const { engine: tender, executor } = engine();
+  const first = await tender.handleAcceptance(demoContribution, demoAcceptance());
+  const contribution = { ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }] };
+  const acceptance = demoAcceptance({ acceptanceKind: "operator_correction", action: "operator.accepted" });
+  const forgedContribution = {
+    ...contribution,
+    economicAuthorization: {
+      authorizationId: "forged-sticky-auth",
+      kind: "corrective_claim" as const,
+      authorizedClaimId: claimIdFor(contribution, acceptance, testPolicy),
+      authorizedBy: "attacker",
+      authorizedAt: new Date().toISOString(),
+      linkedClaimId: first.claim.claimId,
+      reason: "not stored by operator"
+    }
+  };
+  const rejected = await tender.handleAcceptance(forgedContribution, acceptance);
+  const replay = await tender.handleAcceptance(forgedContribution, acceptance);
+  assert.equal(rejected.status, "REQUIRES_ACCEPTANCE");
+  assert.equal(replay.status, "REQUIRES_ACCEPTANCE");
+  assert.equal(replay.claim.claimId, rejected.claim.claimId);
+  assert.equal(executor.calls, 1);
+});
+
 test("authorization linked to the wrong settled claim is rejected", async () => {
   const repo = new MemorySettlementRepository();
   const executor = new FakeExecutor();
