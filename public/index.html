@@ -10,7 +10,7 @@
   <body>
     <main class="packet">
       <div class="evidence-bar" aria-label="Canonical proof metadata">
-        <span>CANONICAL EVIDENCE</span>
+        <span id="runtime-mode">CONNECTING TO RUNTIME</span>
         <span>BASE SEPOLIA</span>
         <span>GITHUB RUN 35162003096</span>
       </div>
@@ -22,10 +22,10 @@
         <p class="dek">GitHub proves what work was accepted. Tender determines what is economically owed. KeeperHub proves it was settled.</p>
         <div class="actions">
           <a class="button primary" id="tx-link" href="#" target="_blank" rel="noreferrer">Inspect onchain transaction</a>
-          <button class="button" id="replay-button" type="button">Replay same claim</button>
-          <a class="button" href="/live-proof.json" target="_blank" rel="noreferrer">Open evidence JSON</a>
+          <button class="button" id="replay-button" type="button">Run server-side replay</button>
+          <a class="button" href="/api/proof" target="_blank" rel="noreferrer">Open canonical proof API</a>
         </div>
-        <p class="microcopy">The replay control plays back the already-recorded canonical evidence. It never broadcasts another payment.</p>
+        <p class="microcopy">The public runtime executes Tender's replay logic server-side against the canonical settled claim. The judge runtime has no value-moving execution adapter and cannot broadcast another payment.</p>
       </header>
 
       <section class="ledger" aria-live="polite">
@@ -57,8 +57,8 @@
 
       <section class="replay-panel" id="replay-panel">
         <div>
-          <p class="label">Exactly-once proof</p>
-          <p class="proof" id="proof">Same accepted work. Same claim. No second settlement.</p>
+          <p class="label">Exactly-once runtime proof</p>
+          <p class="proof" id="proof">Press replay to execute the same Tender claim through the server-side settlement engine.</p>
         </div>
         <div class="replay-numbers" aria-label="Replay result">
           <div><strong id="same-claim">TRUE</strong><span>same claim</span></div>

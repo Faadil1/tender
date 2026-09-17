@@ -9,6 +9,7 @@ const proofEl = $("#proof");
 const replayPanel = $("#replay-panel");
 const replayButton = $("#replay-button");
 const txLink = $("#tx-link");
+const runtimeMode = $("#runtime-mode");
 
 const short = (value, left = 10, right = 8) => {
   if (!value || value.length <= left + right + 1) return value ?? "—";
@@ -17,10 +18,20 @@ const short = (value, left = 10, right = 8) => {
 
 const row = (key, value, full = value) => `<dt>${key}</dt><dd title="${full}">${value}</dd>`;
 
-const proof = await fetch("/live-proof.json").then((response) => {
-  if (!response.ok) throw new Error(`Unable to load canonical evidence (${response.status})`);
-  return response.json();
-});
+const getJson = async (url, init) => {
+  const response = await fetch(url, init);
+  const body = await response.json();
+  if (!response.ok) throw new Error(body?.message ?? `${url} failed (${response.status})`);
+  return body;
+};
+
+const [runtime, proof] = await Promise.all([
+  getJson("/api/runtime"),
+  getJson("/api/proof")
+]);
+
+runtimeMode.textContent = runtime.runtime === "cloudflare-worker" ? "LIVE WORKER RUNTIME" : "RUNTIME UNKNOWN";
+runtimeMode.title = `Server evaluated ${runtime.serverTime}`;
 
 const receipt = proof.settlement.receipt;
 const claim = proof.tenderClaim;
@@ -55,21 +66,38 @@ const timeline = [
   ["ACCEPTED", "GitHub maintainer attestation", short(proof.contribution.acceptedWorkId, 12, 10)],
   ["CLAIMED", "Deterministic Tender Claim", short(claim.claimId, 15, 8)],
   ["SETTLED", "KeeperHub cleared 0.01 USDC", short(proof.settlement.transactionHash, 14, 10)],
-  ["REPLAY", "Same claim returned ALREADY_SETTLED", "$0 additional movement"]
+  ["REPLAY", "Server-side replay available", "Runs Tender SettlementEngine without a broadcast adapter"]
 ];
 
 timelineEl.innerHTML = timeline
   .map(([state, label, detail]) => `<li><span class="timeline-state">${state}</span><div><strong>${label}</strong><span>${detail}</span></div></li>`)
   .join("");
 
-replayButton.addEventListener("click", () => {
-  statusEl.textContent = "ALREADY SETTLED";
-  statusEl.className = "ALREADY_SETTLED";
-  stampEl.innerHTML = "NO SECOND<br />PAYMENT";
-  stampEl.className = "stamp ALREADY_SETTLED";
-  stampEl.dataset.state = "ALREADY_SETTLED";
-  proofEl.textContent = "Replay → same claim → 0 additional KeeperHub executions → $0 moved.";
-  replayPanel.classList.add("replayed");
-  replayButton.textContent = "Replay proven · $0 moved";
+replayButton.addEventListener("click", async () => {
   replayButton.disabled = true;
+  replayButton.textContent = "Running server-side replay…";
+  replayButton.setAttribute("aria-busy", "true");
+
+  try {
+    const result = await getJson("/api/replay", { method: "POST" });
+
+    statusEl.textContent = "ALREADY SETTLED";
+    statusEl.className = "ALREADY_SETTLED";
+    stampEl.innerHTML = "NO SECOND<br />PAYMENT";
+    stampEl.className = "stamp ALREADY_SETTLED";
+    stampEl.dataset.state = "ALREADY_SETTLED";
+    proofEl.textContent = `Server replay → ${result.status} → same claim → ${result.additionalKeeperHubExecutions} additional KeeperHub executions → ${result.additionalMovement} moved.`;
+    replayPanel.classList.add("replayed");
+    $("#same-claim").textContent = result.sameClaim ? "TRUE" : "FALSE";
+    $("#extra-executions").textContent = String(result.additionalKeeperHubExecutions);
+    $("#extra-movement").textContent = result.additionalMovement;
+    replayButton.textContent = "Replay proven by runtime · $0 moved";
+    replayButton.title = `Evaluated by ${result.engine} at ${result.evaluatedAt}`;
+  } catch (error) {
+    replayButton.disabled = false;
+    replayButton.textContent = "Replay failed — retry";
+    proofEl.textContent = error instanceof Error ? error.message : "Runtime replay failed";
+  } finally {
+    replayButton.removeAttribute("aria-busy");
+  }
 });
