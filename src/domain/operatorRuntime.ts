@@ -133,7 +133,7 @@ export class StoreBackedAuthorizationVerifier implements EconomicAuthorizationVe
   }
 }
 
-function validateAuthorization(stored: EconomicAuthorization | undefined, authorization: EconomicAuthorization, context: EconomicAuthorizationContext): EconomicAuthorizationDecision {
+export function validateAuthorization(stored: EconomicAuthorization | undefined, authorization: EconomicAuthorization, context: EconomicAuthorizationContext): EconomicAuthorizationDecision {
   if (!stored) return { ok: false, error: "authorization_not_found" };
   if (stored.consumedAt) return { ok: false, error: "authorization_already_consumed" };
   if (stored.kind !== authorization.kind) return { ok: false, error: "authorization_kind_mismatch" };
