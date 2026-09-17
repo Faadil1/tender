@@ -201,3 +201,35 @@ test("strong operator store consumes only one concurrent authorization attempt",
   assert.equal([a.ok, b.ok].filter(Boolean).length, 1);
   assert.equal([a, b].filter((result) => !result.ok && result.error === "authorization_already_consumed").length, 1);
 });
+
+test("two operator runtime instances cannot both settle the same authorized corrective claim", async () => {
+  const store = new MemoryOperatorStore();
+  const setupOperator = new TenderOperatorService(store);
+  await setupOperator.createPolicy({ ...policyInput, version: "policy.operator.two-runtimes" });
+  await setupOperator.lockPolicy("policy.operator.two-runtimes");
+
+  const executor = new OperatorExecutor();
+  const original = await setupOperator.createObligation(demoContribution, demoAcceptance(), "policy.operator.two-runtimes");
+  const settled = await setupOperator.settleClaim(original.claimId, executor);
+  const correction = await setupOperator.createCorrectiveClaim({
+    linkedClaimId: settled.claim.claimId,
+    contribution: { ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }] },
+    acceptance: demoAcceptance({ acceptanceKind: "operator_correction", action: "operator.accepted" }),
+    policyVersion: "policy.operator.two-runtimes",
+    authorizedBy: "maintainer",
+    reason: "accepted concurrent runtime correction"
+  });
+
+  const runtimeA = new TenderOperatorService(store);
+  const runtimeB = new TenderOperatorService(store);
+  const beforeCorrectionCalls = executor.calls;
+  const [a, b] = await Promise.all([
+    runtimeA.settleClaim(correction.obligation.claimId, executor),
+    runtimeB.settleClaim(correction.obligation.claimId, executor)
+  ]);
+
+  const statuses = [a.status, b.status].sort();
+  assert.deepEqual(statuses, ["REQUIRES_ACCEPTANCE", "SETTLED"]);
+  assert.equal(executor.calls - beforeCorrectionCalls, 1);
+  assert.equal((await setupOperator.status(correction.obligation.claimId)).settlement?.status, "SETTLED");
+});
