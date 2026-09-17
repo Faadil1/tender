@@ -181,6 +181,12 @@ production_operator_runtime_delta:
     command: npm run verify
     unit_tests: 33/33
     replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+    cloudflare_dry_run: pass
+    cloudflare_dry_run_command: npx wrangler deploy --config wrangler.jsonc --dry-run
+    cloudflare_dry_run_bindings:
+      - TENDER_OPERATOR_DO Durable Object
+      - ASSETS
+      - OPERATOR_SETTLEMENT_MODE=mock
   safety:
     canonical_keeperhub_live_proof_preserved: true
     no_new_value_moving_execution: true
