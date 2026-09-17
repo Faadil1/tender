@@ -19,51 +19,70 @@ One accepted obligation -> one settlement.
 
 ## Primitive
 
-A Tender Claim is an immutable economic identity created from an accepted contribution and its settlement policy.
+A Tender Claim is an immutable economic identity created from accepted contribution evidence and settlement policy.
 
-It binds repository, task/contribution identity, acceptance evidence, accepted-work identity, policy version, recipient(s), asset, and amount.
+It binds repository, task/contribution identity, acceptance kind, accepted-work identity, policy version, recipient(s), asset, chain, and amount. Delivery IDs, Action run IDs, and retry IDs are deliberately excluded from economic identity.
 
 ## Signature Artifact
 
-The Tender Receipt records the accepted contribution, claim ID, policy version, recipient(s), value, KeeperHub execution, transaction proof, and settlement status.
+A Tender Receipt records the accepted contribution, claim ID, policy version, recipient(s), value, KeeperHub execution, transaction proof, and settlement status.
 
-## Replay Proof
+## Measured Reliability Proof
 
-The Settlement Replay Harness currently reports:
+The Settlement Replay Harness reports:
 
 ```text
 10 settlement scenarios replayed · 0 duplicate payouts
 ```
 
-Generated evidence: `evidence/settlement-replay-harness.json`.
+Unit verification currently passes `13/13` tests.
 
-## KeeperHub
+Evidence: `evidence/settlement-replay-harness.json`.
 
-Manual calibration already succeeded on Base Sepolia:
+## Canonical Live Proof
 
-- Workflow: `Tender -- Settle Claim`
-- Workflow ID: `yy4ml6aevkov3zaulkpx15`
-- Amount: `0.01 USDC`
-- Transaction: `0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0`
+A Tender-caused GitHub Actions run settled a real `0.01 USDC` Base Sepolia transfer through KeeperHub, issued a Tender Receipt, then replayed the same Tender Claim without a second KeeperHub execution.
 
-This is calibration evidence only. The canonical hero proof must be Tender-caused through the GitHub Actions live-proof path.
+- GitHub Actions run: `35162003096`
+- Accepted work: `3c19bd869e9223bdb1d353a864f1818ee6c2e871`
+- Tender Claim: `tclaim_94eb021e7894252897176543cc9d7b49`
+- Tender Receipt: `treceipt_94eb021e7894252897176543cc9d7b49`
+- KeeperHub execution: `7k14qt2a1989rrc5r370d`
+- Transaction: `0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db`
+- Replay: `ALREADY_SETTLED`
+- Additional KeeperHub executions: `0`
+- Additional movement: `$0`
 
-## GitHub Actions Live Proof
+Evidence: `evidence/live-proof.json`.
 
-Run `Tender Live Proof` manually with:
+BaseScan:
+`https://sepolia.basescan.org/tx/0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db`
 
-- recipient wallet
-- minimal USDC amount
-- optional accepted work ID
-- optional task ID
+## KeeperHub Integration
 
-The action uses repository secrets:
+Configured execution path:
+
+- Workflow: `Tender: Settle Claim`
+- Workflow ID: `yy4ml6aevkov3zaukpx15`
+- Network: Base Sepolia (`84532`)
+- Asset: USDC
+- Trigger inputs: `recipient`, `amount`
+- Transfer bindings: `Manual.data.recipient`, `Manual.data.amount`
+
+Before the canonical run, Tender verified API-key scope, workflow visibility, dynamic input bindings, KeeperHub workflow preflight, and an equivalent ERC20 dry-run with `success: true` and `wouldRevert: false`.
+
+The earlier manual calibration transaction remains separate calibration evidence in `evidence/keeperhub-calibration.json`.
+
+## GitHub Actions
+
+- `Tender Preflight Diagnostic` is read-only and performs no value-moving broadcast.
+- `Tender Live Proof` is the value-moving proof path and should not be re-run casually now that canonical evidence exists.
+
+Repository secrets:
 
 - `KEEPERHUB_API_KEY`
 - `KEEPERHUB_BASE_URL`
 - `KEEPERHUB_WORKFLOW_ID`
-
-It writes `evidence/live-proof.json` as an artifact without printing secrets.
 
 ## Run Locally
 
@@ -83,8 +102,6 @@ npm run verify
 
 This runs build, unit tests, and the replay harness.
 
-## Current Limitations
+## Current Status
 
-- Local mock mode is not live proof.
-- The current KeeperHub workflow was calibrated with static values and must continue migrating toward claim-driven input.
-- Production deployment is still pending.
+Core product proof is complete. Remaining hackathon work is judge-facing deployment, demo/video packaging, and final submission polish.
