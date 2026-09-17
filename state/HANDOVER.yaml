@@ -22,7 +22,6 @@ current_gate: GATE_8_PRODUCT_QA_DEMO_AND_SUBMISSION
 resume_rule: Preserve canonical evidence and do not rerun completed value-moving proof.
 
 current_state:
-  main_sha_before_state_refresh: 953f7525fdbf91ae84320a79d8d6ee5aac1841a8
   pr4_merged: true
   pr4_verify_run_id: 35217621533
   verification: "39/39 tests; 12 replay scenarios; 0 duplicate payouts"
@@ -33,6 +32,7 @@ current_state:
   operator_settlement_mode: mock
   public_value_movement_enabled: false
   authenticated_write_path_smoke_verified: true
+  public_runtime_signature_qa_complete: true
 
 canonical_live_proof:
   github_actions_run_id: 35162003096
@@ -48,16 +48,40 @@ canonical_live_proof:
   evidence_file: evidence/live-proof.json
 
 public_runtime_gate:
-  status: pass
+  status: complete
   runtime:
     operatorRuntimeConfigured: true
     operatorStoreConsistency: strong
     valueMovingExecutionEnabled: false
+  canonical_proof:
+    status: SETTLED
+    claim_id: tclaim_94eb021e7894252897176543cc9d7b49
+    receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
+    transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
+  acceptance_packet:
+    accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
+    policy_version: policy.live.base-sepolia-usdc.v1
   replay:
     status: ALREADY_SETTLED
     additionalKeeperHubExecutions: 0
     additionalMovement: "$0"
     broadcastAttempted: false
+  same_claim_verifier:
+    candidate_claim_id: tclaim_94eb021e7894252897176543cc9d7b49
+    sameClaim: true
+    status: ALREADY_SETTLED
+    correctiveClaimRequired: false
+    additionalMovement: "$0"
+  changed_economics_verifier:
+    tested_change: "amount 0.01 -> 0.02"
+    candidate_claim_id: tclaim_0bc19c1a816146aa4995b57377237186
+    sameClaim: false
+    changedFields:
+      - amount
+    status: NEW_CLAIM_REQUIRES_ACCEPTANCE
+    correctiveClaimRequired: true
+    broadcastAttempted: false
+    additionalMovement: "$0"
   independent_chain_proof:
     verified: true
     transferEventMatched: true
@@ -124,13 +148,14 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 remaining_work:
-  - Verify GET /api/proof and GET /api/acceptance-packet.
-  - Verify POST /api/claim/verify unchanged economics -> SAME_CLAIM / ALREADY_SETTLED.
-  - Verify POST /api/claim/verify changed economics -> NEW_CLAIM / REQUIRES_ACCEPTANCE / $0 movement.
   - QA redesigned product on desktop/mobile and reduced motion.
-  - QA loading/error/failure states.
+  - QA loading/error/failure states and navigation after UI changes.
   - Lock <=3 minute demo narrative and video.
   - Final submission copy and packaging.
+
+runtime_lock_rule:
+  - Treat settlement/runtime/proof behavior as locked unless a real bug appears.
+  - Do not spend remaining time adding speculative runtime features.
 
 local_worktree_note:
   issue: npm run verify regenerates evidence/settlement-replay-harness.json timestamp locally
@@ -145,8 +170,7 @@ do_not:
   - Do not add value-moving execution to the public judge runtime.
 
 next_exact_actions:
-  - Complete the remaining public endpoint signature QA.
-  - Restore only the locally regenerated replay-harness evidence timestamp before future git work if needed.
+  - Pull the latest state-only main updates locally when convenient.
   - Let Benita redesign UI/UX against the verified runtime without changing core invariants.
   - Run responsive/reduced-motion/failure-state QA after UI changes.
   - Lock demo/video and submission.
