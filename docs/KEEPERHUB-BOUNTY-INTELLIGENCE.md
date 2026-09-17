@@ -184,11 +184,54 @@ These independent implementations suggest a generic platform seam: **logical eff
 - No open or closed KeeperHub issue was found using the exact terms `external reference`, `business reference`, or `intentId`.
 - Direct execution already persists execution status, input/output, transaction hash/receipts, retry count and network.
 - KeeperHub maintains a separate idempotency record keyed by organization + scope + idempotency key + request hash with expiry.
-- This candidate still needs a final source-level overlap and migration-cost review before filing.
+- Source-level feasibility inspection is now complete enough to draft a bounded issue; a final PR/issue-name overlap sweep and maintainer critique are still required before filing.
+
+### Source-level validation — 2026-09-17
+
+KeeperHub `staging` was inspected directly at the direct-execution boundary.
+
+Observed architecture:
+
+- `app/api/execute/_lib/execution-service.ts` creates a durable `directExecutions` row with organization, API key, execution type, network, redacted input and lifecycle status; it later persists transaction hash, independently verified receipts, gas/cost fields, output, error and completion time.
+- `app/api/execute/[executionId]/status/route.ts` returns the execution by internal `executionId` and organization. Its public status contract currently has no caller-defined durable reference.
+- `app/api/execute/_lib/spending-cap.ts` creates the direct-execution row atomically inside the value-cap reservation transaction. That is the correct concurrency boundary if a future reference must be reserved before value can move.
+- `lib/idempotency.ts` already provides organization + scope + key + deterministic request-hash conflict semantics, but completed/failed records expire after **24 hours**. It is intentionally transport/retry safety, not durable domain identity.
+- The transfer route reserves idempotency before cap reservation/broadcast, and its idempotency hash is based on the request body. Replays and conflicting bodies are already typed and fail closed.
+
+This validates the core distinction:
+
+`Idempotency-Key = short-lived safe retry identity`
+
+`Execution Reference = durable logical execution identity`
+
+A useful bounty feature should **compose with** existing idempotency rather than replace or extend its TTL globally.
+
+### Likely minimal implementation seam
+
+The smallest credible shape is now:
+
+1. Add an optional `reference` (final name still subject to upstream naming review) to value-moving direct-execution requests.
+2. Persist it with a deterministic request/effect hash at the direct-execution reservation boundary.
+3. Enforce uniqueness at organization scope so concurrent callers cannot bind the same reference twice.
+4. On an existing reference:
+   - same bound effect/request => resolve the existing execution instead of broadcasting;
+   - changed effect/request => typed conflict and no broadcast.
+5. Surface `reference` on execution status and provide a read-only lookup path or query form.
+6. Keep existing 24-hour `Idempotency-Key` semantics unchanged.
+
+### Design questions to settle before filing
+
+- **Name:** `reference`, `executionReference`, or `effectReference`. Avoid `intentId` if it suggests KeeperHub owns business intent semantics.
+- **Fingerprint semantics:** reusing the existing deterministic request hash is maximally mergeable but binds transport-level fields too. A separate canonical effect hash is semantically cleaner but increases route-specific normalization scope.
+- **API surface:** dedicated `GET .../by-reference/{reference}` vs a query parameter on the existing status surface.
+- **Retention:** direct-execution rows appear to be the durable audit record; confirm maintainers are comfortable with reference lifetime matching that record rather than inventing a second TTL.
+- **Routes in v1:** transfer only is smaller but may look product-specific; all value-moving direct-execution routes are more reusable but widen the change. Ask maintainers before coding.
+
+Current bias for mergeability: start with **exact-request binding** rather than claiming a universal cross-route semantic effect canonicalizer. The user value is durable correlation and conflict safety; a richer effect normalizer can follow separately if KeeperHub wants it.
 
 ### Important boundary
 
-This feature must not absorb Tender's semantics. KeeperHub would bind a caller's reference to an **execution effect**. Tender remains responsible for deciding whether the underlying **economic obligation exists**.
+This feature must not absorb Tender's semantics. KeeperHub would bind a caller's reference to an **execution effect/request**. Tender remains responsible for deciding whether the underlying **economic obligation exists**.
 
 ## Explicit no-go list for bounty ideation
 
@@ -219,10 +262,10 @@ Status: **planned, not yet executed in this chat**. No direct Claude/Gemini/Grok
 
 ## Next gate
 
-1. Inspect the exact `directExecutions` + idempotency schema and request/status route to bound the smallest possible patch.
-2. Search open/closed KeeperHub issues and PRs again using the final field/API names.
-3. Draft the KeeperHub issue in their required Reason / Scope / Plan form using Tender as the real integration evidence.
-4. Run the external-LLM critique packet.
+1. Repeat open/closed KeeperHub issue and PR overlap search with the final candidate names (`executionReference`, `effectReference`, `reference lookup`, `durable reference`).
+2. Draft a KeeperHub issue in required Reason / Scope / Plan form using Tender plus independent current integrations as evidence that the need recurs.
+3. Prepare the external-LLM critique packet and run it outside this chat if necessary.
+4. Incorporate only evidence-backed criticism.
 5. File only if the overlap check remains clean.
 6. Wait for `accepted` before implementing any KeeperHub code.
 
