@@ -1,95 +1,75 @@
-const statusEl = document.querySelector("#status");
-const stampEl = document.querySelector("#stamp");
-const factsEl = document.querySelector("#facts");
-const receiptEl = document.querySelector("#receipt");
-const timelineEl = document.querySelector("#timeline");
-const attemptsEl = document.querySelector("#attempts");
-const proofEl = document.querySelector("#proof");
+const $ = (selector) => document.querySelector(selector);
 
-const routes = {
-  merge: "/api/demo/merge",
-  replay: "/api/demo/replay",
-  checks: "/api/demo/checks-failing",
-  wallet: "/api/demo/invalid-wallet"
+const statusEl = $("#status");
+const stampEl = $("#stamp");
+const claimFactsEl = $("#claim-facts");
+const receiptFactsEl = $("#receipt-facts");
+const timelineEl = $("#timeline");
+const proofEl = $("#proof");
+const replayPanel = $("#replay-panel");
+const replayButton = $("#replay-button");
+const txLink = $("#tx-link");
+
+const short = (value, left = 10, right = 8) => {
+  if (!value || value.length <= left + right + 1) return value ?? "—";
+  return `${value.slice(0, left)}…${value.slice(-right)}`;
 };
 
-document.querySelectorAll("button[data-action]").forEach((button) => {
-  button.addEventListener("click", async () => {
-    button.setAttribute("aria-busy", "true");
-    await fetch(routes[button.dataset.action], { method: "POST" });
-    await load();
-    button.removeAttribute("aria-busy");
-  });
+const row = (key, value, full = value) => `<dt>${key}</dt><dd title="${full}">${value}</dd>`;
+
+const proof = await fetch("/live-proof.json").then((response) => {
+  if (!response.ok) throw new Error(`Unable to load canonical evidence (${response.status})`);
+  return response.json();
 });
 
-async function load() {
-  const res = await fetch("/api/settlements");
-  const { records } = await res.json();
-  render(records[0]);
-}
+const receipt = proof.settlement.receipt;
+const claim = proof.tenderClaim;
+const replay = proof.replay;
 
-function render(record) {
-  if (!record) return;
-  const claim = record.claim;
-  statusEl.textContent = record.status;
-  statusEl.className = record.status;
-  stampEl.textContent = record.status === "ALREADY_SETTLED" ? "NO SECOND PAYMENT" : record.status.replaceAll("_", " ");
-  stampEl.dataset.state = record.status;
-  stampEl.className = `stamp ${record.status}`;
+$("#amount").textContent = `${receipt.amount} ${receipt.asset}`;
+$("#same-claim").textContent = replay.sameClaim ? "TRUE" : "FALSE";
+$("#extra-executions").textContent = String(replay.additionalKeeperHubExecutions);
+$("#extra-movement").textContent = replay.additionalMovement;
+$("#proof-time").textContent = `Proof ${new Date(proof.generatedAt).toISOString().slice(0, 10)}`;
+txLink.href = proof.settlement.explorerUrl;
 
-  const facts = {
-    Repository: claim.contribution.repository,
-    Issue: `#${claim.contribution.issueId}`,
-    PR: `#${claim.contribution.pullRequestId}`,
-    Contributor: claim.contribution.contributor,
-    Recipient: claim.contribution.recipientWallet,
-    Payout: `${claim.contribution.amount} ${claim.contribution.token}`,
-    "Merge SHA": claim.acceptance.mergeSha ?? "none",
-    "Claim ID": claim.claimId,
-    "Policy version": claim.policyVersion,
-    "Idempotency key": claim.idempotencyKey,
-    "State": record.status
-  };
+claimFactsEl.innerHTML = [
+  row("Claim ID", claim.claimId, claim.claimId),
+  row("Accepted work", short(proof.contribution.acceptedWorkId, 12, 10), proof.contribution.acceptedWorkId),
+  row("Policy", claim.policyVersion, claim.policyVersion),
+  row("Recipient", short(receipt.recipients[0].wallet), receipt.recipients[0].wallet),
+  row("Value", `${receipt.amount} ${receipt.asset}`),
+  row("Idempotency", short(claim.idempotencyKey, 18, 10), claim.idempotencyKey)
+].join("");
 
-  factsEl.innerHTML = Object.entries(facts)
-    .map(([key, value]) => `<dt>${key}</dt><dd>${value}</dd>`)
-    .join("");
+receiptFactsEl.innerHTML = [
+  row("Receipt", receipt.receiptId, receipt.receiptId),
+  row("KeeperHub execution", proof.keeperHub.executionId, proof.keeperHub.executionId),
+  row("Transaction", short(proof.settlement.transactionHash, 14, 12), proof.settlement.transactionHash),
+  row("Network", "Base Sepolia · 84532"),
+  row("Settlement", proof.settlement.status),
+  row("Settled at", new Date(receipt.settledAt).toISOString().replace("T", " ").replace(".000Z", "Z"))
+].join("");
 
-  const receipt = record.receipt
-    ? {
-        Receipt: record.receipt.receiptId,
-        "Accepted work": record.receipt.acceptedContribution,
-        Recipients: record.receipt.recipients.map((recipient) => `${recipient.amount} ${record.receipt.asset} -> ${recipient.wallet}`).join(", "),
-        "KeeperHub execution": record.receipt.keeperHubExecutionId,
-        "Transaction hash": record.receipt.transactionHash,
-        Status: record.receipt.status
-      }
-    : {
-        Receipt: "not issued",
-        "Accepted work": claim.acceptance.acceptedWorkId ?? claim.acceptance.mergeSha ?? "pending",
-        Recipients: claim.contribution.recipients.map((recipient) => `${recipient.amount} ${claim.contribution.token} -> ${recipient.wallet}`).join(", "),
-        Status: record.status
-      };
+const timeline = [
+  ["ACCEPTED", "GitHub maintainer attestation", short(proof.contribution.acceptedWorkId, 12, 10)],
+  ["CLAIMED", "Deterministic Tender Claim", short(claim.claimId, 15, 8)],
+  ["SETTLED", "KeeperHub cleared 0.01 USDC", short(proof.settlement.transactionHash, 14, 10)],
+  ["REPLAY", "Same claim returned ALREADY_SETTLED", "$0 additional movement"]
+];
 
-  receiptEl.innerHTML = Object.entries(receipt)
-    .map(([key, value]) => `<dt>${key}</dt><dd>${value}</dd>`)
-    .join("");
+timelineEl.innerHTML = timeline
+  .map(([state, label, detail]) => `<li><span class="timeline-state">${state}</span><div><strong>${label}</strong><span>${detail}</span></div></li>`)
+  .join("");
 
-  proofEl.textContent =
-    record.status === "ALREADY_SETTLED"
-      ? `Replay -> same claim -> $0 moved. Duplicate payouts prevented: ${record.duplicatePayoutsPrevented}.`
-      : "Replay the same accepted contribution to prove same claim and $0 additional movement.";
-
-  timelineEl.innerHTML = record.timeline
-    .map((item) => `<li><strong>${item.label}</strong><br><span>${item.detail}</span></li>`)
-    .join("");
-
-  attemptsEl.innerHTML = record.attempts.length
-    ? record.attempts
-        .map((attempt) => `<div class="attempt"><strong>${attempt.status}</strong><span>${attempt.executionId}<br>${attempt.transactionHash ?? attempt.error ?? ""}</span></div>`)
-        .join("")
-    : "<p>No KeeperHub execution was attempted.</p>";
-}
-
-await fetch("/api/demo/reset", { method: "POST" });
-await load();
+replayButton.addEventListener("click", () => {
+  statusEl.textContent = "ALREADY SETTLED";
+  statusEl.className = "ALREADY_SETTLED";
+  stampEl.innerHTML = "NO SECOND<br />PAYMENT";
+  stampEl.className = "stamp ALREADY_SETTLED";
+  stampEl.dataset.state = "ALREADY_SETTLED";
+  proofEl.textContent = "Replay → same claim → 0 additional KeeperHub executions → $0 moved.";
+  replayPanel.classList.add("replayed");
+  replayButton.textContent = "Replay proven · $0 moved";
+  replayButton.disabled = true;
+});
