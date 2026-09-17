@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Tender settles accepted software contributions exactly once through KeeperHub." />
-    <title>Tender — Accepted work becomes a claim</title>
+    <meta name="description" content="Tender clears economic obligations created by accepted work, exactly once through KeeperHub." />
+    <title>Tender — Economic clearing for accepted work</title>
     <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/delta.css" />
   </head>
   <body>
     <main class="packet">
@@ -16,16 +17,17 @@
       </div>
 
       <header class="hero">
-        <p class="eyebrow">Contribution settlement infrastructure</p>
+        <p class="eyebrow">Economic clearing for accepted work</p>
         <h1>Tender</h1>
-        <p class="promise">No bounty. No race.<br />Accepted work becomes a claim.</p>
-        <p class="dek">GitHub proves what work was accepted. Tender determines what is economically owed. KeeperHub proves it was settled.</p>
+        <p class="promise">Accepted once.<br />Owed once.<br />Settled once.</p>
+        <p class="dek">Acceptance creates an obligation. Tender gives that obligation one deterministic identity. KeeperHub clears it. Every later replay, mutation, or verification must preserve the economic record.</p>
         <div class="actions">
           <a class="button primary" id="tx-link" href="#" target="_blank" rel="noreferrer">Inspect onchain transaction</a>
-          <button class="button" id="replay-button" type="button">Run server-side replay</button>
+          <button class="button" id="chain-button" type="button">Verify independently on Base</button>
+          <button class="button" id="replay-button" type="button">Verify same obligation</button>
           <a class="button" href="/api/proof" target="_blank" rel="noreferrer">Open canonical proof API</a>
         </div>
-        <p class="microcopy">The public runtime executes Tender's replay logic server-side against the canonical settled claim. The judge runtime has no value-moving execution adapter and cannot broadcast another payment.</p>
+        <p class="microcopy">The public runtime is judge-safe: it can recompute claims, replay already-settled obligations, and independently verify the chain. It has no value-moving executor and cannot broadcast another payment.</p>
       </header>
 
       <section class="ledger" aria-live="polite">
@@ -38,14 +40,24 @@
       </section>
 
       <section class="proof-grid">
+        <article class="sheet">
+          <div class="sheet-head">
+            <p class="label">Why money became owed</p>
+            <h3>Acceptance Packet</h3>
+          </div>
+          <dl id="acceptance-facts"></dl>
+        </article>
+
         <article class="sheet claim-sheet">
           <div class="sheet-head">
-            <p class="label">Economic identity</p>
+            <p class="label">Immutable economic identity</p>
             <h3>Tender Claim</h3>
           </div>
           <dl id="claim-facts"></dl>
         </article>
+      </section>
 
+      <section class="proof-grid">
         <article class="sheet receipt-sheet">
           <div class="sheet-head">
             <p class="label">Settlement artifact</p>
@@ -53,12 +65,39 @@
           </div>
           <dl id="receipt-facts"></dl>
         </article>
+
+        <article class="sheet chain-sheet" id="chain-panel">
+          <div class="sheet-head">
+            <p class="label">Trust but verify</p>
+            <h3>Independent Chain Proof</h3>
+          </div>
+          <p class="chain-copy" id="chain-proof">KeeperHub produced the receipt. Tender can independently query Base Sepolia and match the USDC Transfer event against the recipient and amount.</p>
+        </article>
+      </section>
+
+      <section class="inspector" aria-labelledby="inspector-title">
+        <div class="inspector-copy">
+          <p class="label">Counterfactual verification</p>
+          <h3 id="inspector-title">Economic fingerprint inspector</h3>
+          <p>Change nothing and Tender must return the same settled claim. Change amount, recipient, policy, or accepted work and Tender must produce a different claim that is not authorized to settle.</p>
+        </div>
+        <form class="inspector-form" id="claim-inspector">
+          <label>Amount<input id="inspect-amount" name="amount" autocomplete="off" /></label>
+          <label>Recipient<input id="inspect-recipient" name="recipient" autocomplete="off" /></label>
+          <label>Policy version<input id="inspect-policy" name="policyVersion" autocomplete="off" /></label>
+          <button class="button primary" id="inspect-button" type="submit">Verify economic identity</button>
+        </form>
+        <div class="verification-result" id="verification-result" aria-live="polite">
+          <span class="label">Awaiting candidate</span>
+          <strong>Same economics → same claim.</strong>
+          <small>No KeeperHub execution is available from this surface.</small>
+        </div>
       </section>
 
       <section class="replay-panel" id="replay-panel">
         <div>
           <p class="label">Exactly-once runtime proof</p>
-          <p class="proof" id="proof">Press replay to execute the same Tender claim through the server-side settlement engine.</p>
+          <p class="proof" id="proof">Ask Tender to verify the exact same obligation again.</p>
         </div>
         <div class="replay-numbers" aria-label="Replay result">
           <div><strong id="same-claim">TRUE</strong><span>same claim</span></div>
@@ -71,7 +110,7 @@
         <article class="sheet">
           <div class="sheet-head">
             <p class="label">Causal chain</p>
-            <h3>Accepted → settled</h3>
+            <h3>Accepted → owed → cleared</h3>
           </div>
           <ol class="timeline" id="timeline"></ol>
         </article>
@@ -82,7 +121,7 @@
             <h3>Failure-first evidence</h3>
           </div>
           <div class="metrics">
-            <div><strong>13/13</strong><span>unit tests pass</span></div>
+            <div><strong>16/16</strong><span>expected tests after this delta</span></div>
             <div><strong>10</strong><span>settlement scenarios replayed</span></div>
             <div><strong>0</strong><span>duplicate payouts</span></div>
           </div>
@@ -91,7 +130,7 @@
 
       <footer>
         <span>Tender</span>
-        <span>WORK → ACCEPTANCE → CLAIM → SETTLEMENT → RECEIPT</span>
+        <span>POLICY → ACCEPTANCE → CLAIM → CLEARING → RECEIPT</span>
         <span id="proof-time">Canonical proof</span>
       </footer>
     </main>

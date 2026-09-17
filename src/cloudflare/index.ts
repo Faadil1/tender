@@ -1,5 +1,6 @@
 import { MemorySettlementRepository } from "../adapters/memoryRepository.js";
-import { claimIdFor, idempotencyKeyFor } from "../domain/identity.js";
+import { claimIdFor, idempotencyKeyFor, normalizeDecimalString } from "../domain/identity.js";
+import { verifyEconomicIdentity, type EconomicOverride } from "../domain/obligationVerifier.js";
 import { SettlementEngine } from "../domain/settlementEngine.js";
 import type { AcceptanceEvidence, Contribution, SettlementExecutor, SettlementPolicy, SettlementRecord } from "../domain/types.js";
 
@@ -16,6 +17,10 @@ const policy: SettlementPolicy = {
   maxAmount: "5",
   requireReview: false
 };
+
+const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
+const BASE_SEPOLIA_USDC = "0x036cbd53842c5426634e7929541ec2318f3dcf7e";
+const ERC20_TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
 const noBroadcastExecutor: SettlementExecutor = {
   async preflight() {
@@ -176,6 +181,90 @@ async function replayCanonicalClaim(request: Request, env: Env) {
   };
 }
 
+async function verifyCandidate(request: Request, env: Env) {
+  const proof = await canonicalProof(request, env);
+  const { contribution, acceptance } = materializeCanonicalRecord(proof);
+  const body = (await request.json()) as EconomicOverride;
+  const allowed: EconomicOverride = {};
+
+  if (typeof body.amount === "string") allowed.amount = body.amount;
+  if (typeof body.recipient === "string") allowed.recipient = body.recipient;
+  if (typeof body.policyVersion === "string") allowed.policyVersion = body.policyVersion;
+  if (typeof body.acceptedWorkId === "string") allowed.acceptedWorkId = body.acceptedWorkId;
+
+  return {
+    runtime: "cloudflare-worker",
+    evaluatedAt: new Date().toISOString(),
+    ...verifyEconomicIdentity(contribution, acceptance, policy, allowed)
+  };
+}
+
+function amountToBaseUnits(value: string, decimals = 6) {
+  const normalized = normalizeDecimalString(value);
+  if (!/^\d+(?:\.\d+)?$/.test(normalized)) throw new Error("invalid canonical amount");
+  const [whole, fraction = ""] = normalized.split(".");
+  if (fraction.length > decimals) throw new Error("canonical amount exceeds token precision");
+  return BigInt(whole) * 10n ** BigInt(decimals) + BigInt((fraction.padEnd(decimals, "0") || "0"));
+}
+
+async function independentChainProof(request: Request, env: Env) {
+  const proof = await canonicalProof(request, env);
+  const receipt = proof.settlement.receipt;
+  const txHash = proof.settlement.transactionHash as string;
+  const recipient = receipt.recipients[0].wallet.toLowerCase() as string;
+  const expectedAmount = amountToBaseUnits(receipt.amount);
+  const recipientTopic = `0x${recipient.replace(/^0x/, "").padStart(64, "0")}`;
+
+  const rpcResponse = await fetch(BASE_SEPOLIA_RPC, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "eth_getTransactionReceipt",
+      params: [txHash]
+    })
+  });
+
+  if (!rpcResponse.ok) throw new Error(`independent Base RPC unavailable (${rpcResponse.status})`);
+  const rpc = (await rpcResponse.json()) as any;
+  const chainReceipt = rpc.result;
+  if (!chainReceipt) throw new Error("canonical transaction not found on independent Base RPC");
+
+  const successful = chainReceipt.status === "0x1";
+  const transferLog = (chainReceipt.logs ?? []).find((log: any) => {
+    const addressMatches = String(log.address ?? "").toLowerCase() === BASE_SEPOLIA_USDC;
+    const transferMatches = String(log.topics?.[0] ?? "").toLowerCase() === ERC20_TRANSFER_TOPIC;
+    const recipientMatches = String(log.topics?.[2] ?? "").toLowerCase() === recipientTopic.toLowerCase();
+    let amountMatches = false;
+    try {
+      amountMatches = BigInt(log.data ?? "0x0") === expectedAmount;
+    } catch {
+      amountMatches = false;
+    }
+    return addressMatches && transferMatches && recipientMatches && amountMatches;
+  });
+
+  if (!successful || !transferLog) {
+    throw new Error("independent chain verification did not match the canonical Tender Receipt");
+  }
+
+  return {
+    verified: true,
+    verifier: "independent Base Sepolia JSON-RPC",
+    evaluatedAt: new Date().toISOString(),
+    transactionHash: txHash,
+    transactionStatus: "success",
+    usdcContract: BASE_SEPOLIA_USDC,
+    recipient,
+    amount: receipt.amount,
+    amountBaseUnits: expectedAmount.toString(),
+    transferEventMatched: true,
+    blockNumber: BigInt(chainReceipt.blockNumber).toString(),
+    keeperHubWasTrustedForThisCheck: false
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -190,17 +279,37 @@ export default {
           claimId: proof.tenderClaim.claimId,
           canonicalSettlement: proof.settlement.status,
           valueMovingExecutionEnabled: false,
-          replayEngineEnabled: true
+          replayEngineEnabled: true,
+          economicIdentityVerifierEnabled: true,
+          independentChainVerificationEnabled: true
         });
       }
 
       if (request.method === "GET" && url.pathname === "/api/proof") {
+        return json(await canonicalProof(request, env));
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/acceptance-packet") {
         const proof = await canonicalProof(request, env);
-        return json(proof);
+        return json({
+          acceptedWorkId: proof.contribution.acceptedWorkId,
+          acceptanceEvidence: proof.settlement.receipt.acceptanceEvidence,
+          settlementPolicy: policy,
+          claimId: proof.tenderClaim.claimId,
+          principle: "policy precedes acceptance; accepted work plus policy creates one economic obligation"
+        });
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/chain-proof") {
+        return json(await independentChainProof(request, env));
       }
 
       if (request.method === "POST" && url.pathname === "/api/replay") {
         return json(await replayCanonicalClaim(request, env));
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/claim/verify") {
+        return json(await verifyCandidate(request, env));
       }
 
       if (url.pathname.startsWith("/api/")) {
