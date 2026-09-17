@@ -33,10 +33,12 @@ export interface Contribution {
 export interface EconomicAuthorization {
   authorizationId: string;
   kind: "initial_claim" | "corrective_claim" | "supersession";
+  authorizedClaimId: string;
   authorizedBy: string;
   authorizedAt: string;
   reason: string;
   linkedClaimId?: string;
+  consumedAt?: string;
 }
 
 export interface SettlementRecipient {
@@ -170,4 +172,23 @@ export interface SettlementExecutor {
     error?: string;
   }>;
   reconcile(record: SettlementRecord): Promise<SettlementRecord>;
+}
+
+export interface EconomicAuthorizationContext {
+  candidateClaimId: string;
+  linkedClaimId: string;
+  contribution: Contribution;
+  acceptance: AcceptanceEvidence;
+  policy: SettlementPolicy;
+}
+
+export type EconomicAuthorizationDecision =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export interface EconomicAuthorizationVerifier {
+  consume(
+    authorization: EconomicAuthorization,
+    context: EconomicAuthorizationContext
+  ): Promise<EconomicAuthorizationDecision>;
 }
