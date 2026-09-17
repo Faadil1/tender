@@ -1,7 +1,7 @@
 # External LLM Critique Synthesis
 
 Date: 2026-09-17
-Status: partial — Gemini, Perplexity and Kimi received/fact-checked; Claude and Grok still pending
+Status: phase 2 — original candidate rejected; full whitespace discovery roster activated including DeepSeek
 
 ## Review protocol
 
@@ -142,3 +142,22 @@ Perplexity and Kimi are extra adversarial reviewers beyond the original three-mo
 3. Use them primarily to discover a **new, narrow, unclaimed whitespace candidate**, not to rescue any rejected candidate.
 4. If no high-signal candidate survives, skip the bounty rather than weaken Tender or duplicate active work.
 5. Re-run issue/PR overlap immediately before any upstream filing.
+
+
+## Phase 2 — full whitespace discovery roster
+
+The review gate is expanded beyond the original candidate critique. We now involve:
+
+- Claude — maintainer/mergeability/hidden coupling;
+- Gemini — systems/API/schema/concurrency;
+- Grok — adversarial duplicate/competition/recurrence;
+- Perplexity — evidence and adjacent-system recurrence;
+- Kimi — product-boundary/semantics/DX;
+- DeepSeek — source-level reliability, sibling-route parity, propagation gaps, state-transition races;
+- ChatGPT — source fact-check, cross-model synthesis, and final overlap gate.
+
+Canonical packet: `docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md`.
+
+DeepSeek is specifically tasked with finding narrow source-level failures at boundaries such as REST↔MCP↔CLI, simulation↔broadcast, sponsored↔direct, workflow↔direct execution, DB↔reconciler, plugin↔core, auth/policy↔execution, and chain adapter↔shared abstraction.
+
+The output of this phase is not a vote. Candidate promotion requires current-source verification, independent evidence, no active ownership, and a bounded mergeable v1. If no candidate survives, the bounty is skipped.
