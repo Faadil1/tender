@@ -37,6 +37,8 @@ Operator-created policies require `policyDigest`. The shared policy type keeps t
 
 If the operator token or store binding is missing, operator endpoints return `operator_runtime_not_configured`. If KeeperHub execution secrets are missing, settlement fails closed with `keeperhub_operator_execution_not_configured`. `OPERATOR_SETTLEMENT_MODE=mock` is available only for non-value-moving development/test environments.
 
+Workers KV is treated as an eventual-consistency/read-mostly store. It is acceptable for mock/dev/proof state, but it is not accepted as the value-moving exactly-once authority store. Workflow settlement mode requires an operator store that advertises strong/serialized authorization consumption; otherwise settlement fails closed with `strong_operator_store_required_for_workflow_settlement`.
+
 ## Authorization Rule
 
 `EconomicAuthorization` is not trusted merely because it appears on a contribution. The operator runtime creates the authorization, binds it to `authorizedClaimId`, links it to the settled claim being corrected, and the settlement engine consumes it exactly once through the operator store. A forged, reused, wrong-linked, or wrong-candidate authorization returns `REQUIRES_ACCEPTANCE` and creates no KeeperHub execution.
