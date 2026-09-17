@@ -94,7 +94,7 @@ next_action: Pull merged main, discard only the locally regenerated replay-harne
 
 pr_2_gate_review_delta:
   branch: work-winning-delta
-  status: implemented_locally_pending_push
+  status: implemented_locally_pending_push_second_gate
   purpose: authenticated write-enabled operator runtime and authorization hardening
   completed_work:
     - Implemented authenticated operator runtime contract with policy creation/versioning/locking, acceptance ingestion, obligation creation, claim authorization, settlement, reconciliation, supersession, and corrective claims.
@@ -107,7 +107,7 @@ pr_2_gate_review_delta:
   verification:
     command: npm run verify
     status: pass
-    unit_tests: 26/26
+    unit_tests: 32/32
     replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
   keeperhub_live_proof:
     preserved: true
@@ -117,3 +117,21 @@ pr_2_gate_review_delta:
     keeperhub_execution_id: 7k14qt2a1989rrc5r370d
     transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
   next_action: Push branch updates to PR #2 and allow repository PR CI to verify before merge.
+
+second_gate_review_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push
+  completed_work:
+    - Made REQUIRES_ACCEPTANCE sticky on retry unless exact stored authorization is consumed.
+    - Routed operator reconciliation through SettlementEngine.reconcile so Tender Receipt finalization is preserved.
+    - Enforced locked/precommitted policies before obligation creation and settlement; locked versions cannot be overwritten.
+    - Added strong-store authorization consumption contract; workflow settlement fails closed on eventual KV-only store.
+    - Preserved engine statuses in operator obligation projections.
+  verification:
+    command: npm run verify
+    status: pass
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  keeperhub_live_proof:
+    preserved: true
+    no_new_payment_executed: true
