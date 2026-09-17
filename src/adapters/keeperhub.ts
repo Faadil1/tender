@@ -53,7 +53,7 @@ export class KeeperHubExecutor implements SettlementExecutor {
     if (this.mode === "mock") {
       return {
         executionId: `kh_mock_${claim.settlementId.slice(-10)}`,
-        transactionHash: `0x${claim.settlementId.replace("tender_", "").padEnd(64, "0").slice(0, 64)}`,
+        transactionHash: `0x${claim.settlementId.replace("tclaim_", "").padEnd(64, "0").slice(0, 64)}`,
         status: "success" as const
       };
     }
@@ -68,11 +68,8 @@ export class KeeperHubExecutor implements SettlementExecutor {
       body: JSON.stringify({ input: this.workflowInput(claim) })
     });
 
-    if (!res.ok) {
-      return { executionId: `failed_${Date.now()}`, status: "failed" as const, error: `keeperhub_execute_${res.status}` };
-    }
-
-    const data = (await res.json()) as { executionId: string; status: "running" };
+    if (!res.ok) return { executionId: `failed_${Date.now()}`, status: "failed" as const, error: `keeperhub_execute_${res.status}` };
+    const data = (await res.json()) as { executionId: string };
     return this.wait(data.executionId);
   }
 
@@ -81,10 +78,12 @@ export class KeeperHubExecutor implements SettlementExecutor {
     const result = await this.wait(record.keeperHubExecutionId);
     if (result.status === "success" && result.transactionHash) {
       record.status = "SETTLED";
+      record.claim.status = "SETTLED";
       record.transactionHash = result.transactionHash;
       record.updatedAt = new Date().toISOString();
     } else if (result.status === "failed") {
       record.status = "RETRYABLE_FAILURE";
+      record.claim.status = "RETRYABLE_FAILURE";
       record.updatedAt = new Date().toISOString();
     }
     return record;
