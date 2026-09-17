@@ -18,6 +18,9 @@ completed_work:
   - Canonical Tender-caused live settlement completed through GitHub Actions.
   - Canonical replay returned ALREADY_SETTLED with zero additional KeeperHub executions and $0 additional movement.
   - Canonical live-proof artifact preserved in evidence/live-proof.json.
+  - Judge-facing UI now renders the real canonical Tender Claim, Tender Receipt, transaction, and replay proof from static evidence.
+  - Cloudflare static-assets deployment is prepared via wrangler.jsonc and npm run deploy:cloudflare.
+  - Continuous npm run verify workflow added for main.
 verification:
   local_verify_status: pass
   unit_tests: 13/13
@@ -53,15 +56,23 @@ live_proof:
   additional_keeperhub_executions: 0
   additional_movement: "$0"
   evidence_file: evidence/live-proof.json
+judge_ui:
+  status: canonical_evidence_bound
+  static_evidence_file: public/live-proof.json
+  replay_control: evidence_playback_only_no_broadcast
 deployment:
-  status: pending
-  preferred: Cloudflare
+  status: prepared_not_published
+  preferred: Cloudflare Workers Static Assets
+  config: wrangler.jsonc
+  command: npm run deploy:cloudflare
+  output_directory: dist/public
 active_blockers:
-  - Judge-facing production deployment is not yet complete.
+  - Cloudflare account authorization/publish is still required outside the available connectors.
+  - Final live URL QA is pending.
   - Final demo/video and DoraHacks submission packaging remain.
 do_not:
   - Do not repeat the manual calibration payment.
   - Do not rerun the canonical value-moving live proof without a new explicit proof objective.
   - Do not expose KeeperHub API keys.
   - Do not frame Tender as a bounty marketplace.
-next_action: Deploy the judge-facing Tender experience, bind the real Tender Receipt evidence into the UI, then lock the demo/video and final submission pack.
+next_action: Authorize Cloudflare and publish the prepared static judge surface, QA the live URL, then lock the demo/video and final submission pack.
