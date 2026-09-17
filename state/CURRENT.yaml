@@ -57,11 +57,12 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: external_review_in_progress_gemini_perplexity_kimi_fact_checked
+  status: multi_llm_whitespace_discovery_all_reviewers_including_deepseek
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
   synthesis_doc: docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
+  whitespace_packet: docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md
   contribution_rule: "Issue -> Reason/Scope/Plan -> wait for accepted -> implement -> test -> PR to staging"
 
   external_reviews:
@@ -152,10 +153,19 @@ keeperhub_bounty_intelligence:
     - generic cross-chain status
     - universal semantic-effect fingerprinting
 
+  reviewer_roster:
+    - Claude: maintainer / mergeability / hidden coupling
+    - Gemini: systems / API / schema / concurrency
+    - Grok: adversarial duplicates / competition / recurrence
+    - Perplexity: evidence / adjacent systems / independent recurrence
+    - Kimi: product boundary / semantics / DX
+    - DeepSeek: source-level reliability / cross-surface parity / race windows
+    - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - Run Claude maintainer/mergeability critique.
-    - Run Grok adversarial uniqueness/duplicate critique.
-    - Use remaining reviews to discover a new narrow whitespace candidate rather than rescue rejected ideas.
+    - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi, and DeepSeek.
+    - DeepSeek must inspect source-level boundary failures and sibling-route parity specifically.
+    - Fact-check every current-repo claim before promotion.
+    - Cross-examine candidate overlap across all reviewer outputs.
     - If nothing high-signal survives, skip the bounty rather than duplicate active work.
     - Re-run issue/PR overlap immediately before filing anything.
 
@@ -164,7 +174,7 @@ remaining_work:
   - Bind Tender to one real existing product/workstream through an acceptance adapter for stronger main-track evidence.
   - QA redesigned product on desktop/mobile/reduced-motion and failure states.
   - Lock <=3 minute demo/video and final submission packaging.
-  - Complete Claude/Grok bounty-review gate without changing locked Tender runtime semantics.
+  - Complete full multi-LLM whitespace gate (Claude, Gemini, Grok, Perplexity, Kimi, DeepSeek) without changing locked Tender runtime semantics.
 
 do_not:
   - Do not rerun the canonical value-moving proof without a distinct explicit reason.
@@ -175,4 +185,4 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. Continue UI/UX and main-track live-product binding. Obtain Claude and Grok critiques, then run a fresh KeeperHub whitespace sweep for one small, independently evidenced, unclaimed mergeable feature.
+next_action: Keep Tender runtime/proof locked. Run the new KeeperHub whitespace packet across Claude, Gemini, Grok, Perplexity, Kimi and DeepSeek, fact-check all outputs, then select at most one independently evidenced unclaimed candidate.
