@@ -1,107 +1,113 @@
 # External LLM Critique Synthesis
 
 Date: 2026-09-17
-Status: partial — Gemini received; Claude and Grok pending
+Status: partial — Gemini and Perplexity received/fact-checked; Claude and Grok still pending
 
 ## Review protocol
 
 The upstream KeeperHub bounty candidate is being attacked by independent models before any issue is filed. A single evidence-backed fatal objection defeats majority agreement. Model claims are not promoted to canonical state until checked against current KeeperHub source/issues/PRs.
 
-## Gemini review — received
+## Gemini review — retained conclusions
 
 Gemini attacked the provisional `Effect-Bound Execution Reference` idea on API/schema/concurrency grounds.
 
-### Strong objections worth keeping
+Strong points that survived fact-checking:
 
-1. **Do not make KeeperHub the permanent authority for Tender-style business identity.** A durable caller-owned reference may be useful for correlation, but KeeperHub should not absorb Tender's obligation semantics.
-2. **Do not attempt a universal semantic-effect fingerprint for arbitrary EVM calls.** Raw request identity and actual onchain effect are different; environment-dependent contract behavior makes a universal semantic fingerprint too broad for this bounty.
-3. **Permanent unique reference + fail-closed request binding creates difficult retry/lifecycle semantics.** KeeperHub's own idempotency work already distinguishes definite failure from unknown outcome, so a second permanent dedup state machine would need unusually strong justification.
-4. **Metadata-only correlation is materially more mergeable than a new permanent deduplication authority.** A nullable, indexed caller reference surfaced in execution status/lookup is the surviving narrower shape from Gemini's critique.
+1. KeeperHub should not become the permanent authority for Tender-style business identity.
+2. Do not attempt a universal semantic-effect fingerprint for arbitrary EVM calls.
+3. Permanent reference uniqueness plus request/effect binding creates a second long-lived retry/idempotency state machine with hard failure/recovery semantics.
+4. Metadata-only caller correlation is materially simpler than permanent deduplication.
 
-### Fact-check corrections to Gemini
+Corrections to Gemini:
 
-Gemini's review contained several current-repo inaccuracies and overstatements:
+- `#1840` is an open accepted issue, not a merged PR.
+- PR `#2372` is open, mergeable, and not merged.
+- `#2373` is open, confirmed, `needs-discussion`, and not accepted; active contributors already have implementation/tests available.
+- Therefore `#2373` is not our bounty target.
 
-- `#1840` is an **open accepted issue**, not a merged PR. The implementation is PR `#2372`, which is currently **open, mergeable, and not merged** as of this check.
-- Issue `#2373` is **open**, labeled `bug`, `confirmed`, and `needs-discussion`; it is not accepted. Its reporter and commenters already have implementation/tests written or available. Therefore it is **not an available bounty target for Tender to take over**.
-- `#2373` explicitly says the 24-hour hold is a bounded **liveness gap**, not a correctness/double-spend defect, and only a conclusive receipt failure should release the key. Unknown outcomes must remain held.
-- Gemini's conclusion that maintainers "will reject" any durable reference uniqueness is not verified. What is verified is that KeeperHub treats retry safety conservatively and distinguishes definite from unknown outcomes.
-- Claims about specific reaper behavior, exact schema/table naming, and external projects (`abstain`, `Runlock`, `OpenClaw KeeperLink`) need independent source verification before they can be used in an upstream issue.
+## Perplexity review — received
 
-## Verified KeeperHub evidence after Gemini review
+Perplexity independently reached the same high-level conclusion: the generic enforcing reference idea is too close to existing idempotency/execution identity, cannot safely define semantic effect equivalence, and would require an explicit lifecycle for uniqueness/reuse.
 
-### #1840
+### Strong objections retained
 
-Current issue state: open, accepted, confirmed.
+1. **Identity multiplication is real.** KeeperHub already has `executionId`, `Idempotency-Key`, transaction hashes, correlation IDs and purpose-specific durable identifiers. A second generic execution identity needs a very strong reason.
+2. **Semantic effect equality is not a valid generic KeeperHub primitive.** Same calldata can have different state effects; changed transport parameters can still represent the same intended operation.
+3. **Permanent uniqueness needs lifecycle semantics.** Failure, correction, replacement, retention, org migration and legitimate later reuse are not solved by a unique `(organization, reference)` constraint.
+4. **Independent recurrence for a generic caller reference remains weak.** Exact field-name absence is not enough evidence that a platform feature is needed.
+5. **Metadata-only `clientReferenceId` is safe-ish but probably too weak for the bounty unless independent demand is demonstrated.**
 
-Maintainer direction recorded in the issue: release an idempotency key when the outcome is **definite and nothing landed**; hold it when the outcome is **unknown**. This validates the core principle that retry identity cannot be treated as a permanent business identity.
+### Fact-check against current KeeperHub
 
-Implementation PR `#2372` targets `staging` and is currently open, mergeable, not merged. It applies the definite-failure/unknown-outcome disposition across direct execution routes.
+Perplexity correctly surfaced `#2495` / PR `#2552` as a concrete durable-identity problem. Current verification:
 
-### #2373
+- Issue `#2495` is open, `accepted`, `confirmed` and reproduces a real partial-payout double-pay failure.
+- PR `#2552` is already open, mergeable and implements `web3/disburse` with a persistent per-leg ledger, `runKey`, broadcast-boundary tracking, explicit `sending/unknown` handling, and operator resolution.
+- Therefore this area is **occupied and unavailable** as our bounty whitespace.
 
-Current issue state: open, `needs-discussion`.
+Perplexity's proposed broad alternative — durable broadcast-outcome identity/reconciliation across direct, sponsored and Solana paths — is also **not clean whitespace**:
 
-The issue covers the asynchronous reconciler half: a previously held key remains held even after the reconciler later proves a conclusive failure. The issue author states that a standalone implementation and seven tests already exist. Another contributor also states the implementation/tests are written.
+- `#2020` is closed/completed; PR `#2162` merged and preserves the transaction hash when a broadcast receipt cannot be read.
+- `#2177` is closed/completed as a follow-up for non-Tempo `tx.wait()` post-broadcast failures.
+- `#2374` is closed/completed; PR `#2386` merged and fixed sponsored-send ambiguity so unknown outcomes do not fall through to a second direct broadcast.
+- `#1979` is closed/completed and documented the real cross-path double-broadcast + false-failure problem.
+- `#2373` remains active/needs-discussion with existing implementation work.
+- PR `#2552` additionally introduces a shared broadcast hook precisely because durable broadcast-boundary evidence is required for safe cross-execution payout recovery.
 
-Conclusion: do **not** pursue #2373 as our bounty contribution.
+Conclusion: **do not file a broad “durable broadcast-outcome/reconciliation” issue either.** Much of that territory is already fixed, closed, or actively owned.
 
-### Current reference-field overlap
+## Candidate status after Gemini + Perplexity
 
-A code search for `clientReferenceId`, `externalId`, and `client_reference_id` on KeeperHub returned no current matches. This supports, but does not yet prove, that a metadata-only caller reference may still be whitespace.
+### 1. Effect-Bound Execution Reference — STOP
 
-## Candidate status after Gemini
+The enforcing form is now rejected for this bounty search:
 
-### Original enforcing candidate
+- no universal effect fingerprint;
+- no permanent org+reference dedup authority;
+- no second generic idempotency state machine;
+- no claim that KeeperHub owns Tender's business identity.
 
-`Effect-Bound Execution Reference` with:
-- organization-scoped uniqueness,
-- same reference + same request => replay original,
-- same reference + changed request => conflict,
-- durable dedup beyond idempotency TTL,
+### 2. Metadata-only `clientReferenceId` — HOLD, low priority
 
-is **demoted / not ready to file**.
+Narrow shape:
 
-Reason: Gemini surfaced a real architecture tension and current KeeperHub retry semantics support the concern. We should not create a second permanent idempotency state machine without much stronger evidence.
+- optional caller-owned metadata;
+- non-unique;
+- persisted on the direct execution row;
+- status exposure and org-scoped filtering only;
+- no effect hash, dedup or 409 semantics.
 
-### Surviving narrower candidate
+This remains technically plausible but currently lacks strong independent recurrence evidence and may be too small/ordinary for a feature bounty.
 
-Working shape:
+### 3. Broad outcome/reconciliation layer — NO-GO
 
-**Client Execution Reference / clientReferenceId**
+Do not pursue as a fresh bounty idea because the strongest sub-problems are already closed/fixed or actively covered by `#2373` and `#2495/#2552`.
 
-- optional caller-owned correlation metadata on direct execution;
-- persisted with the existing execution audit row;
-- non-unique by default;
-- organization-scoped lookup/filter;
-- surfaced in execution status;
-- no effect hashing;
-- no deduplication semantics;
-- no 409 conflict behavior;
-- no change to `Idempotency-Key` behavior;
-- no Tender/business-obligation interpretation inside KeeperHub.
+## New search principle
 
-This is not yet cleared. Claude and Grok must still attack it, and we need recurrence evidence from independent integrations/users before filing.
+The next bounty candidate must satisfy all of these:
 
-## No-go updates
-
-- Do not take #2373; it is already an active, discussed implementation path owned by current contributors.
-- Do not build a universal EVM semantic-effect fingerprint.
-- Do not make a caller reference a second primary key or permanent deduplication authority without maintainer demand.
-- Do not cite Gemini's external-project examples until independently verified.
+- not a second form of idempotency;
+- not generic execution-reference metadata unless strong user demand appears;
+- not partial payout/disbursement;
+- not post-broadcast outcome preservation already covered by current work;
+- not receipt export, executed-call verification, permission cards, multi-model consensus, sign-and-hold, generic simulation, generic framework adapters, Merkle audit or cross-chain status;
+- independently evidenced by current KeeperHub users/issues or by multiple adjacent systems;
+- small enough for an accepted issue + mergeable PR before submission;
+- useful to KeeperHub beyond Tender.
 
 ## Pending reviews
 
 - Claude: maintainer / mergeability / hidden-coupling critique.
 - Grok: duplicate / competition / recurrence / adversarial uniqueness critique.
 
+Perplexity has been added as an extra research reviewer beyond the original three-model gate.
+
 ## Next synthesis gate
 
-1. Run the same packet through Claude and Grok.
-2. Cross-check every factual claim against current KeeperHub sources.
-3. Decide between:
-   - metadata-only `clientReferenceId`,
-   - a stronger newly discovered candidate,
-   - or no bounty contribution if nothing is sufficiently distinct and mergeable.
-4. Re-run issue/PR overlap immediately before any upstream filing.
-5. File no KeeperHub issue until this synthesis is complete.
+1. Run the same critique packet through Claude and Grok.
+2. Fact-check all current-repo claims before promotion.
+3. Treat both the original enforcing reference and broad outcome/reconciliation proposal as no-go unless new evidence materially changes the picture.
+4. Use Claude/Grok primarily to identify a **new, narrower whitespace candidate**, not to rescue the rejected idea.
+5. If no high-signal candidate survives, skip the bounty rather than weakening Tender or duplicating active KeeperHub work.
+6. Re-run current issue/PR overlap immediately before any upstream filing.
