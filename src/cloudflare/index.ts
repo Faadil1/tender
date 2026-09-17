@@ -2,9 +2,17 @@ import { KeeperHubExecutor } from "../adapters/keeperhub.js";
 import { MemorySettlementRepository } from "../adapters/memoryRepository.js";
 import { claimIdFor, idempotencyKeyFor, normalizeDecimalString } from "../domain/identity.js";
 import { verifyEconomicIdentity, type EconomicOverride } from "../domain/obligationVerifier.js";
-import { TenderOperatorService, type OperatorStore } from "../domain/operatorRuntime.js";
+import { TenderOperatorService, validateAuthorization, type OperatorStore } from "../domain/operatorRuntime.js";
 import { SettlementEngine } from "../domain/settlementEngine.js";
-import type { AcceptanceEvidence, Contribution, SettlementExecutor, SettlementPolicy, SettlementRecord } from "../domain/types.js";
+import type {
+  AcceptanceEvidence,
+  Contribution,
+  EconomicAuthorization,
+  EconomicAuthorizationContext,
+  SettlementExecutor,
+  SettlementPolicy,
+  SettlementRecord
+} from "../domain/types.js";
 
 type KVNamespace = {
   get(key: string): Promise<string | null>;
@@ -13,10 +21,38 @@ type KVNamespace = {
   list(options?: { prefix?: string }): Promise<{ keys: Array<{ name: string }> }>;
 };
 
+type DurableObjectNamespace = {
+  idFromName(name: string): DurableObjectId;
+  get(id: DurableObjectId): DurableObjectStub;
+};
+
+type DurableObjectId = unknown;
+
+type DurableObjectStub = {
+  fetch(request: Request): Promise<Response>;
+};
+
+type DurableObjectState = {
+  storage: {
+    get<T>(key: string): Promise<T | undefined>;
+    put<T>(key: string, value: T): Promise<void>;
+    delete(key: string): Promise<void>;
+    list<T>(options?: { prefix?: string }): Promise<Map<string, T>>;
+    transaction<T>(callback: (txn: DurableObjectTransaction) => Promise<T>): Promise<T>;
+  };
+};
+
+type DurableObjectTransaction = {
+  get<T>(key: string): Promise<T | undefined>;
+  put<T>(key: string, value: T): Promise<void>;
+  delete(key: string): Promise<void>;
+};
+
 type Env = {
   ASSETS: { fetch(request: Request): Promise<Response> };
   TENDER_OPERATOR_TOKEN?: string;
   TENDER_OPERATOR_STORE?: KVNamespace;
+  TENDER_OPERATOR_DO?: DurableObjectNamespace;
   KEEPERHUB_API_KEY?: string;
   KEEPERHUB_BASE_URL?: string;
   KEEPERHUB_WORKFLOW_ID?: string;
@@ -61,6 +97,110 @@ class CloudflareKVOperatorStore implements OperatorStore {
   }
 }
 
+class CloudflareDurableObjectOperatorStore implements OperatorStore {
+  readonly consistency = "strong" as const;
+
+  constructor(private readonly stub: DurableObjectStub) {}
+
+  async get<T>(key: string) {
+    return this.rpc<T | undefined>("get", { key });
+  }
+
+  async put<T>(key: string, value: T) {
+    await this.rpc<void>("put", { key, value });
+  }
+
+  async delete(key: string) {
+    await this.rpc<void>("delete", { key });
+  }
+
+  async list<T>(prefix: string) {
+    return this.rpc<Array<{ key: string; value: T }>>("list", { prefix });
+  }
+
+  async consumeAuthorization(key: string, context: EconomicAuthorizationContext, payload: EconomicAuthorization) {
+    return this.rpc<Awaited<ReturnType<Required<OperatorStore>["consumeAuthorization"]>>>("consume-authorization", { key, context, payload });
+  }
+
+  async reserveSettlement(claimId: string, idempotencyKey: string) {
+    return this.rpc<Awaited<ReturnType<Required<OperatorStore>["reserveSettlement"]>>>("reserve-settlement", { claimId, idempotencyKey });
+  }
+
+  async releaseSettlementReservation(claimId: string) {
+    await this.rpc<void>("release-settlement-reservation", { claimId });
+  }
+
+  private async rpc<T>(operation: string, body: unknown) {
+    const response = await this.stub.fetch(new Request(`https://tender-operator-store.internal/${operation}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }));
+    const payload = await response.json() as { ok: true; value: T } | { ok: false; error: string };
+    if (!response.ok || !payload.ok) throw new Error(payload.ok ? `operator_store_rpc_${response.status}` : payload.error);
+    return payload.value;
+  }
+}
+
+export class TenderOperatorStoreDurableObject {
+  constructor(private readonly state: DurableObjectState) {}
+
+  async fetch(request: Request): Promise<Response> {
+    try {
+      if (request.method !== "POST") return durableJson({ ok: false, error: "method_not_allowed" }, 405);
+      const operation = new URL(request.url).pathname.replace(/^\//, "");
+      const body = await request.json() as any;
+      if (operation === "get") return durableJson({ ok: true, value: await this.state.storage.get(body.key) });
+      if (operation === "put") {
+        await this.state.storage.put(body.key, body.value);
+        return durableJson({ ok: true });
+      }
+      if (operation === "delete") {
+        await this.state.storage.delete(body.key);
+        return durableJson({ ok: true });
+      }
+      if (operation === "list") {
+        const listed = await this.state.storage.list({ prefix: body.prefix });
+        return durableJson({ ok: true, value: [...listed.entries()].map(([key, value]) => ({ key, value })) });
+      }
+      if (operation === "consume-authorization") {
+        const decision = await this.state.storage.transaction(async (txn) => {
+          const stored = await txn.get<EconomicAuthorization>(body.key);
+          const result = validateAuthorization(stored, body.payload, body.context);
+          if (!result.ok) return result;
+          await txn.put(body.key, { ...stored, consumedAt: new Date().toISOString() });
+          return { ok: true as const };
+        });
+        return durableJson({ ok: true, value: decision });
+      }
+      if (operation === "reserve-settlement") {
+        const decision = await this.state.storage.transaction(async (txn) => {
+          const key = `settlement-reservation:${body.claimId}`;
+          const existing = await txn.get(key);
+          if (existing) return { ok: false as const, error: "claim_settlement_already_reserved" };
+          await txn.put(key, { claimId: body.claimId, idempotencyKey: body.idempotencyKey, reservedAt: new Date().toISOString() });
+          return { ok: true as const };
+        });
+        return durableJson({ ok: true, value: decision });
+      }
+      if (operation === "release-settlement-reservation") {
+        await this.state.storage.delete(`settlement-reservation:${body.claimId}`);
+        return durableJson({ ok: true });
+      }
+      return durableJson({ ok: false, error: "operator_store_operation_not_found" }, 404);
+    } catch (error) {
+      return durableJson({ ok: false, error: error instanceof Error ? error.message : "operator_store_failure" }, 500);
+    }
+  }
+}
+
+function durableJson(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
+  });
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body, null, 2), {
     status,
@@ -69,11 +209,22 @@ function json(body: unknown, status = 200) {
 }
 
 async function requireOperator(request: Request, env: Env) {
-  if (!env.TENDER_OPERATOR_TOKEN || !env.TENDER_OPERATOR_STORE) {
+  if (!env.TENDER_OPERATOR_TOKEN) {
     return { ok: false as const, response: json({ error: "operator_runtime_not_configured" }, 503) };
   }
   if ((request.headers.get("Authorization") ?? "") !== `Bearer ${env.TENDER_OPERATOR_TOKEN}`) {
     return { ok: false as const, response: json({ error: "operator_unauthorized" }, 401) };
+  }
+  const operatorMode = env.OPERATOR_SETTLEMENT_MODE ?? "mock";
+  if (env.TENDER_OPERATOR_DO) {
+    const store = new CloudflareDurableObjectOperatorStore(env.TENDER_OPERATOR_DO.get(env.TENDER_OPERATOR_DO.idFromName("tender-operator")));
+    return { ok: true as const, service: new TenderOperatorService(store), store };
+  }
+  if (operatorMode === "workflow") {
+    return { ok: false as const, response: json({ error: "strong_operator_store_required_for_workflow_settlement" }, 503) };
+  }
+  if (!env.TENDER_OPERATOR_STORE) {
+    return { ok: false as const, response: json({ error: "operator_runtime_not_configured" }, 503) };
   }
   const store = new CloudflareKVOperatorStore(env.TENDER_OPERATOR_STORE);
   return { ok: true as const, service: new TenderOperatorService(store), store };
