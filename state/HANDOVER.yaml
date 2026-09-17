@@ -149,7 +149,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: research_in_progress
+  status: source_level_candidate_validation_complete
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   keeperhub_contribution_rule: "Issue first -> Reason/Scope/Plan -> wait for accepted -> implement -> PR to staging"
@@ -161,12 +161,30 @@ keeperhub_bounty_handoff:
   tender_unique_white_space: "economic obligation existence + deterministic obligation identity derived from accepted work"
   provisional_bounty_candidate:
     name: Effect-Bound Execution Reference
-    core: "durable caller reference bound to canonical execution effect and original execution/proof"
+    status: feasible_pending_final_overlap_and_external_review
+    core: "durable caller reference bound to exact request/effect identity and original execution/proof"
     same_reference_same_effect: resolve original execution/proof
     same_reference_changed_effect: fail closed
-    keeperhub_boundary: execution effect identity only
+    keeperhub_boundary: execution request/effect identity only
     tender_boundary: obligation existence, policy, acceptance, correction semantics
-    overlap_status: exact-term search currently clean; final source-level/PR overlap validation still required
+    source_findings:
+      - directExecutions already stores a durable organization-scoped audit row with redacted input, lifecycle status, tx hash, receipts, output, gas/cost and timestamps
+      - status lookup is currently by internal executionId and has no caller-defined durable reference
+      - checkAndReserveExecution inserts the direct execution atomically at the value-cap reservation boundary
+      - idempotency uses organization+scope+key+deterministic request hash and expires completed/failed records after 24 hours
+      - the candidate should compose with idempotency, not extend its TTL globally
+    mergeability_bias:
+      - Start with exact-request binding in v1 rather than universal semantic effect normalization.
+      - Reserve reference atomically with the direct execution row.
+      - Scope reference to organization, not API key.
+      - Keep Idempotency-Key semantics unchanged.
+    open_questions:
+      - final field name
+      - exact request hash vs normalized effect hash
+      - lookup route shape
+      - retention semantics
+      - transfer-only vs all direct write routes for v1
+    overlap_status: exact-term issue search clean; final final-name issue/PR sweep still required
     issue_filed: false
     code_started: false
   known_no_go_overlaps:
@@ -187,10 +205,10 @@ keeperhub_bounty_handoff:
       - Grok: uniqueness/duplicate/adversarial critique
     note: no direct provider connector is available in this chat; do not claim those reviews occurred until outputs are obtained
   next_steps:
-    - Inspect exact directExecutions/idempotency data model and direct-execution route contracts.
-    - Repeat issue/PR overlap search with final proposed names.
-    - Draft upstream KeeperHub issue but do not file until the evidence packet is complete.
-    - Run external-LLM critique, synthesize, then file only if still distinct.
+    - Finalize candidate naming and repeat open/closed issue + PR overlap search with those names.
+    - Draft the upstream Reason/Scope/Plan issue using Tender plus independent integrations as recurrence evidence.
+    - Prepare/run external-LLM critique packet and synthesize only evidence-backed objections.
+    - File only if still distinct.
     - Wait for accepted before any upstream implementation.
 
 remaining_work:
@@ -198,7 +216,7 @@ remaining_work:
   - QA loading/error/failure states and navigation after UI changes.
   - Lock <=3 minute demo narrative and video.
   - Final submission copy and packaging.
-  - Complete KeeperHub bounty candidate validation without changing Tender's locked runtime.
+  - Complete KeeperHub bounty overlap/review gate without changing Tender's locked runtime.
 
 runtime_lock_rule:
   - Treat settlement/runtime/proof behavior as locked unless a real bug appears.
@@ -221,7 +239,7 @@ do_not:
 
 next_exact_actions:
   - Let Benita continue UI/UX redesign against the verified runtime without changing core invariants.
-  - Complete source-level validation of Effect-Bound Execution Reference and its migration/API blast radius.
-  - Prepare the Reason/Scope/Plan evidence packet and external-LLM review packet.
+  - Finalize Effect-Bound Execution Reference naming/overlap and draft the upstream Reason/Scope/Plan issue.
+  - Prepare the external-LLM review packet before filing.
   - Run responsive/reduced-motion/failure-state QA after UI changes.
   - Lock demo/video and main-track submission independently of the bounty workstream.
