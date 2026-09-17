@@ -1,41 +1,30 @@
 project: Tender
-repository:
-  canonical: https://github.com/Faadil1/tender
-  visibility: private
-  default_branch: main
 branch: main
-main_sha_before_state_update: 0f160887171dd49315660fdd37ac9049a4076d17
 current_gate: GATE_8_PRODUCT_QA_DEMO_AND_SUBMISSION
 category: economic clearing for accepted work
 north_star: "Accepted once. Owed once. Settled once."
 
+repository:
+  canonical: https://github.com/Faadil1/tender
+  live: https://tender-settlement.faadil-casecraft.workers.dev
+
 product_thesis:
-  - GitHub or another acceptance adapter proves what work was accepted.
+  - Acceptance evidence proves what work was accepted.
   - Tender determines whether that acceptance creates one economic obligation and gives it deterministic identity.
-  - KeeperHub performs value-moving settlement when explicitly enabled and authorized.
-  - Tender Receipt plus independent chain evidence preserve the causal settlement record.
-  - Public judge proof is non-value-moving; authenticated operator runtime is write-enabled.
+  - KeeperHub performs value-moving execution when explicitly authorized/enabled.
+  - Tender preserves the causal record with a Tender Receipt plus independent chain proof.
+  - Tender remains above KeeperHub: obligation existence/identity is not execution transport identity.
 
 verification:
   status: pass
   unit_tests: 39/39
-  replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
-  pr4_verify_run_id: 35217621533
+  replay_harness: "12 settlement scenarios; 0 duplicate payouts"
   pr4_merge_sha: 953f7525fdbf91ae84320a79d8d6ee5aac1841a8
-
-keeperhub:
-  status: canonical_live_proof_complete
-  base_url: https://app.keeperhub.com
-  workflow: "Tender: Settle Claim"
-  workflow_id: yy4ml6aevkov3zaukpx15
-  network: Base Sepolia
-  chain_id: 84532
-  asset: USDC
   canonical_payment_must_not_be_rerun: true
 
-live_proof:
+canonical_live_proof:
   status: complete
-  run_id: 35162003096
+  github_actions_run_id: 35162003096
   accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
   claim_id: tclaim_94eb021e7894252897176543cc9d7b49
   receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
@@ -45,7 +34,6 @@ live_proof:
   replay_status: ALREADY_SETTLED
   additional_keeperhub_executions: 0
   additional_movement: "$0"
-  evidence_file: evidence/live-proof.json
 
 production_operator_runtime:
   status: deployed_and_smoke_verified
@@ -56,245 +44,119 @@ production_operator_runtime:
   real_value_movement_enabled: false
   authentication: bearer token via TENDER_OPERATOR_TOKEN
   exactly_once_claim_reservation: atomic_durable_object_transaction
-  explicit_initial_claim_authorization_required: true
-  cloudflare_url: https://tender-settlement.faadil-casecraft.workers.dev
-  cloudflare_version_id: 276d7351-63c1-44fd-81b9-62ebe17a95f3
-  bindings:
-    - TENDER_OPERATOR_DO
-    - ASSETS
-    - OPERATOR_SETTLEMENT_MODE=mock
-
-public_runtime_qa:
-  status: complete
-  runtime:
-    operatorRuntimeConfigured: true
-    operatorStoreConsistency: strong
-    valueMovingExecutionEnabled: false
-  canonical_proof:
-    status: SETTLED
-    claim_id: tclaim_94eb021e7894252897176543cc9d7b49
-    receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
-    transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
-  acceptance_packet:
-    accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
-    policy_version: policy.live.base-sepolia-usdc.v1
-    principle: "policy precedes acceptance; accepted work plus policy creates one economic obligation"
-  replay:
-    status: ALREADY_SETTLED
-    sameClaim: true
-    additionalKeeperHubExecutions: 0
-    additionalMovement: "$0"
-    broadcastAttempted: false
-  same_claim_verifier:
-    sameClaim: true
-    status: ALREADY_SETTLED
-    originalImmutable: true
-    correctiveClaimRequired: false
-    broadcastAttempted: false
-    additionalMovement: "$0"
-  changed_economics_verifier:
-    override: "amount 0.01 -> 0.02"
-    candidate_claim_id: tclaim_0bc19c1a816146aa4995b57377237186
-    sameClaim: false
-    changedFields:
-      - amount
-    status: NEW_CLAIM_REQUIRES_ACCEPTANCE
-    originalImmutable: true
-    correctiveClaimRequired: true
-    broadcastAttempted: false
-    additionalMovement: "$0"
-  independent_chain_proof:
-    verified: true
-    transactionStatus: success
-    transferEventMatched: true
-    keeperHubWasTrustedForThisCheck: false
-    rpcProvider: base-sepolia-rpc.publicnode.com
-    blockNumber: "46916095"
-
-live_operator_smoke_qa:
-  status: pass
-  unauthenticated_operator_request_status: 401
-  policy_status: LOCKED
-  authorization_kind: initial_claim
-  claim_id: tclaim_e5908b04a1b333c7583089dcdca05da3
-  settlement_status: SETTLED
-  execution_id: kh_mock_dcdca05da3
-  receipt_id: treceipt_e5908b04a1b333c7583089dcdca05da3
-  stored_status: SETTLED
-  real_value_moved: false
-  significance: authenticated write path completed CREATE POLICY -> LOCK -> ACCEPTANCE -> CLAIM -> AUTHORIZE -> SETTLE(mock) -> RECEIPT on deployed Cloudflare runtime
+  public_value_movement_enabled: false
+  operator_flow_verified: "CREATE POLICY -> LOCK -> ACCEPTANCE -> CLAIM -> AUTHORIZE -> SETTLE(mock) -> RECEIPT"
 
 ui_ux:
   status: redesign_review_in_progress
   collaborator: Benita
-  direction:
-    - Current UI is functionally useful but visually basic.
-    - Product may be split across multiple pages/surfaces; one-page constraint is removed.
-    - Preserve core semantics, safety states, proof legibility, and domain-native clearing language.
-    - Improve information architecture, operator experience, proof/verification surface, responsive behavior, and demo readability.
+  constraints:
+    - Product does not need to remain one page.
+    - Navigation, information architecture, flows, visual system and interactions may be redesigned.
+    - Preserve Acceptance -> Claim -> Authorization -> Settlement -> Receipt semantics.
+    - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: competitive_scan_expanded_external_review_ready
+  status: external_review_in_progress_gemini_and_perplexity_fact_checked
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
-  external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
-  upstream_rule:
-    - Behavior-changing work requires a KeeperHub issue first.
-    - Issue must contain Reason, Scope, and Plan.
-    - Do not code until the issue is labeled accepted.
-    - Target KeeperHub staging and implement the accepted plan, not a speculative variant.
-  hackathon_signal:
-    - Main track favors KeeperHub integrated into a live project/product instead of another standalone demo.
-    - Separate feature bounty favors a feature KeeperHub can merge.
-    - Tender main-track and bounty work must remain separately packaged.
-  winner_signal:
-    - production seriousness
-    - live/reproducible proof
-    - reusable primitives
-    - test depth
-    - real integration feedback
-    - upstream usefulness
-  recurring_problem_clusters:
-    - durable execution identity, replay, and ambiguous outcomes
-    - ambiguous status/proof interpretation
-    - simulation fidelity and state propagation
-    - machine-readable action contracts and agent discoverability
-    - trigger liveness and observability
-    - signer and authorization clarity
-  current_submission_overlap:
-    finaltab: durable settlement intent, consent, chain proof, replay/crash recovery
-    agentkeeper_mcp: guarded MCP execution, dry-run, idempotency, x402, Merkle audit, multi-chain controls
-    landed: verified landing, stable references, recovery semantics
-    nyrvok: sequential preflight and invariant firewall
-  adjacent_platform_lessons:
-    - Chainlink-style deterministic execution should remain separate from open-ended reasoning.
-    - OpenZeppelin-style relayer/recovery issues reinforce explicit unknown/unconfirmed states and retry discipline.
-    - Hypernative/Monitor reinforce detection-execution separation.
-    - Almanak reinforces strategy/human approval above the execution plane.
-    - Do not derive durable business truth from a transient transport state.
-  tender_adoptable_mechanisms:
-    - explicit authority separation across acceptance, obligation, authorization, execution, proof
-    - explicit non-terminal unknown/unconfirmed states
-    - independent chain proof
-    - stable Claim identity separate from execution IDs and retry keys
-    - clear polling/recovery semantics
-    - bind at least one real existing product/workstream through an acceptance adapter for main-track proof
-  uniqueness_guardrail:
-    - Tender remains the economic-obligation layer above execution.
-    - Do not compete on generic settlement verification, generic idempotency, simulation firewall, Merkle audit, permission cards, or framework wrappers.
-    - Preserve the distinction: accepted work creates an obligation; KeeperHub executes an already-authorized effect.
-  provisional_bounty_candidate:
-    name: Effect-Bound Execution Reference
-    status: source_validated_final_name_sweep_clean_pending_external_critique
-    hypothesis: logical effect identity can outlive transport idempotency and is repeatedly reimplemented as reference/runKey/settlement-intent state by integrations
-    source_validation:
-      direct_execution_row_is_durable_audit_record: true
-      status_lookup_is_internal_execution_id_only: true
-      idempotency_completed_ttl: 24h
-      idempotency_request_hash_exists: true
-      atomic_execution_reservation_boundary: checkAndReserveExecution
-      caller_defined_durable_reference_exists_today: false
-      candidate_can_compose_with_existing_idempotency: true
-    final_overlap_sweep:
-      date: 2026-09-17
-      terms:
-        - execution reference
-        - effect reference
-        - durable reference
-        - reference lookup
-      issue_direct_duplicate_found: false
-      pr_direct_duplicate_found: false
-      semantic_overlap_still_requires_review: true
-    minimal_shape:
-      - optional durable reference on a bounded set of value-moving direct execution routes
-      - bind organization+reference to deterministic exact request hash and executionId
-      - same reference + same bound request resolves original execution/proof
-      - same reference + changed request fails closed with typed conflict
-      - expose reference in status and one read-only lookup path
-      - keep existing 24h Idempotency-Key behavior unchanged
-      - no invoice/work/obligation interpretation inside KeeperHub
-    mergeability_bias:
-      - Prefer exact-request binding for v1 over a universal semantic effect canonicalizer.
-      - Scope reference to organization, not API key.
-      - Reserve the reference at the same atomic boundary that creates the direct execution row.
-    open_design_questions:
-      - final field name
-      - whether route/action participates in uniqueness scope
-      - direct execution column vs separate binding table
-      - lookup route shape
-      - retention semantics
-      - v1 route set
-      - validation/redaction of caller references
-    issue_filed: false
-    implementation_started: false
-  no_go_bounty_duplicates:
-    - "#2495 partial payout resume / web3/disburse"
-    - generic sequential simulation or preflight firewall
-    - "#2395 receipt export"
-    - "#2503 direct-call verification"
-    - "#2398 permission/generative cards"
-    - "#2318 multi-model consensus node"
-    - "#2479 chain-agnostic sign-and-hold"
-    - generic framework connector
-    - generic Merkle audit
-    - generic cross-chain status
-  external_llm_review:
-    status: packet_ready_not_executed
-    packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
-    plugin_directory_check: no_direct_claude_gemini_grok_provider_integration_surfaced
-    planned_reviewers:
-      - Claude for maintainer/mergeability critique
-      - Gemini for API/schema/migration/concurrency critique
-      - Grok for adversarial uniqueness/duplicate search
-    synthesis_rule: one evidence-backed fatal objection defeats majority agreement
-    rule: do not claim external-model review is complete until actual outputs are obtained
-  next_gate:
-    - Run the external-LLM critique packet.
-    - Record evidence-backed synthesis.
-    - Draft KeeperHub Reason/Scope/Plan issue only after critique.
-    - Re-run final upstream overlap immediately before filing.
-    - File only if still distinct, then wait for accepted before code.
-
-remaining_qa:
-  - QA redesigned product on desktop/mobile and reduced motion.
-  - QA loading/error/failure states and navigation after UI changes.
-  - Lock demo narrative/video and final submission packaging.
-  - Bind Tender to a real existing product/workstream through an acceptance adapter for stronger main-track evidence.
-
-local_worktree_note:
-  - npm run verify regenerates evidence/settlement-replay-harness.json timestamp locally.
-  - Restore only that generated file before future branch/commit work if it is the sole local modification.
-
-do_not:
-  - Do not repeat the manual calibration payment.
-  - Do not rerun the canonical value-moving live proof without a new explicit proof objective.
-  - Do not expose TENDER_OPERATOR_TOKEN or KeeperHub API keys.
-  - Do not switch OPERATOR_SETTLEMENT_MODE to workflow during smoke/demo QA.
-  - Do not frame Tender as a bounty marketplace or generic merge-to-pay tool.
-  - Do not give the public judge runtime a value-moving execution adapter.
-  - Do not change locked Tender runtime semantics merely to chase the KeeperHub bounty.
-  - Do not implement an upstream KeeperHub feature before its issue is accepted.
-
-external_review_progress_2026_09_17:
+  review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
   synthesis_doc: docs/EXTERNAL-LLM-CRITIQUE-SYNTHESIS.md
-  gemini:
-    status: received_and_fact_checked
-    strongest_supported_objection: permanent unique reference plus request/effect binding risks creating a second long-lived idempotency/business-identity state machine inside KeeperHub
-    candidate_effect: original Effect-Bound Execution Reference enforcing form demoted_not_ready_to_file
-    surviving_shape: optional non-unique clientReferenceId/externalId metadata plus org-scoped lookup/status exposure
-    still_pending:
-      - Claude maintainer/mergeability critique
-      - Grok adversarial duplicate/competition critique
-  fact_check:
+  contribution_rule: "Issue -> Reason/Scope/Plan -> wait for accepted -> implement -> test -> PR to staging"
+
+  external_reviews:
+    gemini:
+      status: received_and_fact_checked
+      retained:
+        - Do not make KeeperHub the permanent authority for Tender-style business identity.
+        - Do not attempt universal semantic EVM effect fingerprinting.
+        - Permanent reference uniqueness plus request binding creates hard retry/lifecycle semantics.
+        - Metadata-only caller correlation is simpler than a second permanent dedup state machine.
+      corrections:
+        - "#1840 is open/accepted/confirmed; PR #2372 is open, mergeable, not merged."
+        - "#2373 is open/confirmed/needs-discussion, not accepted, and already has active implementation/tests."
+    perplexity:
+      status: received_and_fact_checked
+      retained:
+        - Existing executionId + Idempotency-Key + transaction/proof identifiers make a second generic identity expensive to justify.
+        - Generic semantic-effect equality is not a valid platform primitive.
+        - Permanent reference uniqueness requires explicit release/reuse/retention/supersession semantics.
+        - Independent recurrence for a generic caller reference remains weak.
+        - Metadata-only clientReferenceId may be too small/ordinary for the bounty without stronger demand.
+      corrections:
+        - Broad broadcast-outcome/reconciliation is not clean whitespace; several cited problems are already closed/fixed or actively owned.
+
+  candidate_status:
+    effect_bound_execution_reference:
+      status: stop_do_not_file
+      reasons:
+        - second generic idempotency/identity state machine
+        - unsafe semantic-effect claim
+        - lifecycle/retention/retry ambiguity
+        - weak independent recurrence evidence
+    clientReferenceId_metadata_only:
+      status: hold_low_priority
+      semantics:
+        - optional caller-owned metadata
+        - non_unique
+        - status exposure and org-scoped lookup only
+        - no deduplication
+        - no effect hashing
+        - no 409 semantics
+      blocker: insufficient independent recurrence / may be too weak for bounty
+    broad_outcome_reconciliation:
+      status: no_go_as_new_bounty_candidate
+      reason: strongest sub-problems already fixed/closed or actively covered
+
+  verified_overlap:
     issue_1840: open_accepted_confirmed
     pr_2372: open_mergeable_not_merged
     issue_2373: open_confirmed_needs_discussion_not_accepted
-    issue_2373_takeover: no_go_already_active_with_existing_implementation_tests
-    client_reference_code_search: no current clientReferenceId/externalId/client_reference_id match found
-  rules:
-    - Do not cite unverified Gemini examples or repo details in an upstream issue.
-    - Do not pursue #2373 as our bounty contribution.
-    - Do not build semantic EVM effect fingerprinting.
-    - Do not file any KeeperHub issue until Claude and Grok reviews are synthesized.
+    issue_2020: closed_completed
+    pr_2162: merged
+    issue_2177: closed_completed
+    issue_2374: closed_completed
+    pr_2386: merged
+    issue_1979: closed_completed
+    issue_2495: open_accepted_confirmed
+    pr_2552: open_mergeable_not_merged
 
-next_action: Keep Tender runtime/proof locked. Continue Benita UI/UX work. Obtain Claude and Grok critiques using the same packet, then synthesize whether metadata-only clientReferenceId survives or a stronger bounty candidate replaces it.
+  no_go_areas:
+    - "#2373 asynchronous idempotency release after reconciled conclusive failure"
+    - "#2495/#2552 partial payout resume / web3/disburse"
+    - generic post-broadcast outcome/reconciliation layer
+    - generic sequential simulation or preflight firewall
+    - receipt export
+    - executed-call verification
+    - permission cards
+    - multi-model consensus
+    - generic EVM sign-and-hold
+    - generic framework connector
+    - generic Merkle audit
+    - generic cross-chain status
+    - universal semantic-effect fingerprinting
+
+  next_gate:
+    - Run Claude maintainer/mergeability critique.
+    - Run Grok adversarial uniqueness/duplicate critique.
+    - Use remaining reviews to discover a new narrow whitespace candidate rather than rescue the rejected reference idea.
+    - If nothing high-signal survives, skip the bounty rather than duplicate active work.
+    - Re-run issue/PR overlap immediately before filing anything.
+
+remaining_work:
+  - Continue Benita UI/UX redesign.
+  - Bind Tender to one real existing product/workstream through an acceptance adapter for stronger main-track evidence.
+  - QA redesigned product on desktop/mobile/reduced-motion and failure states.
+  - Lock <=3 minute demo/video and final submission packaging.
+  - Complete Claude/Grok bounty-review gate without changing locked Tender runtime semantics.
+
+do_not:
+  - Do not rerun the canonical value-moving proof without a distinct explicit reason.
+  - Do not expose TENDER_OPERATOR_TOKEN or KeeperHub API keys.
+  - Do not switch OPERATOR_SETTLEMENT_MODE to workflow during current QA/demo work.
+  - Do not weaken Tender into generic merge-to-pay or a bounty marketplace.
+  - Do not add value-moving execution to the public judge runtime.
+  - Do not implement upstream KeeperHub code before an issue is accepted.
+  - Do not chase #2373 or #2495/#2552.
+
+next_action: Keep Tender runtime/proof locked. Continue UI/UX and main-track live-product binding. Obtain Claude and Grok critiques, then run a fresh KeeperHub whitespace sweep for one small, independently evidenced, unclaimed mergeable feature.
