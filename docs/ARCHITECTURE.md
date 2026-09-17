@@ -2,25 +2,35 @@
 
 ```mermaid
 flowchart TD
-  Source["Acceptance adapter"] --> Evidence["Acceptance evidence"]
-  Evidence --> Claim["Tender Claim"]
-  Claim --> KeeperHub["KeeperHub execution"]
+  Policy["Settlement Policy"] --> Packet["Acceptance Packet"]
+  Packet --> Claim["Tender Claim"]
+  Claim --> KeeperHub["KeeperHub settlement"]
   KeeperHub --> Receipt["Tender Receipt"]
-  Receipt --> Store["Claim record store"]
+  Receipt --> Verify["Independent verification"]
 ```
 
 ## Domain Center
 
-Tender is centered on domain concepts:
+Tender is centered on domain concepts, not GitHub glue:
 
-- `Contribution`
-- `AcceptanceEvidence`
 - `SettlementPolicy`
+- `AcceptanceEvidence` / Acceptance Packet
 - `TenderClaim`
+- `EconomicAuthorization`
 - `SettlementExecution`
 - `TenderReceipt`
+- `SettlementRecord`
 
 GitHub is the first acceptance adapter. KeeperHub is the first settlement execution adapter.
+
+## Authority Zones
+
+| Zone | Can Do | Cannot Do |
+| --- | --- | --- |
+| Operator runtime | create/version policies, authorize claims, settle through KeeperHub, reconcile, create corrective claims | rewrite settled receipts |
+| Public judge runtime | recompute identity, replay canonical settled claim, inspect altered economics, verify chain receipt | broadcast KeeperHub payment or access KeeperHub secrets |
+| Source adapter | prove what work was accepted | decide settlement identity |
+| KeeperHub | execute settlement | decide whether accepted work is owed |
 
 ## Tender Claim Identity
 
@@ -31,48 +41,27 @@ The Tender Claim ID is derived from:
 - task/contribution identifier
 - acceptance kind
 - accepted-work identity
-- policy version
+- policy version and optional policy digest
 - recipient set
 - token
 - chain
-- amount
+- normalized amount
 
-Webhook delivery IDs, GitHub Action run IDs, and retry IDs are deliberately excluded. Duplicate delivery, rerun, concurrency, or callback retry must converge on the same Tender Claim.
+Webhook delivery IDs, GitHub Action run IDs, retry IDs, and callback IDs are deliberately excluded. Duplicate delivery, rerun, concurrency, and callback retry converge on the same Tender Claim.
+
+## Changed Economics
+
+If a settled accepted-work identity already has a Tender Receipt, a changed amount, recipient, accepted work, or policy creates a new claim with `REQUIRES_ACCEPTANCE`. No KeeperHub call is made. A new value-moving path requires explicit `EconomicAuthorization` as a corrective claim linked to the original claim.
 
 ## Exactly-Once Guardrails
 
 - In-process claim lock prevents concurrent workers from double executing.
 - Existing `SETTLED` or `ALREADY_SETTLED` records return replay proof instead of re-execution.
+- Changed economics after settlement produce `REQUIRES_ACCEPTANCE`, not an automatic payment.
 - KeeperHub writes use the Tender Claim idempotency key.
-- In-flight claims with a KeeperHub execution ID are reconciled before any rebroadcast.
-- In-flight claims without an execution ID fail closed rather than broadcasting blindly.
-- The canonical live-proof path snapshots the successful settlement before replay and rejects any replay that creates another KeeperHub execution.
-
-## KeeperHub Integration
-
-Configured production path:
-
-- `KEEPERHUB_BASE_URL=https://app.keeperhub.com`
-- `KEEPERHUB_WORKFLOW_ID=yy4ml6aevkov3zaukpx15`
-- Workflow: `Tender: Settle Claim`
-- Network: Base Sepolia (`84532`)
-- Asset: USDC
-- Required trigger inputs: `recipient`, `amount`
-- Downstream bindings: `Manual.data.recipient`, `Manual.data.amount`
-
-Tender owns acceptance, economic entitlement, deterministic claim identity, replay safety, and exactly-once semantics. KeeperHub owns wallet-backed execution and transaction proof.
-
-## Preflight
-
-Before value movement, the diagnostic path verifies:
-
-1. KeeperHub API-key authentication.
-2. Target workflow visibility.
-3. Dynamic trigger schema and bindings.
-4. Workflow simulation acceptance.
-5. Equivalent ERC20 dry-run with `success: true` and `wouldRevert: false`.
-
-The workflow-level simulation may skip a dynamically templated transfer before runtime inputs are resolved; the direct ERC20 simulation provides transaction-level dry-run evidence without signing or broadcasting.
+- In-flight claims with a KeeperHub execution ID reconcile before any rebroadcast.
+- In-flight claims without an execution ID fail closed.
+- Settled receipts are immutable; corrections become linked obligations.
 
 ## Canonical Live Execution
 
