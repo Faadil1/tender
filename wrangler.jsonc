@@ -1,0 +1,7 @@
+{
+  "name": "tender-settlement",
+  "compatibility_date": "2026-09-16",
+  "assets": {
+    "directory": "./dist/public"
+  }
+}
