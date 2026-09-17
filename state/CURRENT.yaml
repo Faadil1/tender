@@ -5,26 +5,29 @@ repository:
   default_branch: main
   remote_history_pushed: true
 branch: main
-baseline_before_delta: 7361422c9ae2ed20e2bef67cf078ee8495dc72a8
 current_gate: GATE_8_DEPLOYMENT_AND_SUBMISSION
+category: economic clearing for accepted work
+north_star: "Accepted once. Owed once. Settled once."
 completed_work:
   - Git history preserved and pushed to canonical GitHub main.
-  - Tender positioned as settlement infrastructure for accepted software contributions.
-  - Tender Claim is the deterministic economic primitive.
-  - Tender Receipt is the signature settlement artifact.
+  - Tender Claim is the deterministic economic primitive and Tender Receipt is the settlement artifact.
   - Exactly-once hardening covers concurrency, replay, reconciliation, and fail-closed in-flight handling.
   - KeeperHub Manual trigger uses required dynamic recipient and amount inputs.
   - Read-only KeeperHub preflight passed with workflow visibility and ERC20 dry-run wouldRevert=false.
   - Canonical Tender-caused live settlement completed through GitHub Actions.
   - Canonical replay returned ALREADY_SETTLED with zero additional KeeperHub executions and $0 additional movement.
-  - Canonical live-proof artifact preserved in evidence/live-proof.json.
-  - Judge-facing UI now renders the real canonical Tender Claim, Tender Receipt, transaction, and replay proof from static evidence.
-  - Cloudflare static-assets deployment is prepared via wrangler.jsonc and npm run deploy:cloudflare.
-  - Continuous npm run verify workflow added for main.
+  - Canonical live-proof artifact is preserved in evidence/live-proof.json.
+  - Cloudflare Worker runtime executes judge-safe Tender verification without a value-moving adapter.
+  - Winning delta PR #1 was locally verified with 16/16 tests and 10 replay scenarios with 0 duplicate payouts, then squash-merged to main.
+  - Economic identity now normalizes economically equivalent decimal amount formatting.
+  - Domain-level obligation verifier distinguishes SAME_CLAIM from NEW_CLAIM / REQUIRES_ACCEPTANCE.
+  - Pre-committed settlement policy artifact, Acceptance Packet, independent Base Sepolia chain proof, same-vs-altered Claim inspector, and clearing-desk UI are implemented.
+  - Competitive Winning Intelligence incorporates prior KeeperHub winner patterns and current-field overlap without copying competitor product surfaces.
 verification:
   local_verify_status: pass
-  unit_tests: 13/13
+  unit_tests: 16/16
   replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
+  winning_delta_merge_sha: e5b99bc1428d2812a066a2f6a47cdba47402ed44
   live_proof_run_id: 35162003096
 keeperhub:
   status: canonical_live_proof_complete
@@ -56,23 +59,35 @@ live_proof:
   additional_keeperhub_executions: 0
   additional_movement: "$0"
   evidence_file: evidence/live-proof.json
-judge_ui:
-  status: canonical_evidence_bound
-  static_evidence_file: public/live-proof.json
-  replay_control: evidence_playback_only_no_broadcast
+judge_runtime:
+  mode: cloudflare_worker_dynamic_judge_safe
+  value_moving_execution_enabled: false
+  endpoints:
+    - GET /api/runtime
+    - GET /api/proof
+    - POST /api/replay
+    - POST /api/claim/verify
+    - GET /api/acceptance-packet
+    - GET /api/chain-proof
+  signature_interactions:
+    - verify same obligation -> SAME_CLAIM / ALREADY_SETTLED / $0 additional movement
+    - alter amount, recipient, policy, or accepted work -> NEW_CLAIM / REQUIRES_ACCEPTANCE / $0 movement
+  independent_proof: Base Sepolia ERC20 Transfer verification for canonical settlement
 deployment:
-  status: prepared_not_published
-  preferred: Cloudflare Workers Static Assets
+  target: Cloudflare Worker + Static Assets
+  url: https://tender-settlement.faadil-casecraft.workers.dev
   config: wrangler.jsonc
   command: npm run deploy:cloudflare
-  output_directory: dist/public
+  status: prior_build_published_latest_main_redeploy_pending
 active_blockers:
-  - Cloudflare account authorization/publish is still required outside the available connectors.
-  - Final live URL QA is pending.
+  - Redeploy latest merged main to the existing Cloudflare Worker URL.
+  - QA runtime endpoints, independent chain proof, claim mutation inspector, desktop/mobile, and reduced-motion.
+  - Integrate Tender with a real live project acceptance event for stronger live-project evidence if time allows.
   - Final demo/video and DoraHacks submission packaging remain.
 do_not:
   - Do not repeat the manual calibration payment.
   - Do not rerun the canonical value-moving live proof without a new explicit proof objective.
   - Do not expose KeeperHub API keys.
-  - Do not frame Tender as a bounty marketplace.
-next_action: Authorize Cloudflare and publish the prepared static judge surface, QA the live URL, then lock the demo/video and final submission pack.
+  - Do not frame Tender as a bounty marketplace or generic merge-to-pay tool.
+  - Do not give the public judge runtime a value-moving KeeperHub adapter.
+next_action: Pull merged main, discard only the locally regenerated replay-harness timestamp artifact if needed, verify main, redeploy the existing Cloudflare Worker, then QA the live clearing-desk runtime before video lock.
