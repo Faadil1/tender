@@ -29,7 +29,7 @@ Reduced motion keeps the same facts and stamps without relying on animation.
 
 ## Receipt Treatment
 
-The Tender Receipt should feel like a real settlement artifact:
+The Tender Receipt is presented as a real settlement artifact with:
 
 - claim ID
 - policy version
@@ -40,6 +40,16 @@ The Tender Receipt should feel like a real settlement artifact:
 - transaction hash
 - status
 
+The judge-facing page now opens directly on the canonical `SETTLED` evidence and lets the viewer play back the already-recorded replay result as `NO SECOND PAYMENT`; the control does not broadcast another transaction.
+
 ## Evidence Status
 
-Runtime UI has been locally smoke-tested only. Full device matrix remains pending after deploy.
+Canonical live proof is complete and bound into the UI:
+
+- Tender Claim: `tclaim_94eb021e7894252897176543cc9d7b49`
+- Tender Receipt: `treceipt_94eb021e7894252897176543cc9d7b49`
+- KeeperHub execution: `7k14qt2a1989rrc5r370d`
+- Transaction: `0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db`
+- Replay: same claim, 0 additional KeeperHub executions, `$0` additional movement
+
+Full device QA remains a deployment-stage check.
