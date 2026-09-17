@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MemorySettlementRepository } from "../src/adapters/memoryRepository.js";
+import { claimIdFor } from "../src/domain/identity.js";
+import { MemoryOperatorStore, StoreBackedAuthorizationVerifier } from "../src/domain/operatorRuntime.js";
 import { SettlementEngine } from "../src/domain/settlementEngine.js";
-import type { SettlementClaim, SettlementExecutor, SettlementRecord } from "../src/domain/types.js";
+import type { EconomicAuthorization, SettlementClaim, SettlementExecutor, SettlementPolicy, SettlementRecord } from "../src/domain/types.js";
 import { demoAcceptance, demoContribution } from "../src/server/demoData.js";
 
 class FakeExecutor implements SettlementExecutor {
@@ -20,8 +22,30 @@ class FakeExecutor implements SettlementExecutor {
   async reconcile(record: SettlementRecord) { this.reconcileCalls += 1; record.status = "SETTLED"; record.transactionHash = "0xreconciled"; return record; }
 }
 
-function engine(executor = new FakeExecutor()) {
-  return { executor, engine: new SettlementEngine(new MemorySettlementRepository(), executor, { version: "policy.test.v1", token: "USDC", chainId: 84532, maxAmount: "5", requireReview: false }) };
+const testPolicy: SettlementPolicy = { version: "policy.test.v1", token: "USDC", chainId: 84532, maxAmount: "5", requireReview: false };
+
+function engine(executor = new FakeExecutor(), authorizationVerifier?: StoreBackedAuthorizationVerifier) {
+  return { executor, engine: new SettlementEngine(new MemorySettlementRepository(), executor, testPolicy, authorizationVerifier) };
+}
+
+async function authorizedCorrection(
+  linkedClaimId: string,
+  contribution = { ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }] }
+) {
+  const store = new MemoryOperatorStore();
+  const acceptance = demoAcceptance({ acceptanceKind: "operator_correction", action: "operator.accepted" });
+  const authorizedClaimId = claimIdFor(contribution, acceptance, testPolicy);
+  const authorization: EconomicAuthorization = {
+    authorizationId: "auth-correct-1",
+    kind: "corrective_claim",
+    authorizedClaimId,
+    authorizedBy: "maintainer",
+    authorizedAt: new Date().toISOString(),
+    linkedClaimId,
+    reason: "accepted additional contributor scope"
+  };
+  await store.put(`authorization:${authorization.authorizationId}`, authorization);
+  return { contribution: { ...contribution, economicAuthorization: authorization }, acceptance, verifier: new StoreBackedAuthorizationVerifier(store), store, authorization };
 }
 
 test("deterministic claim settles accepted contribution once", async () => {
@@ -64,6 +88,7 @@ test("temporary KeeperHub failure is retryable under same settlement identity", 
   const failed = await tender.handleAcceptance(demoContribution, demoAcceptance());
   assert.equal(failed.status, "RETRYABLE_FAILURE");
   assert.equal(fake.calls, 1);
+  assert.equal(failed.claim.idempotencyKey, `tender:claim:${failed.claim.claimId}`);
 });
 
 test("forged webhook evidence is quarantined", async () => {
@@ -80,6 +105,7 @@ test("reconciliation can recover completed payment after interrupted callback", 
   const recovered = await tender.reconcile(settled.claim.settlementId);
   assert.equal(recovered?.status, "SETTLED");
   assert.equal(recovered?.transactionHash, "0xreconciled");
+  assert.ok(recovered?.receipt);
 });
 
 test("two concurrent workers converge on one claim and one execution", async () => {
@@ -101,12 +127,95 @@ test("altered economics on already settled accepted work require new acceptance 
 });
 
 test("authorized corrective claim creates a linked new obligation without rewriting original receipt", async () => {
-  const { engine: tender, executor } = engine();
-  const first = await tender.handleAcceptance(demoContribution, demoAcceptance());
-  const corrective = await tender.handleAcceptance({ ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }], economicAuthorization: { authorizationId: "auth-correct-1", kind: "corrective_claim", authorizedBy: "maintainer", authorizedAt: new Date().toISOString(), linkedClaimId: first.claim.claimId, reason: "accepted additional contributor scope" } }, demoAcceptance({ acceptanceKind: "operator_correction", action: "operator.accepted" }));
+  const repo = new MemorySettlementRepository();
+  const executor = new FakeExecutor();
+  const firstTender = new SettlementEngine(repo, executor, testPolicy);
+  const first = await firstTender.handleAcceptance(demoContribution, demoAcceptance());
+  const authorized = await authorizedCorrection(first.claim.claimId);
+  const tender = new SettlementEngine(repo, executor, testPolicy, authorized.verifier);
+  const corrective = await tender.handleAcceptance(authorized.contribution, authorized.acceptance);
   assert.equal(corrective.status, "SETTLED");
   assert.equal(corrective.claim.linkedClaimId, first.claim.claimId);
   assert.equal(first.status, "SETTLED");
+  assert.equal(executor.calls, 2);
+});
+
+test("forged corrective authorization is rejected before KeeperHub execution", async () => {
+  const { engine: tender, executor } = engine();
+  const first = await tender.handleAcceptance(demoContribution, demoAcceptance());
+  const contribution = { ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }] };
+  const acceptance = demoAcceptance({ acceptanceKind: "operator_correction", action: "operator.accepted" });
+  const forged = await tender.handleAcceptance({
+    ...contribution,
+    economicAuthorization: {
+      authorizationId: "forged-auth",
+      kind: "corrective_claim",
+      authorizedClaimId: claimIdFor(contribution, acceptance, testPolicy),
+      authorizedBy: "attacker",
+      authorizedAt: new Date().toISOString(),
+      linkedClaimId: first.claim.claimId,
+      reason: "not stored by operator"
+    }
+  }, acceptance);
+  assert.equal(forged.status, "REQUIRES_ACCEPTANCE");
+  assert.equal(executor.calls, 1);
+});
+
+test("authorization linked to the wrong settled claim is rejected", async () => {
+  const repo = new MemorySettlementRepository();
+  const executor = new FakeExecutor();
+  const firstTender = new SettlementEngine(repo, executor, testPolicy);
+  const first = await firstTender.handleAcceptance(demoContribution, demoAcceptance());
+  const authorized = await authorizedCorrection("tclaim_wrong_linked_claim");
+  const tender = new SettlementEngine(repo, executor, testPolicy, authorized.verifier);
+  const rejected = await tender.handleAcceptance(authorized.contribution, authorized.acceptance);
+  assert.equal(rejected.status, "REQUIRES_ACCEPTANCE");
+  assert.equal(rejected.claim.linkedClaimId, first.claim.claimId);
+  assert.equal(executor.calls, 1);
+});
+
+test("authorization bound to a different candidate claim is rejected", async () => {
+  const repo = new MemorySettlementRepository();
+  const executor = new FakeExecutor();
+  const firstTender = new SettlementEngine(repo, executor, testPolicy);
+  const first = await firstTender.handleAcceptance(demoContribution, demoAcceptance());
+  const contribution = { ...demoContribution, amount: "1.25", recipients: [{ ...demoContribution.recipients[0], amount: "1.25" }] };
+  const acceptance = demoAcceptance({ acceptanceKind: "operator_correction", action: "operator.accepted" });
+  const store = new MemoryOperatorStore();
+  const authorization: EconomicAuthorization = {
+    authorizationId: "auth-wrong-candidate",
+    kind: "corrective_claim",
+    authorizedClaimId: "tclaim_some_other_candidate",
+    authorizedBy: "maintainer",
+    authorizedAt: new Date().toISOString(),
+    linkedClaimId: first.claim.claimId,
+    reason: "bound to a different correction"
+  };
+  await store.put(`authorization:${authorization.authorizationId}`, authorization);
+  const tender = new SettlementEngine(repo, executor, testPolicy, new StoreBackedAuthorizationVerifier(store));
+  const rejected = await tender.handleAcceptance({ ...contribution, economicAuthorization: authorization }, acceptance);
+  assert.equal(rejected.status, "REQUIRES_ACCEPTANCE");
+  assert.equal(executor.calls, 1);
+});
+
+test("consumed authorization cannot be replayed for a second candidate claim", async () => {
+  const repo = new MemorySettlementRepository();
+  const executor = new FakeExecutor();
+  const firstTender = new SettlementEngine(repo, executor, testPolicy);
+  const first = await firstTender.handleAcceptance(demoContribution, demoAcceptance());
+  const authorized = await authorizedCorrection(first.claim.claimId);
+  const tender = new SettlementEngine(repo, executor, testPolicy, authorized.verifier);
+  const corrective = await tender.handleAcceptance(authorized.contribution, authorized.acceptance);
+  assert.equal(corrective.status, "SETTLED");
+
+  const changedAgain = {
+    ...demoContribution,
+    amount: "1.50",
+    recipients: [{ ...demoContribution.recipients[0], amount: "1.50" }],
+    economicAuthorization: { ...authorized.authorization, authorizedClaimId: claimIdFor({ ...demoContribution, amount: "1.50", recipients: [{ ...demoContribution.recipients[0], amount: "1.50" }] }, authorized.acceptance, testPolicy) }
+  };
+  const rejected = await tender.handleAcceptance(changedAgain, authorized.acceptance);
+  assert.equal(rejected.status, "REQUIRES_ACCEPTANCE");
   assert.equal(executor.calls, 2);
 });
 
@@ -118,6 +227,8 @@ test("in-flight KeeperHub execution is reconciled without rebroadcast", async ()
   const recovered = await tender.handleAcceptance(demoContribution, demoAcceptance({ eventId: "replay-while-settling" }));
   assert.equal(firstStatus, "SETTLING");
   assert.equal(recovered.status, "SETTLED");
+  assert.equal(recovered.transactionHash, "0xreconciled");
   assert.equal(fake.calls, 1);
   assert.equal(fake.reconcileCalls, 1);
+  assert.ok(recovered.receipt);
 });
