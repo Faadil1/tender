@@ -42,6 +42,7 @@ const noBroadcastExecutor: SettlementExecutor = {
 };
 
 class CloudflareKVOperatorStore implements OperatorStore {
+  readonly consistency = "eventual" as const;
   constructor(private readonly kv: KVNamespace) {}
   async get<T>(key: string) {
     const value = await this.kv.get(key);
@@ -74,15 +75,17 @@ async function requireOperator(request: Request, env: Env) {
   if ((request.headers.get("Authorization") ?? "") !== `Bearer ${env.TENDER_OPERATOR_TOKEN}`) {
     return { ok: false as const, response: json({ error: "operator_unauthorized" }, 401) };
   }
-  return { ok: true as const, service: new TenderOperatorService(new CloudflareKVOperatorStore(env.TENDER_OPERATOR_STORE)) };
+  const store = new CloudflareKVOperatorStore(env.TENDER_OPERATOR_STORE);
+  return { ok: true as const, service: new TenderOperatorService(store), store };
 }
 
 async function readJson<T>(request: Request) {
   return (await request.json()) as T;
 }
 
-function operatorExecutor(env: Env) {
+function operatorExecutor(env: Env, store: OperatorStore) {
   if (env.OPERATOR_SETTLEMENT_MODE === "mock") return new KeeperHubExecutor({ mode: "mock" });
+  if (store.consistency !== "strong") throw new Error("strong_operator_store_required_for_workflow_settlement");
   if (!env.KEEPERHUB_API_KEY || !env.KEEPERHUB_WORKFLOW_ID) throw new Error("keeperhub_operator_execution_not_configured");
   return new KeeperHubExecutor({
     apiKey: env.KEEPERHUB_API_KEY,
@@ -250,10 +253,10 @@ async function handleOperator(request: Request, env: Env, pathname: string) {
     return json(await service.authorizeClaim({ ...body, candidateClaimId: decodeURIComponent(segments[3]) }), 201);
   }
   if (request.method === "POST" && segments[2] === "claims" && segments[4] === "settle") {
-    return json(await service.settleClaim(decodeURIComponent(segments[3]), operatorExecutor(env)));
+    return json(await service.settleClaim(decodeURIComponent(segments[3]), operatorExecutor(env, auth.store)));
   }
   if (request.method === "POST" && segments[2] === "claims" && segments[4] === "reconcile") {
-    return json(await service.reconcileClaim(decodeURIComponent(segments[3]), operatorExecutor(env)));
+    return json(await service.reconcileClaim(decodeURIComponent(segments[3]), operatorExecutor(env, auth.store)));
   }
   if (request.method === "POST" && segments[2] === "claims" && segments[4] === "supersede") {
     const body = await readJson<{ supersededByClaimId: string; reason: string }>(request);
