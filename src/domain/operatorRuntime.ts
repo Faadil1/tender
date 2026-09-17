@@ -28,7 +28,7 @@ export interface OperatorObligation {
   policyVersion: string;
   contribution: Contribution;
   acceptance: AcceptanceEvidence;
-  status: "CLAIMED" | "AUTHORIZED" | "SETTLING" | "SETTLED" | "REQUIRES_ACCEPTANCE" | "SUPERSEDED";
+  status: SettlementRecord["status"] | "AUTHORIZED" | "SUPERSEDED";
   authorizationId?: string;
   supersededByClaimId?: string;
   createdAt: string;
@@ -36,10 +36,12 @@ export interface OperatorObligation {
 }
 
 export interface OperatorStore {
+  readonly consistency: "strong" | "eventual";
   get<T>(key: string): Promise<T | undefined>;
   put<T>(key: string, value: T): Promise<void>;
   delete(key: string): Promise<void>;
   list<T>(prefix: string): Promise<Array<{ key: string; value: T }>>;
+  consumeAuthorization?(key: string, context: EconomicAuthorizationContext, payload: EconomicAuthorization): Promise<EconomicAuthorizationDecision>;
 }
 
 const keys = {
@@ -64,7 +66,9 @@ function operatorId(prefix: string) {
 }
 
 export class MemoryOperatorStore implements OperatorStore {
+  readonly consistency = "strong" as const;
   private readonly values = new Map<string, unknown>();
+  private readonly locks = new Map<string, Promise<unknown>>();
 
   async get<T>(key: string) {
     return this.values.get(key) as T | undefined;
@@ -82,6 +86,24 @@ export class MemoryOperatorStore implements OperatorStore {
     return [...this.values.entries()]
       .filter(([key]) => key.startsWith(prefix))
       .map(([key, value]) => ({ key, value: structuredClone(value) as T }));
+  }
+
+  async consumeAuthorization(key: string, context: EconomicAuthorizationContext, payload: EconomicAuthorization) {
+    const prior = this.locks.get(key) ?? Promise.resolve();
+    let release!: () => void;
+    const current = prior.then(() => new Promise<void>((resolve) => { release = resolve; }));
+    this.locks.set(key, current);
+    await prior;
+    try {
+      const stored = this.values.get(key) as EconomicAuthorization | undefined;
+      const decision = validateAuthorization(stored, payload, context);
+      if (!decision.ok) return decision;
+      this.values.set(key, structuredClone({ ...stored, consumedAt: now() }));
+      return { ok: true as const };
+    } finally {
+      release();
+      if (this.locks.get(key) === current) this.locks.delete(key);
+    }
   }
 }
 
@@ -105,22 +127,20 @@ export class StoreBackedAuthorizationVerifier implements EconomicAuthorizationVe
   constructor(private readonly store: OperatorStore) {}
 
   async consume(authorization: EconomicAuthorization, context: EconomicAuthorizationContext): Promise<EconomicAuthorizationDecision> {
-    const stored = await this.store.get<EconomicAuthorization>(keys.authorization(authorization.authorizationId));
-    if (!stored) return { ok: false, error: "authorization_not_found" };
-    if (stored.consumedAt) return { ok: false, error: "authorization_already_consumed" };
-    if (stored.kind !== authorization.kind) return { ok: false, error: "authorization_kind_mismatch" };
-    if (stored.authorizedClaimId !== context.candidateClaimId) return { ok: false, error: "authorization_candidate_claim_mismatch" };
-    if (stored.authorizedClaimId !== authorization.authorizedClaimId) return { ok: false, error: "authorization_payload_claim_mismatch" };
-    if (stored.linkedClaimId !== context.linkedClaimId || authorization.linkedClaimId !== context.linkedClaimId) {
-      return { ok: false, error: "authorization_linked_claim_mismatch" };
-    }
-
-    await this.store.put(keys.authorization(stored.authorizationId), {
-      ...stored,
-      consumedAt: now()
-    });
-    return { ok: true };
+    const key = keys.authorization(authorization.authorizationId);
+    if (!this.store.consumeAuthorization) return { ok: false, error: "authorization_store_not_atomic" };
+    return this.store.consumeAuthorization(key, context, authorization);
   }
+}
+
+function validateAuthorization(stored: EconomicAuthorization | undefined, authorization: EconomicAuthorization, context: EconomicAuthorizationContext): EconomicAuthorizationDecision {
+  if (!stored) return { ok: false, error: "authorization_not_found" };
+  if (stored.consumedAt) return { ok: false, error: "authorization_already_consumed" };
+  if (stored.kind !== authorization.kind) return { ok: false, error: "authorization_kind_mismatch" };
+  if (stored.authorizedClaimId !== context.candidateClaimId) return { ok: false, error: "authorization_candidate_claim_mismatch" };
+  if (stored.authorizedClaimId !== authorization.authorizedClaimId) return { ok: false, error: "authorization_payload_claim_mismatch" };
+  if (stored.linkedClaimId !== context.linkedClaimId || authorization.linkedClaimId !== context.linkedClaimId) return { ok: false, error: "authorization_linked_claim_mismatch" };
+  return { ok: true };
 }
 
 export class TenderOperatorService {
@@ -128,6 +148,9 @@ export class TenderOperatorService {
 
   async createPolicy(input: SettlementPolicy & { createdBy: string }) {
     const policyDigest = requireNonEmpty(input.policyDigest, "policyDigest");
+    const existing = await this.store.get<OperatorSettlementPolicy>(keys.policy(input.version));
+    if (existing?.status === "LOCKED") throw new Error("locked_policy_cannot_be_overwritten");
+    if (existing) throw new Error("policy_version_already_exists");
     const policy: OperatorSettlementPolicy = {
       ...input,
       policyDigest,
@@ -140,6 +163,7 @@ export class TenderOperatorService {
 
   async lockPolicy(version: string) {
     const policy = await this.requirePolicy(version);
+    if (policy.status === "LOCKED") return policy;
     const locked: OperatorSettlementPolicy = { ...policy, status: "LOCKED", lockedAt: now() };
     await this.store.put(keys.policy(version), locked);
     return locked;
@@ -152,6 +176,7 @@ export class TenderOperatorService {
 
   async createObligation(contribution: Contribution, acceptance: AcceptanceEvidence, policyVersion: string) {
     const policy = await this.requirePolicy(policyVersion);
+    this.assertPolicyPrecommitted(policy, acceptance);
     const claimId = claimIdFor(contribution, acceptance, policy);
     const obligation: OperatorObligation = {
       claimId,
@@ -201,6 +226,7 @@ export class TenderOperatorService {
   async settleClaim(claimId: string, executor: SettlementExecutor) {
     const obligation = await this.requireObligation(claimId);
     const policy = await this.requirePolicy(obligation.policyVersion);
+    this.assertPolicyPrecommitted(policy, obligation.acceptance);
     const repo = await this.repository();
     const verifier = new StoreBackedAuthorizationVerifier(this.store);
     const authorization = obligation.authorizationId
@@ -214,7 +240,7 @@ export class TenderOperatorService {
     const record = await engine.handleAcceptance(contribution, obligation.acceptance);
     await this.store.put(keys.obligation(claimId), {
       ...obligation,
-      status: record.status === "SETTLED" || record.status === "ALREADY_SETTLED" ? "SETTLED" : record.status === "REQUIRES_ACCEPTANCE" ? "REQUIRES_ACCEPTANCE" : "SETTLING",
+      status: record.status,
       updatedAt: now()
     } satisfies OperatorObligation);
     return record;
@@ -222,12 +248,15 @@ export class TenderOperatorService {
 
   async reconcileClaim(claimId: string, executor: SettlementExecutor) {
     const repo = await this.repository();
-    return repo.get(claimId).then(async (record) => {
-      if (!record) throw new Error("settlement_record_not_found");
-      const reconciled = await executor.reconcile(record);
-      await repo.put(reconciled);
-      return reconciled;
-    });
+    const record = await repo.get(claimId);
+    if (!record) throw new Error("settlement_record_not_found");
+    const obligation = await this.requireObligation(claimId);
+    const policy = await this.requirePolicy(obligation.policyVersion);
+    const engine = new SettlementEngine(repo, executor, policy, new StoreBackedAuthorizationVerifier(this.store));
+    const reconciled = await engine.reconcile(claimId);
+    if (!reconciled) throw new Error("settlement_record_not_found");
+    await this.store.put(keys.obligation(claimId), { ...obligation, status: reconciled.status, updatedAt: now() } satisfies OperatorObligation);
+    return reconciled;
   }
 
   async supersedeUnsettledClaim(claimId: string, supersededByClaimId: string, reason: string) {
@@ -293,6 +322,11 @@ export class TenderOperatorService {
     const policy = await this.store.get<OperatorSettlementPolicy>(keys.policy(version));
     if (!policy) throw new Error("policy_not_found");
     return policy;
+  }
+
+  private assertPolicyPrecommitted(policy: OperatorSettlementPolicy, acceptance: AcceptanceEvidence) {
+    if (policy.status !== "LOCKED" || !policy.lockedAt) throw new Error("policy_must_be_locked_before_obligation");
+    if (new Date(policy.lockedAt).getTime() > new Date(acceptance.eventTime).getTime()) throw new Error("policy_not_precommitted_before_acceptance");
   }
 
   private async requireObligation(claimId: string) {
