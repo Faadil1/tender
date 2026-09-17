@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-17T02:55:01.416Z",
-  "scenarios": 11,
+  "generatedAt": "2026-09-17T03:15:26.253Z",
+  "scenarios": 12,
   "duplicatePayouts": 0,
-  "statement": "11 settlement scenarios replayed · 0 duplicate payouts",
+  "statement": "12 settlement scenarios replayed · 0 duplicate payouts",
   "results": [
     {
       "name": "duplicate webhook",
@@ -43,7 +43,7 @@
       "keeperHubExecutions": 0,
       "duplicatePayouts": 0,
       "claimIds": [
-        "blocked_9e4daf3c82d7fdadefc9f17a"
+        "blocked_d58dea635e2bdcac96bfbf21"
       ],
       "notes": "No accepted obligation exists."
     },
@@ -53,7 +53,7 @@
       "keeperHubExecutions": 0,
       "duplicatePayouts": 0,
       "claimIds": [
-        "blocked_d7005a6a2ada0765a74b293c"
+        "blocked_d73795331fe3c5c281e85e33"
       ],
       "notes": "Checks failed before settlement."
     },
@@ -63,7 +63,7 @@
       "keeperHubExecutions": 0,
       "duplicatePayouts": 0,
       "claimIds": [
-        "blocked_cf9f53882e36e8625cef85ce"
+        "blocked_719ec5b9b33fc597751c0774"
       ],
       "notes": "Unsafe recipient blocked before KeeperHub."
     },
@@ -77,6 +77,17 @@
         "tclaim_be620e553720b775f51eb0dacbee0026"
       ],
       "notes": "Changed economics create a different Tender Claim, but no second settlement without explicit acceptance."
+    },
+    {
+      "name": "forged corrective authorization rejected",
+      "finalStatus": "REQUIRES_ACCEPTANCE",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_623dbb2eee5a601e16581f595c1bc887"
+      ],
+      "notes": "Caller-supplied authorization is rejected unless the operator store can consume it."
     },
     {
       "name": "authorized corrective claim",
