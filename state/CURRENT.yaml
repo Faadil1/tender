@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: external_review_in_progress_gemini_and_perplexity_fact_checked
+  status: external_review_in_progress_gemini_perplexity_kimi_fact_checked
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -72,9 +72,6 @@ keeperhub_bounty_intelligence:
         - Do not attempt universal semantic EVM effect fingerprinting.
         - Permanent reference uniqueness plus request binding creates hard retry/lifecycle semantics.
         - Metadata-only caller correlation is simpler than a second permanent dedup state machine.
-      corrections:
-        - "#1840 is open/accepted/confirmed; PR #2372 is open, mergeable, not merged."
-        - "#2373 is open/confirmed/needs-discussion, not accepted, and already has active implementation/tests."
     perplexity:
       status: received_and_fact_checked
       retained:
@@ -82,19 +79,31 @@ keeperhub_bounty_intelligence:
         - Generic semantic-effect equality is not a valid platform primitive.
         - Permanent reference uniqueness requires explicit release/reuse/retention/supersession semantics.
         - Independent recurrence for a generic caller reference remains weak.
-        - Metadata-only clientReferenceId may be too small/ordinary for the bounty without stronger demand.
+        - Metadata-only reference may be too small/ordinary for the bounty without stronger demand.
+    kimi:
+      status: received_and_fact_checked
+      retained:
+        - Permanent fail-closed execution references leak Tender-style business semantics into KeeperHub.
+        - Permanent binding conflicts with KeeperHub's definite-failure release path under #1840/PR #2372.
+        - "#2495/#2552 already provides a scoped durable runKey where platform-owned identity is concretely justified."
+        - KeeperHub stable-key documentation already covers much of deterministic retry identity.
+        - Cross-route reference scoping is unresolved and weakens the generic proposal.
       corrections:
-        - Broad broadcast-outcome/reconciliation is not clean whitespace; several cited problems are already closed/fixed or actively owned.
+        - "#2408 is closed/completed, accepted/confirmed, and cannot be taken as our new bounty issue."
+        - "PR #2446 merged the accepted docs half and closed #2408."
+        - "The execution-level softened-error carrier/analytics remainder was explicitly retained by KeeperHub core-team discussion."
 
   candidate_status:
     effect_bound_execution_reference:
       status: stop_do_not_file
       reasons:
+        - business-semantic leakage
         - second generic idempotency/identity state machine
         - unsafe semantic-effect claim
         - lifecycle/retention/retry ambiguity
+        - overlap with "#2495/#2552"
         - weak independent recurrence evidence
-    clientReferenceId_metadata_only:
+    callerReference_metadata_only:
       status: hold_low_priority
       semantics:
         - optional caller-owned metadata
@@ -107,6 +116,10 @@ keeperhub_bounty_intelligence:
     broad_outcome_reconciliation:
       status: no_go_as_new_bounty_candidate
       reason: strongest sub-problems already fixed/closed or actively covered
+    softened_error_execution_contract:
+      status: no_go_occupied
+      issue: 2408
+      reason: issue closed/completed; docs merged via PR 2446; remaining execution-level shape retained by core team
 
   verified_overlap:
     issue_1840: open_accepted_confirmed
@@ -118,12 +131,15 @@ keeperhub_bounty_intelligence:
     issue_2374: closed_completed
     pr_2386: merged
     issue_1979: closed_completed
+    issue_2408: closed_completed_accepted_confirmed
+    pr_2446: merged
     issue_2495: open_accepted_confirmed
     pr_2552: open_mergeable_not_merged
 
   no_go_areas:
     - "#2373 asynchronous idempotency release after reconciled conclusive failure"
     - "#2495/#2552 partial payout resume / web3/disburse"
+    - "#2408 softened-error execution reporting"
     - generic post-broadcast outcome/reconciliation layer
     - generic sequential simulation or preflight firewall
     - receipt export
@@ -139,7 +155,7 @@ keeperhub_bounty_intelligence:
   next_gate:
     - Run Claude maintainer/mergeability critique.
     - Run Grok adversarial uniqueness/duplicate critique.
-    - Use remaining reviews to discover a new narrow whitespace candidate rather than rescue the rejected reference idea.
+    - Use remaining reviews to discover a new narrow whitespace candidate rather than rescue rejected ideas.
     - If nothing high-signal survives, skip the bounty rather than duplicate active work.
     - Re-run issue/PR overlap immediately before filing anything.
 
@@ -157,6 +173,6 @@ do_not:
   - Do not weaken Tender into generic merge-to-pay or a bounty marketplace.
   - Do not add value-moving execution to the public judge runtime.
   - Do not implement upstream KeeperHub code before an issue is accepted.
-  - Do not chase #2373 or #2495/#2552.
+  - Do not chase "#2373", "#2495/#2552", or "#2408".
 
 next_action: Keep Tender runtime/proof locked. Continue UI/UX and main-track live-product binding. Obtain Claude and Grok critiques, then run a fresh KeeperHub whitespace sweep for one small, independently evidenced, unclaimed mergeable feature.
