@@ -91,3 +91,47 @@ do_not:
   - Do not frame Tender as a bounty marketplace or generic merge-to-pay tool.
   - Do not give the public judge runtime a value-moving KeeperHub adapter.
 next_action: Pull merged main, discard only the locally regenerated replay-harness timestamp artifact if needed, verify main, redeploy the existing Cloudflare Worker, then QA the live clearing-desk runtime before video lock.
+
+pr_2_gate_review_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push_second_gate
+  purpose: authenticated write-enabled operator runtime and authorization hardening
+  completed_work:
+    - Implemented authenticated operator runtime contract with policy creation/versioning/locking, acceptance ingestion, obligation creation, claim authorization, settlement, reconciliation, supersession, and corrective claims.
+    - Bound EconomicAuthorization to authorizedClaimId and linkedClaimId.
+    - Added durable one-time authorization consumption through the operator store verifier.
+    - Public judge runtime remains non-value-moving; operator endpoints are bearer-authenticated and fail closed without configured store/credentials.
+    - Restored settlement-engine assertions for idempotency key, reconciled transaction hash, and receipt presence.
+    - Added PR CI for pull_request on main.
+    - Extended replay harness with forged corrective authorization rejection.
+  verification:
+    command: npm run verify
+    status: pass
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  keeperhub_live_proof:
+    preserved: true
+    no_new_payment_executed: true
+    claim_id: tclaim_94eb021e7894252897176543cc9d7b49
+    receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
+    keeperhub_execution_id: 7k14qt2a1989rrc5r370d
+    transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
+  next_action: Push branch updates to PR #2 and allow repository PR CI to verify before merge.
+
+second_gate_review_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push
+  completed_work:
+    - Made REQUIRES_ACCEPTANCE sticky on retry unless exact stored authorization is consumed.
+    - Routed operator reconciliation through SettlementEngine.reconcile so Tender Receipt finalization is preserved.
+    - Enforced locked/precommitted policies before obligation creation and settlement; locked versions cannot be overwritten.
+    - Added strong-store authorization consumption contract; workflow settlement fails closed on eventual KV-only store.
+    - Preserved engine statuses in operator obligation projections.
+  verification:
+    command: npm run verify
+    status: pass
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  keeperhub_live_proof:
+    preserved: true
+    no_new_payment_executed: true

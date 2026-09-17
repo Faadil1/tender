@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-16T21:54:59.705Z",
-  "scenarios": 10,
+  "generatedAt": "2026-09-17T04:10:20.534Z",
+  "scenarios": 12,
   "duplicatePayouts": 0,
-  "statement": "10 settlement scenarios replayed · 0 duplicate payouts",
+  "statement": "12 settlement scenarios replayed · 0 duplicate payouts",
   "results": [
     {
       "name": "duplicate webhook",
@@ -10,8 +10,8 @@
       "keeperHubExecutions": 1,
       "duplicatePayouts": 0,
       "claimIds": [
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a"
       ],
       "notes": "Second delivery mapped to same Tender Claim."
     },
@@ -21,8 +21,8 @@
       "keeperHubExecutions": 1,
       "duplicatePayouts": 0,
       "claimIds": [
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a"
       ],
       "notes": "In-process lock converged workers before second execution."
     },
@@ -32,8 +32,8 @@
       "keeperHubExecutions": 1,
       "duplicatePayouts": 0,
       "claimIds": [
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a"
       ],
       "notes": "Action rerun does not create a new economic obligation."
     },
@@ -43,7 +43,7 @@
       "keeperHubExecutions": 0,
       "duplicatePayouts": 0,
       "claimIds": [
-        "blocked_dc99254eb90094acca718a98"
+        "blocked_909c7b15092e11a16416ad69"
       ],
       "notes": "No accepted obligation exists."
     },
@@ -53,7 +53,7 @@
       "keeperHubExecutions": 0,
       "duplicatePayouts": 0,
       "claimIds": [
-        "blocked_2d04ea7a3a6c465e24008337"
+        "blocked_c5096d86287c0052e4abe70d"
       ],
       "notes": "Checks failed before settlement."
     },
@@ -63,20 +63,42 @@
       "keeperHubExecutions": 0,
       "duplicatePayouts": 0,
       "claimIds": [
-        "blocked_dde2c5b7ce9ba1401952ea78"
+        "blocked_8293160210fefefc3affba0b"
       ],
       "notes": "Unsafe recipient blocked before KeeperHub."
     },
     {
-      "name": "altered economic claim",
+      "name": "altered economic claim requires acceptance",
+      "finalStatus": "REQUIRES_ACCEPTANCE",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_be620e553720b775f51eb0dacbee0026"
+      ],
+      "notes": "Changed economics create a different Tender Claim, but no second settlement without explicit acceptance."
+    },
+    {
+      "name": "forged corrective authorization rejected",
+      "finalStatus": "REQUIRES_ACCEPTANCE",
+      "keeperHubExecutions": 1,
+      "duplicatePayouts": 0,
+      "claimIds": [
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_623dbb2eee5a601e16581f595c1bc887"
+      ],
+      "notes": "Caller-supplied authorization is rejected unless the operator store can consume it."
+    },
+    {
+      "name": "authorized corrective claim",
       "finalStatus": "SETTLED",
       "keeperHubExecutions": 2,
       "duplicatePayouts": 0,
       "claimIds": [
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
-        "tclaim_be620e553720b775f51eb0dacbee0026"
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_623dbb2eee5a601e16581f595c1bc887"
       ],
-      "notes": "Changed economics create a different Tender Claim, not a replay."
+      "notes": "A correction is a linked new obligation, not a rewrite."
     },
     {
       "name": "KeeperHub timeout / unconfirmed result",
@@ -84,7 +106,7 @@
       "keeperHubExecutions": 1,
       "duplicatePayouts": 0,
       "claimIds": [
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a"
       ],
       "notes": "Execution remains SETTLING; retry must reconcile the same claim."
     },
@@ -94,7 +116,7 @@
       "keeperHubExecutions": 1,
       "duplicatePayouts": 0,
       "claimIds": [
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a"
       ],
       "notes": "Reconciliation recovers the already-broadcast claim."
     },
@@ -104,8 +126,8 @@
       "keeperHubExecutions": 1,
       "duplicatePayouts": 0,
       "claimIds": [
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5",
-        "tclaim_ea03d27f9fb48ae517bba810aab28ca5"
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a",
+        "tclaim_850a5aa9b2fa7af1ff19d70365364e1a"
       ],
       "notes": "Retry after success is treated as replay."
     }

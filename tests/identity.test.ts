@@ -15,11 +15,7 @@ test("settlement identity ignores webhook delivery id and preserves economic ide
 
 test("settlement identity changes when recipient changes", () => {
   const a = settlementIdFor(demoContribution, demoAcceptance(), policy);
-  const changed = {
-    ...demoContribution,
-    recipientWallet: "0x2222222222222222222222222222222222222222",
-    recipients: [{ wallet: "0x2222222222222222222222222222222222222222", amount: "1.00", role: "primary" as const }]
-  };
+  const changed = { ...demoContribution, recipientWallet: "0x2222222222222222222222222222222222222222", recipients: [{ wallet: "0x2222222222222222222222222222222222222222", amount: "1.00", role: "primary" as const }] };
   const b = settlementIdFor(changed, demoAcceptance(), policy);
   assert.notEqual(a, b);
 });
@@ -32,21 +28,19 @@ test("settlement identity changes when policy version changes", () => {
 
 test("equivalent decimal formatting preserves the same economic identity", () => {
   const a = settlementIdFor(demoContribution, demoAcceptance(), policy);
-  const reformatted = {
-    ...demoContribution,
-    amount: "01.0000",
-    recipients: [{ ...demoContribution.recipients[0], amount: "1.000" }]
-  };
+  const reformatted = { ...demoContribution, amount: "01.0000", recipients: [{ ...demoContribution.recipients[0], amount: "1.000" }] };
   const b = settlementIdFor(reformatted, demoAcceptance(), policy);
   assert.equal(a, b);
 });
 
+test("policy digest participates in the pre-committed economic fingerprint", () => {
+  const a = settlementIdFor(demoContribution, demoAcceptance(), { ...policy, policyDigest: "sha256:policy-a" });
+  const b = settlementIdFor(demoContribution, demoAcceptance(), { ...policy, policyDigest: "sha256:policy-b" });
+  assert.notEqual(a, b);
+});
+
 test("obligation verifier identifies an unchanged claim as already settled", () => {
-  const result = verifyEconomicIdentity(demoContribution, demoAcceptance(), policy, {
-    amount: "1.000",
-    recipient: demoContribution.recipientWallet,
-    policyVersion: policy.version
-  });
+  const result = verifyEconomicIdentity(demoContribution, demoAcceptance(), policy, { amount: "1.000", recipient: demoContribution.recipientWallet, policyVersion: policy.version });
   assert.equal(result.sameClaim, true);
   assert.equal(result.status, "ALREADY_SETTLED");
   assert.deepEqual(result.changedFields, []);
@@ -58,5 +52,6 @@ test("obligation verifier treats changed economics as a new claim requiring acce
   assert.equal(result.status, "NEW_CLAIM_REQUIRES_ACCEPTANCE");
   assert.deepEqual(result.changedFields, ["amount"]);
   assert.notEqual(result.candidateClaimId, result.canonicalClaimId);
+  assert.equal(result.correctiveClaimRequired, true);
   assert.equal(result.additionalMovement, "$0");
 });

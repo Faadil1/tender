@@ -28,6 +28,7 @@ important_files:
   - src/domain/identity.ts
   - src/domain/obligationVerifier.ts
   - src/domain/settlementEngine.ts
+  - src/domain/operatorRuntime.ts
   - src/adapters/keeperhub.ts
   - src/cloudflare/index.ts
   - scripts/replay-harness.ts
@@ -50,6 +51,7 @@ important_files:
   - docs/PRD.md
   - docs/ARCHITECTURE.md
   - docs/DESIGN-DIRECTION.md
+  - docs/OPERATOR-RUNTIME.md
   - SUBMISSION.md
 gates:
   GATE_0: completed_research
@@ -124,3 +126,44 @@ next_exact_actions:
   - QA clearing desk on desktop/mobile/reduced-motion.
   - If schedule permits, integrate a real live project acceptance event to strengthen the named-project evidence.
   - Lock demo/video and final DoraHacks copy; do not run another payment.
+
+pr_2_gate_review_delta:
+  branch: work-winning-delta
+  gate_review_comment: "Gate Review — changes required before merge"
+  implemented:
+    - src/domain/operatorRuntime.ts adds a real authenticated write-path service over a durable-store interface.
+    - src/cloudflare/index.ts exposes /api/operator/* endpoints behind bearer auth and KV storage while leaving public proof endpoints non-value-moving.
+    - src/domain/settlementEngine.ts now requires verified, one-time operator authorization for corrective claims.
+    - EconomicAuthorization now binds authorizedClaimId to the exact candidate Tender Claim.
+    - tests/operatorRuntime.test.ts covers operator policy/acceptance/obligation/authorization/settlement/supersession flows.
+    - tests/settlementEngine.test.ts covers forged auth, wrong linked claim, wrong candidate claim, and auth reuse.
+    - .github/workflows/verify.yml runs on pull_request to main.
+  measured_proof:
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  safety:
+    canonical_keeperhub_live_proof_preserved: true
+    no_new_value_moving_execution: true
+    public_judge_runtime_has_no_broadcast_path_by_default: true
+  remaining_before_merge:
+    - Push PR #2 branch update.
+    - Wait for GitHub Actions verify on the PR.
+    - Review operator KV/token configuration before any production operator deploy.
+
+second_gate_review_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push
+  completed_work:
+    - Made REQUIRES_ACCEPTANCE sticky on retry unless exact stored authorization is consumed.
+    - Routed operator reconciliation through SettlementEngine.reconcile so Tender Receipt finalization is preserved.
+    - Enforced locked/precommitted policies before obligation creation and settlement; locked versions cannot be overwritten.
+    - Added strong-store authorization consumption contract; workflow settlement fails closed on eventual KV-only store.
+    - Preserved engine statuses in operator obligation projections.
+  verification:
+    command: npm run verify
+    status: pass
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  keeperhub_live_proof:
+    preserved: true
+    no_new_payment_executed: true
