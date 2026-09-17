@@ -38,6 +38,33 @@ export class SettlementEngine {
   private async createOrSettleClaim(claimId: string, contribution: Contribution, acceptance: AcceptanceEvidence) {
     const existing = await this.repo.get(claimId);
     if (existing?.status === "SETTLED" || existing?.status === "ALREADY_SETTLED") return this.markReplay(existing, "Replay mapped to the same Tender Claim; $0 moved.");
+    if (existing?.status === "REQUIRES_ACCEPTANCE") {
+      const authorization = contribution.economicAuthorization;
+      const linkedClaimId = existing.claim.linkedClaimId;
+      if (!authorization || !linkedClaimId || authorization.kind !== "corrective_claim" || authorization.linkedClaimId !== linkedClaimId || authorization.authorizedClaimId !== claimId || !this.authorizationVerifier) {
+        existing.timeline.push(event("REQUIRES_ACCEPTANCE", "Still requires acceptance", "Candidate remains blocked; no valid operator authorization was consumed."));
+        existing.updatedAt = now();
+        await this.repo.put(existing);
+        return existing;
+      }
+      const decision = await this.authorizationVerifier.consume(authorization, {
+        candidateClaimId: claimId,
+        linkedClaimId,
+        contribution,
+        acceptance,
+        policy: this.policy
+      });
+      if (!decision.ok) {
+        existing.timeline.push(event("REQUIRES_ACCEPTANCE", "Authorization rejected", decision.error));
+        existing.updatedAt = now();
+        await this.repo.put(existing);
+        return existing;
+      }
+      existing.claim.contribution = contribution;
+      existing.claim.acceptance = acceptance;
+      existing.claim.correctionReason = authorization.reason;
+      existing.timeline.push(event("CORRECTION", "Corrective obligation authorized", authorization.reason));
+    }
     if (!existing) {
       const unauthorized = await this.findConflictingSettledObligation(claimId, contribution, acceptance);
       if (unauthorized) return this.requiresAcceptance(claimId, contribution, acceptance, unauthorized.claim.claimId, unauthorized.reason);
