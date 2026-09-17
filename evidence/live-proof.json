@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-09-16T23:22:38.600Z",
+  "repository": "Faadil1/tender",
+  "commitSha": "3c19bd869e9223bdb1d353a864f1818ee6c2e871",
+  "contribution": {
+    "taskId": "accepted-3c19bd869e9223bd",
+    "pullRequestId": "accepted-3c19bd869e9223bd",
+    "acceptedWorkId": "3c19bd869e9223bdb1d353a864f1818ee6c2e871"
+  },
+  "tenderClaim": {
+    "claimId": "tclaim_94eb021e7894252897176543cc9d7b49",
+    "policyVersion": "policy.live.base-sepolia-usdc.v1",
+    "idempotencyKey": "tender:claim:tclaim_94eb021e7894252897176543cc9d7b49"
+  },
+  "keeperHub": {
+    "workflowId": "yy4ml6aevkov3zaukpx15",
+    "executionId": "7k14qt2a1989rrc5r370d",
+    "baseUrl": "https://app.keeperhub.com"
+  },
+  "settlement": {
+    "status": "SETTLED",
+    "transactionHash": "0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db",
+    "explorerUrl": "https://sepolia.basescan.org/tx/0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db",
+    "receipt": {
+      "receiptId": "treceipt_94eb021e7894252897176543cc9d7b49",
+      "acceptedContribution": "3c19bd869e9223bdb1d353a864f1818ee6c2e871",
+      "acceptanceEvidence": {
+        "source": "github",
+        "acceptanceKind": "maintainer_attestation",
+        "eventId": "github-actions-35162003096",
+        "acceptedWorkId": "3c19bd869e9223bdb1d353a864f1818ee6c2e871",
+        "mergeSha": "3c19bd869e9223bdb1d353a864f1818ee6c2e871",
+        "eventTime": "2026-09-16T23:22:38.067Z"
+      },
+      "claimId": "tclaim_94eb021e7894252897176543cc9d7b49",
+      "policyVersion": "policy.live.base-sepolia-usdc.v1",
+      "recipients": [
+        {
+          "wallet": "0x2ca7ba27ab8686F3a073c053FaD6258C003a02bb",
+          "amount": "0.01",
+          "role": "primary"
+        }
+      ],
+      "asset": "USDC",
+      "amount": "0.01",
+      "keeperHubExecutionId": "7k14qt2a1989rrc5r370d",
+      "transactionHash": "0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db",
+      "status": "SETTLED",
+      "settledAt": "2026-09-16T23:22:38.600Z"
+    }
+  },
+  "replay": {
+    "status": "ALREADY_SETTLED",
+    "sameClaim": true,
+    "additionalKeeperHubExecutions": 0,
+    "additionalMovement": "$0"
+  }
+}
