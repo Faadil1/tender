@@ -1,6 +1,16 @@
 import { createHash } from "node:crypto";
 import type { Contribution, AcceptanceEvidence, SettlementPolicy } from "./types.js";
 
+export function normalizeDecimalString(value: string) {
+  const trimmed = value.trim();
+  if (!/^\d+(?:\.\d+)?$/.test(trimmed)) return trimmed;
+
+  const [wholeRaw, fractionRaw = ""] = trimmed.split(".");
+  const whole = wholeRaw.replace(/^0+(?=\d)/, "") || "0";
+  const fraction = fractionRaw.replace(/0+$/, "");
+  return fraction ? `${whole}.${fraction}` : whole;
+}
+
 export function canonicalTenderClaimPayload(
   contribution: Contribution,
   acceptance: AcceptanceEvidence,
@@ -21,12 +31,12 @@ export function canonicalTenderClaimPayload(
     policyVersion: policy.version,
     recipients: contribution.recipients.map((recipient) => ({
       wallet: recipient.wallet.toLowerCase(),
-      amount: recipient.amount,
+      amount: normalizeDecimalString(recipient.amount),
       role: recipient.role
     })),
     token: contribution.token.toUpperCase(),
     chainId: contribution.chainId,
-    amount: contribution.amount
+    amount: normalizeDecimalString(contribution.amount)
   };
 }
 
