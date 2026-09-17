@@ -1,14 +1,19 @@
 project: Tender
 summary: >
   Tender is settlement infrastructure for accepted software contributions.
-  The central primitive is the Tender Claim. The invariant is one accepted
-  obligation -> one settlement. The signature artifact is the Tender Receipt.
-resume_rule: Preserve current Git history; do not reset to older local baselines.
+  GitHub proves what work was accepted. Tender determines what is economically
+  owed. KeeperHub proves it was settled.
+core:
+  primitive: Tender Claim
+  invariant: one accepted obligation -> one settlement
+  signature_artifact: Tender Receipt
+  replay_statement: same claim -> ALREADY_SETTLED -> $0 additional movement
+resume_rule: Preserve current Git history and canonical evidence. Do not recreate or rerun completed value-moving proof.
 canonical_repository: https://github.com/Faadil1/tender
 current_state:
   branch: main
   remote_history_pushed: true
-  last_verified_remote_commit_before_hardening: 1081597c290c03b385ad81379a5bf5fda86d8555
+  canonical_live_proof_complete: true
   uncommitted_work_expected: false
 important_files:
   - src/domain/types.ts
@@ -17,9 +22,11 @@ important_files:
   - src/adapters/keeperhub.ts
   - scripts/replay-harness.ts
   - scripts/live-proof.ts
+  - .github/workflows/tender-preflight-diagnostic.yml
   - .github/workflows/tender-live-proof.yml
   - evidence/settlement-replay-harness.json
   - evidence/keeperhub-calibration.json
+  - evidence/live-proof.json
   - docs/WINNING-INTELLIGENCE.md
   - docs/PRD.md
   - docs/ARCHITECTURE.md
@@ -28,32 +35,48 @@ important_files:
 gates:
   GATE_0: completed_research
   GATE_1: completed_product_thesis
-  GATE_2: completed_architecture_update
+  GATE_2: completed_architecture
   GATE_3: completed_core_settlement_engine
-  GATE_4: completed_github_adapter_local
-  GATE_5: keeperhub_calibrated_manual_live_tx
-  GATE_6: completed_replay_harness_local
-  GATE_6_5: live_proof_hardening_pending_local_verify
-  GATE_7: pending_tender_caused_live_proof
-  GATE_8: pending_deployment_and_submission_pack_final
+  GATE_4: completed_github_acceptance_adapter
+  GATE_5: completed_keeperhub_calibration
+  GATE_6: completed_replay_harness
+  GATE_6_5: completed_live_proof_hardening_and_preflight
+  GATE_7: completed_tender_caused_live_proof
+  GATE_8: pending_deployment_video_and_submission_lock
 keeperhub:
-  secrets_configured_in_github: true
-  workflow_id: yy4ml6aevkov3zaulkpx15
+  workflow: "Tender: Settle Claim"
+  workflow_id: yy4ml6aevkov3zaukpx15
   base_url: https://app.keeperhub.com
   chain_id: 84532
   network: Base Sepolia
+  asset: USDC
+  runtime_bindings:
+    amount: Manual.data.amount
+    recipient: Manual.data.recipient
   calibration_tx: 0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0
+canonical_live_proof:
+  github_actions_run_id: 35162003096
+  accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
+  claim_id: tclaim_94eb021e7894252897176543cc9d7b49
+  receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
+  execution_id: 7k14qt2a1989rrc5r370d
+  transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
+  settlement_status: SETTLED
+  replay_status: ALREADY_SETTLED
+  additional_keeperhub_executions: 0
+  additional_movement: "$0"
+  evidence_file: evidence/live-proof.json
+measured_proof:
+  unit_tests: 13/13
+  replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
 do_not:
   - Do not repeat the manual calibration payment.
+  - Do not rerun the canonical value-moving proof without a distinct explicit reason.
   - Do not expose KeeperHub API keys.
-  - Do not demonstrate replay by broadcasting a second KeeperHub payment.
-  - Do not run Tender Live Proof until the hardening commit verifies locally.
-  - Do not run Tender Live Proof while KeeperHub recipient and amount remain hardcoded.
-  - Do not frame Tender as a bounty marketplace.
+  - Do not weaken the product into a generic merge-to-pay or bounty marketplace.
+  - Do not replace deterministic Tender Claim identity with GitHub delivery or Action run identity.
 next_exact_actions:
-  - Pull the live-proof hardening commit from main.
-  - Run npm ci if needed, then npm run verify.
-  - In KeeperHub, bind Manual trigger recipient and amount fields into Transfer ERC20 Token instead of hardcoded values.
-  - Run KeeperHub workflow simulation/preflight only; do not broadcast while configuring.
-  - Run Tender Live Proof exactly once with 0.01 USDC after all gates pass.
-  - Capture evidence/live-proof.json artifact and verify same claim -> ALREADY_SETTLED -> $0 additional movement.
+  - Build/refine the judge-facing UI around the real Tender Receipt and replay proof.
+  - Deploy the judge-facing product, preferring Cloudflare if practical.
+  - Capture the demo/video using the real canonical evidence rather than running another payment.
+  - Finalize README/SUBMISSION/DoraHacks copy and submission links.
