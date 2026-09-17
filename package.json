@@ -10,7 +10,8 @@
     "live:proof": "tsc && node dist/scripts/live-proof.js",
     "dev": "node --watch dist/src/server/index.js",
     "start": "node dist/src/server/index.js",
-    "verify": "npm run build && npm test && npm run replay:harness"
+    "verify": "npm run build && npm test && npm run replay:harness",
+    "deploy:cloudflare": "npm run build && npx wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
