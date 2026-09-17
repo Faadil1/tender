@@ -42,6 +42,8 @@ export interface OperatorStore {
   delete(key: string): Promise<void>;
   list<T>(prefix: string): Promise<Array<{ key: string; value: T }>>;
   consumeAuthorization?(key: string, context: EconomicAuthorizationContext, payload: EconomicAuthorization): Promise<EconomicAuthorizationDecision>;
+  reserveSettlement?(claimId: string, idempotencyKey: string): Promise<{ ok: true } | { ok: false; error: string }>;
+  releaseSettlementReservation?(claimId: string): Promise<void>;
 }
 
 const keys = {
@@ -49,7 +51,8 @@ const keys = {
   acceptance: (eventId: string) => `acceptance:${eventId}`,
   obligation: (claimId: string) => `obligation:${claimId}`,
   settlement: (claimId: string) => `settlement:${claimId}`,
-  authorization: (authorizationId: string) => `authorization:${authorizationId}`
+  authorization: (authorizationId: string) => `authorization:${authorizationId}`,
+  settlementReservation: (claimId: string) => `settlement-reservation:${claimId}`
 };
 
 function now() {
@@ -105,6 +108,27 @@ export class MemoryOperatorStore implements OperatorStore {
       if (this.locks.get(key) === current) this.locks.delete(key);
     }
   }
+
+  async reserveSettlement(claimId: string, idempotencyKey: string) {
+    const key = keys.settlementReservation(claimId);
+    const prior = this.locks.get(key) ?? Promise.resolve();
+    let release!: () => void;
+    const current = prior.then(() => new Promise<void>((resolve) => { release = resolve; }));
+    this.locks.set(key, current);
+    await prior;
+    try {
+      if (this.values.has(key)) return { ok: false as const, error: "claim_settlement_already_reserved" };
+      this.values.set(key, structuredClone({ claimId, idempotencyKey, reservedAt: now() }));
+      return { ok: true as const };
+    } finally {
+      release();
+      if (this.locks.get(key) === current) this.locks.delete(key);
+    }
+  }
+
+  async releaseSettlementReservation(claimId: string) {
+    this.values.delete(keys.settlementReservation(claimId));
+  }
 }
 
 export class StoreBackedSettlementRepository extends MemorySettlementRepository {
@@ -133,13 +157,14 @@ export class StoreBackedAuthorizationVerifier implements EconomicAuthorizationVe
   }
 }
 
-function validateAuthorization(stored: EconomicAuthorization | undefined, authorization: EconomicAuthorization, context: EconomicAuthorizationContext): EconomicAuthorizationDecision {
+export function validateAuthorization(stored: EconomicAuthorization | undefined, authorization: EconomicAuthorization, context: EconomicAuthorizationContext): EconomicAuthorizationDecision {
   if (!stored) return { ok: false, error: "authorization_not_found" };
   if (stored.consumedAt) return { ok: false, error: "authorization_already_consumed" };
   if (stored.kind !== authorization.kind) return { ok: false, error: "authorization_kind_mismatch" };
   if (stored.authorizedClaimId !== context.candidateClaimId) return { ok: false, error: "authorization_candidate_claim_mismatch" };
   if (stored.authorizedClaimId !== authorization.authorizedClaimId) return { ok: false, error: "authorization_payload_claim_mismatch" };
-  if (stored.linkedClaimId !== context.linkedClaimId || authorization.linkedClaimId !== context.linkedClaimId) return { ok: false, error: "authorization_linked_claim_mismatch" };
+  const expectedLinkedClaimId = context.linkedClaimId ?? "";
+  if ((stored.linkedClaimId ?? "") !== expectedLinkedClaimId || (authorization.linkedClaimId ?? "") !== expectedLinkedClaimId) return { ok: false, error: "authorization_linked_claim_mismatch" };
   return { ok: true };
 }
 
@@ -232,18 +257,42 @@ export class TenderOperatorService {
     const authorization = obligation.authorizationId
       ? await this.store.get<EconomicAuthorization>(keys.authorization(obligation.authorizationId))
       : undefined;
+    if (!authorization) throw new Error("claim_authorization_required");
+    if (authorization.kind === "initial_claim") {
+      const decision = validateAuthorization(authorization, authorization, {
+        candidateClaimId: claimId,
+        linkedClaimId: "",
+        contribution: obligation.contribution,
+        acceptance: obligation.acceptance,
+        policy
+      });
+      if (!decision.ok) throw new Error(decision.error);
+    }
 
     const contribution = authorization
       ? { ...obligation.contribution, economicAuthorization: authorization }
       : obligation.contribution;
+    if (!this.store.reserveSettlement) throw new Error("claim_reservation_store_not_atomic");
+    const reservation = await this.store.reserveSettlement(claimId, idempotencyKeyFor(claimId));
+    if (!reservation.ok) {
+      const existing = await repo.get(claimId);
+      if (existing) return existing;
+      throw new Error(reservation.error);
+    }
     const engine = new SettlementEngine(repo, executor, policy, verifier);
-    const record = await engine.handleAcceptance(contribution, obligation.acceptance);
-    await this.store.put(keys.obligation(claimId), {
-      ...obligation,
-      status: record.status,
-      updatedAt: now()
-    } satisfies OperatorObligation);
-    return record;
+    try {
+      const record = await engine.handleAcceptance(contribution, obligation.acceptance);
+      await this.store.put(keys.obligation(claimId), {
+        ...obligation,
+        status: record.status,
+        updatedAt: now()
+      } satisfies OperatorObligation);
+      if (this.shouldReleaseReservation(record.status)) await this.store.releaseSettlementReservation?.(claimId);
+      return record;
+    } catch (error) {
+      await this.store.releaseSettlementReservation?.(claimId);
+      throw error;
+    }
   }
 
   async reconcileClaim(claimId: string, executor: SettlementExecutor) {
@@ -333,5 +382,9 @@ export class TenderOperatorService {
     const obligation = await this.store.get<OperatorObligation>(keys.obligation(claimId));
     if (!obligation) throw new Error("obligation_not_found");
     return obligation;
+  }
+
+  private shouldReleaseReservation(status: SettlementRecord["status"]) {
+    return status === "BLOCKED" || status === "RETRYABLE_FAILURE" || status === "REQUIRES_ACCEPTANCE" || status === "NOT_ACCEPTED" || status === "ACCEPTANCE_INCOMPLETE" || status === "QUARANTINED";
   }
 }

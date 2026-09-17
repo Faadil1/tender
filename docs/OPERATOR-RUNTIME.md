@@ -4,7 +4,7 @@ Tender has two authority zones.
 
 ## Operator Zone
 
-The operator zone is implemented as a server-side write path. In Cloudflare it is exposed under `/api/operator/*`, requires `Authorization: Bearer <TENDER_OPERATOR_TOKEN>`, and persists product state through `TENDER_OPERATOR_STORE` KV. KeeperHub broadcast credentials stay server-side only.
+The operator zone is implemented as a server-side write path. In Cloudflare it is exposed under `/api/operator/*`, requires `Authorization: Bearer <TENDER_OPERATOR_TOKEN>`, and persists value-moving product state through the `TENDER_OPERATOR_DO` Durable Object. KeeperHub broadcast credentials stay server-side only.
 
 Implemented write operations:
 
@@ -37,11 +37,23 @@ Operator-created policies require `policyDigest`. The shared policy type keeps t
 
 If the operator token or store binding is missing, operator endpoints return `operator_runtime_not_configured`. If KeeperHub execution secrets are missing, settlement fails closed with `keeperhub_operator_execution_not_configured`. `OPERATOR_SETTLEMENT_MODE=mock` is available only for non-value-moving development/test environments.
 
-Workers KV is treated as an eventual-consistency/read-mostly store. It is acceptable for mock/dev/proof state, but it is not accepted as the value-moving exactly-once authority store. Workflow settlement mode requires an operator store that advertises strong/serialized authorization consumption; otherwise settlement fails closed with `strong_operator_store_required_for_workflow_settlement`.
+Workers KV is treated as an eventual-consistency/read-mostly store. It is acceptable for mock/dev/proof state, but it is not accepted as the value-moving exactly-once authority store. Workflow settlement mode requires the Durable Object-backed operator store, which serializes both authorization consumption and claim-level settlement reservations with Durable Object storage transactions; otherwise settlement fails closed with `strong_operator_store_required_for_workflow_settlement`.
+
+The checked-in Cloudflare configuration binds:
+
+- `TENDER_OPERATOR_DO` -> `TenderOperatorStoreDurableObject` for value-moving operator state;
+- `OPERATOR_SETTLEMENT_MODE=mock` by default, so authenticated smoke QA can mutate operator state without KeeperHub broadcast authority;
+- no public judge endpoint with KeeperHub broadcast authority.
+
+Only after the Durable Object binding, `TENDER_OPERATOR_TOKEN`, and server-side KeeperHub secrets are confirmed should an operator deployment be switched to `OPERATOR_SETTLEMENT_MODE=workflow`.
 
 ## Authorization Rule
 
-`EconomicAuthorization` is not trusted merely because it appears on a contribution. The operator runtime creates the authorization, binds it to `authorizedClaimId`, links it to the settled claim being corrected, and the settlement engine consumes it exactly once through the operator store. A forged, reused, wrong-linked, or wrong-candidate authorization returns `REQUIRES_ACCEPTANCE` and creates no KeeperHub execution.
+`EconomicAuthorization` is not trusted merely because it appears on a contribution. The operator runtime creates the authorization and binds it to `authorizedClaimId`. Normal value-moving settlements require an explicit `initial_claim` authorization. Corrective settlements additionally link to the settled claim being corrected, and the settlement engine consumes that corrective authorization exactly once through the operator store. A forged, reused, wrong-linked, or wrong-candidate authorization returns `REQUIRES_ACCEPTANCE` and creates no KeeperHub execution.
+
+## Claim Reservation Rule
+
+Every value-moving operator settlement must reserve the Tender Claim before KeeperHub preflight or broadcast. The reservation key is derived from the deterministic claim ID and existing idempotency key. If two separate runtime instances attempt the same first-time claim, only one can acquire the Durable Object reservation and call the executor; the other fails closed before preflight/broadcast. Reservations are preserved for `SETTLING` and `SETTLED` claims and released for safe retry states such as `RETRYABLE_FAILURE` or blocked/non-accepted claims.
 
 ## Public Proof Zone
 
