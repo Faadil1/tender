@@ -1,142 +1,199 @@
 # Tender — Competitive Winning Delta
 
-## Why this delta exists
+## Goal
 
-The KeeperHub Agent Economy Hackathon is not asking for another standalone agent demo. The main track is explicitly about integrating KeeperHub into a live project, proving real value movement, surviving unhappy paths, and shipping code another team could pick up.
+Tender should not win by imitating the largest current submission or by accumulating the most chains, agents, MCP tools, or DeFi protocols. KeeperHub's own retrospective makes the bar explicit: the team reviewed every project, rejected shallow integrations with polished demos, and rewarded code that looked adoptable, mergeable, production-serious, and proven under real execution.
 
-Tender's job is therefore not to imitate the most common hackathon pattern — `agent decides -> KeeperHub pays` — but to occupy a category with a sharper economic primitive and a more memorable proof.
+This document converts that evidence plus the current Agent Economy field into concrete product rules.
 
-## What KeeperHub's own winners teach us
+## Winner DNA we implement — not copy
 
-KeeperHub's OpenAgents retrospective is unusually explicit about its bar. The team reviewed every submission and said shallow integrations with polished demos were not enough; winning projects had to look adoptable, mergeable, or production-serious.
+### Tradewise Agentlab
 
-Signals from prior winners:
+Signal: production seriousness under hackathon conditions — 125 tests, live deployment, real x402 flow, reproducible KeeperHub bug reports, and a novel ownership primitive.
 
-- **Tradewise Agentlab** — production seriousness, 125 tests, live deployment, real x402 flow, and a genuinely novel primitive: an agent as an equity issuer.
-- **Keeper-Gate** — a reusable abstraction, not a one-off wrapper: one framework-agnostic core with thin adapters.
-- **ZW.ARM** — real activity, measurable outcomes, independent critique before execution, and explicit failure-mode thinking.
-- **Meld / ChronicleAI / n8n-nodes-keeperhub** from Agents Onchain — the pattern continued: measurable runtime evidence, integration into a real existing surface, and code that can be adopted upstream. n8n's node was subsequently approved by n8n.
+Tender implementation:
 
-The common DNA is not "more agent features." It is:
+- canonical live KeeperHub settlement, not a mock hero;
+- domain tests plus a 10-scenario replay harness;
+- runtime proof rather than screenshots only;
+- explicit evidence artifacts and reproducible preflight diagnostics;
+- one memorable primitive: **Tender Claim**.
 
-1. KeeperHub is load-bearing.
-2. The other side of the integration is real and named.
-3. There is a primitive or abstraction worth remembering.
-4. Reliability is demonstrated, not asserted.
-5. The repo survives close inspection.
-6. Proof is independently verifiable.
+### Keeper-Gate
+
+Signal: correct abstraction boundary — reusable core separated from thin framework adapters.
+
+Tender implementation:
+
+- `SettlementEngine` remains source-agnostic and execution-agnostic;
+- GitHub is the first acceptance adapter, not the definition of acceptance;
+- KeeperHub is the execution adapter, not the business logic;
+- economic identity and obligation verification live in the domain layer so future acceptance adapters can reuse them.
+
+### ZW.ARM
+
+Signal: real execution, measurable runtime outcomes, explicit failure-mode thinking, and independent critique before value moves.
+
+Tender implementation:
+
+- KeeperHub moves the canonical value;
+- Tender separately proves replay refusal and failure behavior;
+- the public runtime independently verifies the Base Sepolia receipt and exact USDC Transfer event instead of trusting KeeperHub's success string;
+- the economic fingerprint inspector challenges the claim before any new value-moving path can exist.
+
+### Adoptable/upstream integrations
+
+Signal: projects such as n8n-nodes-keeperhub stood out because another ecosystem could actually adopt the work.
+
+Tender implementation:
+
+- documented acceptance-adapter boundary;
+- machine-readable proof endpoints;
+- deterministic claim identity;
+- no UI-only business logic;
+- an architecture that can be embedded into another live project without rewriting settlement semantics.
 
 ## Current field pressure
 
-Visible Agent Economy submissions are already crowding these territories:
+Visible Agent Economy projects already cover much of the obvious space:
 
-- deterministic MCP gateways;
-- DeFi risk monitors and liquidation protection;
-- generic safe transaction middleware;
-- dry-run + idempotency wrappers;
-- broad multi-chain tool surfaces.
+| Project / pattern | Strong territory already occupied | Tender response |
+| --- | --- | --- |
+| MergeSplit | accepted GitHub PR -> deterministic reward -> KeeperHub/Superfluid | Do not compete as merge-to-pay. Tender models why an economic obligation exists and whether that exact obligation has already been discharged. |
+| Landed | x402 + KeeperHub, verified landing, two idempotency layers | Keep exactly-once settlement, but make economic identity and acceptance provenance the product. |
+| Nyrvok | execution firewall, dry-run gate, route verification | Do not become another execution firewall. |
+| Almanak KeeperGate | intent policy gate before KeeperHub execution | Tender's policy is about obligation creation, not whether a DeFi intent may execute. |
+| AgentKeeper-MCP | broad safe MCP gateway | Do not enter the MCP feature-count race. |
+| KeeperSentinel / self-healing DeFi | autonomous monitoring and corrective execution | Stay outside crowded DeFi monitoring. |
+| FINALTab precedent | rich settlement, consent, verification, replay | Tender must prove a different causal object: accepted work -> economic obligation -> clearing record. |
 
-Tender should not enter that feature-count race.
+## White-space lock
 
-## Tender's category
+Tender owns the layer between **acceptance** and **execution**.
 
-**Economic completion for accepted software work.**
+> **What exactly became owed, why did it become owed, and has that exact obligation already been discharged?**
 
-A software contribution can be technically complete in GitHub but economically incomplete. Merge, approval, maintainer attestation, or another acceptance signal says the work is accepted; it does not itself define or prove settlement.
+That creates the canonical lifecycle:
 
-Tender binds those two moments:
+`POLICY -> WORK -> ACCEPTANCE PACKET -> TENDER CLAIM -> KEEPERHUB CLEARING -> TENDER RECEIPT`
 
-`WORK -> ACCEPTANCE -> TENDER CLAIM -> KEEPERHUB SETTLEMENT -> TENDER RECEIPT`
+GitHub supplies the first acceptance evidence. A separate live product should eventually supply the real work context; GitHub itself is an acceptance adapter, not the long-term live-project claim.
 
-The live named project on the other side is **GitHub**. GitHub provides the acceptance semantics. Tender converts accepted-work identity plus versioned settlement policy into one deterministic economic obligation. KeeperHub clears the obligation onchain.
+## Three laws
 
-This is specific to GitHub's contribution lifecycle rather than a generic payment webhook.
+1. **Policy precedes acceptance.** Economic rules must already exist before accepted work can create an obligation. A contributor or coding agent cannot rewrite its own economics through the contribution being evaluated.
+2. **Economic identity is deterministic.** Accepted work + acceptance kind + policy version + recipients + asset + amount + chain resolve to one Tender Claim. Semantically equivalent decimal formatting normalizes to the same claim.
+3. **Settlement history is immutable.** A settled obligation is never rewritten. Same economics replay the settled claim. Changed economics create a new, unauthorized claim until new acceptance exists.
 
-## Product lock
+## Judge-facing proof stack
 
-| Element | Canonical Tender answer |
-| --- | --- |
-| Category | Economic completion infrastructure for software work |
-| Live integration | GitHub acceptance -> KeeperHub settlement |
-| Primitive | Tender Claim |
-| Invariant | one accepted obligation -> one settlement |
-| Signature artifact | Tender Receipt |
-| Negative artifact | explicit non-settlement / replay outcome |
-| Hero proof | real 0.01 USDC settlement + same claim replay -> 0 additional executions -> $0 moved |
-| Failure proof | interactive Settlement Failure Lab running the real Tender SettlementEngine server-side without a broadcast adapter |
-| Measured evidence | 13/13 unit tests; 10 replay scenarios; 0 duplicate payouts |
+### 1. Acceptance Packet
 
-## Demo memory sentence
+Shows *why* the obligation exists:
 
-**Merged is not settled. Tender turns accepted work into one economic claim and settles it exactly once.**
+- acceptance source;
+- acceptance kind;
+- accepted-work identity;
+- evidence event;
+- settlement policy version.
 
-Supporting line:
+### 2. Tender Claim
 
-**GitHub proves acceptance. Tender proves what is owed. KeeperHub proves it was settled.**
+Shows *what* became owed:
 
-## The signature interaction
+- deterministic claim ID;
+- recipient;
+- amount / asset;
+- policy version;
+- idempotency identity.
 
-The judge should be invited to attack the invariant:
+### 3. Tender Receipt
 
-> **Try to make Tender pay twice.**
+Shows *how* it was discharged:
 
-The public runtime exposes safe engine-level failure scenarios:
+- KeeperHub execution ID;
+- transaction hash;
+- settlement time;
+- canonical receipt ID.
 
-- duplicate webhook delivery;
-- two concurrent workers;
-- failed acceptance checks;
-- malformed recipient;
-- callback loss after execution begins.
+### 4. Independent Chain Proof
 
-The lab uses the real `SettlementEngine` and an in-memory non-network executor. It never calls KeeperHub and never moves value. Its purpose is to make failure behavior inspectable while the canonical onchain transaction remains the real execution proof.
+The runtime queries Base Sepolia independently and requires:
 
-The most memorable result is not another successful payment. It is a deliberately refused second payment.
+- successful transaction receipt;
+- Base Sepolia USDC contract;
+- ERC-20 `Transfer` event;
+- exact canonical recipient;
+- exact canonical amount.
 
-## Winning Intelligence rules carried forward
+KeeperHub is not trusted for this verification.
 
-- Prefer one narrow thesis over broad agent feature count.
-- Make authority boundaries explicit: GitHub accepts, Tender determines the obligation, KeeperHub executes.
-- Fail closed when evidence or recipient data is incomplete.
-- Use versioned settlement policy and deterministic identity.
-- Treat refusal and replay as designed outputs, not error states to hide.
-- Preserve an evidence passport through claim -> execution -> receipt.
-- Distinguish canonical onchain proof from safe runtime simulation.
-- Never substitute a dashboard score for causal evidence.
-- Never claim reliability without a replay or failure artifact.
+### 5. Economic Fingerprint Inspector
+
+The judge can alter the economics safely.
+
+- unchanged values -> **SAME CLAIM / ALREADY_SETTLED / $0 moved**;
+- amount changed -> **NEW CLAIM / REQUIRES ACCEPTANCE / $0 moved**;
+- recipient changed -> **NEW CLAIM / REQUIRES ACCEPTANCE / $0 moved**;
+- policy changed -> **NEW CLAIM / REQUIRES ACCEPTANCE / $0 moved**.
+
+This turns idempotency from an invisible implementation detail into a product-level proof of economic identity.
+
+## Signature moment
+
+**Accepted once. Owed once. Settled once.**
+
+The judge first verifies the exact same obligation and sees a refused second settlement. Then the judge changes one economic field and sees Tender refuse to pretend it is the same obligation.
+
+Compressed explanation:
+
+> GitHub proves what was accepted. Tender proves what became owed. KeeperHub proves what was settled.
+
+## Measured evidence
+
+- canonical KeeperHub-caused Base Sepolia settlement: `0.01 USDC`;
+- same canonical claim replay: `ALREADY_SETTLED`;
+- additional KeeperHub executions on replay: `0`;
+- additional movement: `$0`;
+- replay harness: `10 settlement scenarios replayed · 0 duplicate payouts`;
+- current target after economic-verifier delta: `16/16` unit/domain tests.
 
 ## Design lineage lock
 
-User-supplied reference systems remain active:
+- **CARI** — institutional / archival lineage and anti-AI-slop check.
+- **Annual Report Gallery** — evidence hierarchy, numerical proof, document authority.
+- **Study Old Ads** — compressed promise and memorable above-the-fold sentence.
+- **Spectrum UI** — mechanisms only, not aesthetic imitation.
+- **Motion & Interaction Grammar** — motion explains state transitions; reduced-motion parity required.
+- **Design Engineer Tools** — capability router, never final aesthetic authority.
 
-- **CARI** — institutional / archival lineage, anti-AI-slop checks, no generic neon crypto dashboard.
-- **Annual Report Gallery** — evidence hierarchy, number-led proof, editorial restraint.
-- **Study Old Ads** — compressed promise and one memorable sentence above the fold.
-- **Spectrum UI** — dense, functional state / record mechanisms rather than decorative cards.
-- **Motion & Interaction Grammar** — every motion maps to a state transition; reduced-motion parity is required.
-- **Design Engineer Tools** — implementation router only; it does not override the domain-native visual language.
+The product should feel like a clearing office / economic record packet, not a generic crypto dashboard.
 
-The interface should feel like an economic record packet: acceptance evidence, claim, cleared receipt, refusal stamp, replay proof.
+## Do not add just because competitors have it
 
-## What not to add
-
-Do not add these just because competitors have them:
-
-- a generic chat agent;
-- a broad MCP tool suite;
-- DeFi portfolio/risk monitoring;
+- generic chat agent;
+- broad MCP tool suite;
+- DeFi portfolio monitoring;
 - arbitrary wallet execution;
-- multi-chain breadth with no product reason;
-- tokenomics or agent marketplace mechanics;
-- a giant dashboard of vanity metrics.
+- multi-chain breadth without a product reason;
+- agent marketplace/tokenomics;
+- decorative dashboard metrics.
 
-Every new surface must strengthen one of three things: **acceptance semantics, settlement correctness, or proof.**
+Every new surface must strengthen **acceptance provenance, economic identity, clearing correctness, or proof**.
+
+## Remaining winner-grade gates
+
+- bind Tender to a genuinely live external project/workstream rather than claiming GitHub itself as the live product;
+- add one upstream-quality reusable acceptance adapter or integration package if time permits;
+- submit one specific reproducible KeeperHub feedback item if a genuine issue/documentation gap was encountered;
+- record a <= 3 minute demo around the signature moment, not a feature tour;
+- keep the canonical transaction fixed — no second live proof for presentation purposes.
 
 ## Sources reviewed
 
 - KeeperHub, "What 180 Hackathon Builders Taught Us About Agents" — https://keeperhub.com/blog/010-openagents-hackathon-wrap
+- KeeperHub, "Agents decide, KeeperHub executes" — https://keeperhub.com/blog/keeperhub-for-agents
 - KeeperHub Agent Economy Hackathon — https://dorahacks.io/hackathon/agent-economy/detail
-- Tradewise Agentlab — https://github.com/fritzschoff/hackagent
-- Keeper-Gate — https://github.com/chronogist/keeper-gate
-- ChronicleAI — https://github.com/zaikaman/ChronicleAI
-- n8n-nodes-keeperhub — https://github.com/iamrobertmoore/n8n-nodes-keeperhub
-- Current-field references reviewed: KeeperSentinel and AgentKeeper-MCP
+- current public field: MergeSplit, Landed, Nyrvok, Almanak KeeperGate, AgentKeeper-MCP, KeeperSentinel
+- prior KeeperHub reference: FINALTab
