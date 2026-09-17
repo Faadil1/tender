@@ -7,11 +7,13 @@ export type SettlementStatus =
   | "SETTLING"
   | "SETTLED"
   | "ALREADY_SETTLED"
+  | "REQUIRES_ACCEPTANCE"
+  | "SUPERSEDED"
   | "BLOCKED"
   | "RETRYABLE_FAILURE"
   | "QUARANTINED";
 
-export type SourceKind = "github";
+export type SourceKind = "github" | "external" | "manual";
 
 export interface Contribution {
   source: SourceKind;
@@ -25,6 +27,16 @@ export interface Contribution {
   token: string;
   chainId: number;
   amount: string;
+  economicAuthorization?: EconomicAuthorization;
+}
+
+export interface EconomicAuthorization {
+  authorizationId: string;
+  kind: "initial_claim" | "corrective_claim" | "supersession";
+  authorizedBy: string;
+  authorizedAt: string;
+  reason: string;
+  linkedClaimId?: string;
 }
 
 export interface SettlementRecipient {
@@ -37,8 +49,8 @@ export interface AcceptanceEvidence {
   source: SourceKind;
   eventId: string;
   eventTime: string;
-  action: "closed" | "synchronize" | "workflow_run.completed" | "replayed";
-  acceptanceKind: "github_merge" | "maintainer_attestation" | "external_acceptance";
+  action: "closed" | "synchronize" | "workflow_run.completed" | "replayed" | "operator.accepted";
+  acceptanceKind: "github_merge" | "maintainer_attestation" | "external_acceptance" | "operator_correction";
   accepted: boolean;
   acceptedWorkId?: string;
   repository: string;
@@ -60,6 +72,9 @@ export interface SettlementPolicy {
   chainId: number;
   maxAmount: string;
   requireReview: boolean;
+  policyDigest?: string;
+  effectiveFrom?: string;
+  supersedes?: string;
 }
 
 export interface TenderClaim {
@@ -71,6 +86,8 @@ export interface TenderClaim {
   policyVersion: string;
   status: SettlementStatus;
   createdAt: string;
+  linkedClaimId?: string;
+  correctionReason?: string;
 }
 
 export type SettlementClaim = TenderClaim;
@@ -95,6 +112,7 @@ export interface SettlementRecord {
   attempts: ExecutionAttempt[];
   replayCount: number;
   duplicatePayoutsPrevented: number;
+  supersededByClaimId?: string;
   updatedAt: string;
 }
 
@@ -129,7 +147,10 @@ export interface TimelineEvent {
     | "SETTLED"
     | "REPLAY"
     | "BLOCKED"
-    | "RETRY";
+    | "RETRY"
+    | "REQUIRES_ACCEPTANCE"
+    | "SUPERSEDED"
+    | "CORRECTION";
   label: string;
   detail: string;
 }
