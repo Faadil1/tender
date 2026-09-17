@@ -4,7 +4,7 @@ Tender has two authority zones.
 
 ## Operator Zone
 
-The operator zone is implemented as a server-side write path. In Cloudflare it is exposed under `/api/operator/*`, requires `Authorization: Bearer <TENDER_OPERATOR_TOKEN>`, and persists product state through `TENDER_OPERATOR_STORE` KV. KeeperHub broadcast credentials stay server-side only.
+The operator zone is implemented as a server-side write path. In Cloudflare it is exposed under `/api/operator/*`, requires `Authorization: Bearer <TENDER_OPERATOR_TOKEN>`, and persists value-moving product state through the `TENDER_OPERATOR_DO` Durable Object. KeeperHub broadcast credentials stay server-side only.
 
 Implemented write operations:
 
@@ -37,7 +37,15 @@ Operator-created policies require `policyDigest`. The shared policy type keeps t
 
 If the operator token or store binding is missing, operator endpoints return `operator_runtime_not_configured`. If KeeperHub execution secrets are missing, settlement fails closed with `keeperhub_operator_execution_not_configured`. `OPERATOR_SETTLEMENT_MODE=mock` is available only for non-value-moving development/test environments.
 
-Workers KV is treated as an eventual-consistency/read-mostly store. It is acceptable for mock/dev/proof state, but it is not accepted as the value-moving exactly-once authority store. Workflow settlement mode requires an operator store that advertises strong/serialized authorization consumption; otherwise settlement fails closed with `strong_operator_store_required_for_workflow_settlement`.
+Workers KV is treated as an eventual-consistency/read-mostly store. It is acceptable for mock/dev/proof state, but it is not accepted as the value-moving exactly-once authority store. Workflow settlement mode requires the Durable Object-backed operator store, which serializes authorization consumption with Durable Object storage transactions; otherwise settlement fails closed with `strong_operator_store_required_for_workflow_settlement`.
+
+The checked-in Cloudflare configuration binds:
+
+- `TENDER_OPERATOR_DO` -> `TenderOperatorStoreDurableObject` for value-moving operator state;
+- `OPERATOR_SETTLEMENT_MODE=mock` by default, so authenticated smoke QA can mutate operator state without KeeperHub broadcast authority;
+- no public judge endpoint with KeeperHub broadcast authority.
+
+Only after the Durable Object binding, `TENDER_OPERATOR_TOKEN`, and server-side KeeperHub secrets are confirmed should an operator deployment be switched to `OPERATOR_SETTLEMENT_MODE=workflow`.
 
 ## Authorization Rule
 
