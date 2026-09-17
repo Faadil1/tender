@@ -65,7 +65,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: external_review_in_progress_gemini_perplexity_fact_checked
+  status: external_review_in_progress_gemini_perplexity_kimi_fact_checked
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -83,23 +83,40 @@ keeperhub_bounty_handoff:
         - Metadata-only caller correlation is simpler but needs independent demand.
     perplexity:
       status: received_fact_checked
-      effect: enforcing candidate moved from demoted to stop_do_not_file
+      effect: enforcing candidate moved to stop_do_not_file
       strongest_supported_points:
         - Existing executionId + Idempotency-Key + transaction/proof identifiers make another identity expensive to justify.
         - Generic semantic-effect equality is unsafe.
         - Permanent uniqueness requires explicit reuse/release/retention/supersession lifecycle.
         - Generic caller-reference recurrence is not yet independently evidenced strongly enough.
-        - Metadata-only clientReferenceId may be too ordinary/small for this bounty.
+        - Metadata-only caller reference may be too ordinary/small for this bounty.
+    kimi:
+      status: received_fact_checked
+      effect: rejection strengthened; "#2408 alternative rejected as occupied"
+      strongest_supported_points:
+        - Permanent fail-closed references import domain/business semantics into KeeperHub.
+        - The proposal conflicts with KeeperHub's definite-failure release path under "#1840/PR #2372".
+        - "#2495/#2552 already demonstrates the scoped runKey pattern where durable platform identity is justified."
+        - KeeperHub stable-key docs already answer much of deterministic retry identity.
+        - Cross-route scoping remains an unresolved architecture problem.
+      fact_check:
+        - "#2408 is closed/completed with accepted and confirmed labels."
+        - "PR #2446 merged the accepted documentation scope and closed #2408."
+        - "Maintainer triage says the execution-level field/analytics carrier is being settled with the core team and is not blocked on the contributor."
+        - "Do not create a duplicate issue for the remaining softened-error execution-level work."
 
   candidate_board:
     effect_bound_execution_reference:
       status: stop_do_not_file
-    clientReferenceId_metadata_only:
+    callerReference_metadata_only:
       status: hold_low_priority
-      note: technically plausible but weak bounty signal until independent recurrence is proven
+      note: technically plausible correlation-only metadata, but weak bounty signal until independent recurrence is proven
     broad_broadcast_outcome_reconciliation:
       status: no_go_as_new_candidate
       note: strongest sub-problems are already fixed/closed or actively owned
+    softened_error_execution_contract:
+      status: no_go_occupied
+      note: "#2408 closed; PR #2446 merged; execution-level remainder retained by core team"
 
   verified_overlap_and_ownership:
     - "#1840 open accepted confirmed; PR #2372 open mergeable not merged"
@@ -108,16 +125,13 @@ keeperhub_bounty_handoff:
     - "#2177 closed completed"
     - "#2374 closed completed; PR #2386 merged"
     - "#1979 closed completed"
+    - "#2408 closed completed accepted confirmed; PR #2446 merged"
     - "#2495 open accepted confirmed; PR #2552 open mergeable not merged"
-  important_2552_signal:
-    - `web3/disburse` already implements persistent cross-execution payout-leg state via `runKey`.
-    - PR #2552 adds broadcast-boundary tracking across EVM direct, sponsored, and Solana paths.
-    - It explicitly preserves `sending/unknown` states and adds operator resolution.
-    - This is exactly why partial payout / generic durable broadcast-boundary work is occupied.
 
   no_go_bounty_areas:
     - "#2373 asynchronous idempotency release"
     - "#2495/#2552 disbursement/partial payout resume"
+    - "#2408 softened-error execution reporting"
     - generic broadcast-outcome/reconciliation layer
     - generic sequential simulator/firewall
     - receipt export
@@ -136,6 +150,7 @@ keeperhub_bounty_handoff:
   synthesis_rule: one evidence-backed fatal objection defeats majority agreement
   next_bounty_search_rule:
     - Do not rescue the rejected reference idea.
+    - Do not take "#2408"; it is closed and its remaining implementation direction is owned by the core team.
     - Use Claude/Grok to discover a different narrow whitespace candidate.
     - Candidate must be independently evidenced, unclaimed, small, backward-compatible, testable and useful beyond Tender.
     - If no candidate survives, skip the bounty rather than duplicate active work.
@@ -161,7 +176,7 @@ do_not:
   - Do not switch OPERATOR_SETTLEMENT_MODE to workflow during current QA/demo work.
   - Do not weaken Tender into generic merge-to-pay or a bounty marketplace.
   - Do not add value-moving execution to the public judge runtime.
-  - Do not duplicate an active KeeperHub issue simply to enter the bounty.
+  - Do not duplicate an active or closed KeeperHub issue simply to enter the bounty.
   - Do not implement KeeperHub bounty code before an upstream issue is accepted.
 
 next_exact_actions:
