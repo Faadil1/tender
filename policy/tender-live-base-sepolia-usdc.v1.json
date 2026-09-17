@@ -1,0 +1,17 @@
+{
+  "version": "policy.live.base-sepolia-usdc.v1",
+  "purpose": "Pre-committed settlement policy for the canonical Tender proof.",
+  "principle": "Policy precedes acceptance.",
+  "chainId": 84532,
+  "network": "Base Sepolia",
+  "asset": "USDC",
+  "maxAmount": "5",
+  "requireReview": false,
+  "acceptance": {
+    "accepted": true,
+    "requiredChecksPassed": true,
+    "acceptedWorkIdentityRequired": true
+  },
+  "mutationRule": "Changing accepted work, policy version, recipient, asset, chain, or amount creates a different Tender Claim and requires new acceptance before settlement.",
+  "historyRule": "A settled claim is immutable and may only be followed by a new correction or compensating claim."
+}
