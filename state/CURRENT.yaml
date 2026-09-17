@@ -4,7 +4,7 @@ repository:
   visibility: private
   default_branch: main
 branch: main
-main_sha_before_state_update: 953f7525fdbf91ae84320a79d8d6ee5aac1841a8
+main_sha_before_state_update: 4ae4c1f5d5aff59a80325dd5ab83ac42fdb6857b
 current_gate: GATE_8_PRODUCT_QA_DEMO_AND_SUBMISSION
 category: economic clearing for accepted work
 north_star: "Accepted once. Owed once. Settled once."
@@ -65,17 +65,44 @@ production_operator_runtime:
     - OPERATOR_SETTLEMENT_MODE=mock
 
 public_runtime_qa:
-  status: pass
+  status: complete
   runtime:
     operatorRuntimeConfigured: true
     operatorStoreConsistency: strong
     valueMovingExecutionEnabled: false
+  canonical_proof:
+    status: SETTLED
+    claim_id: tclaim_94eb021e7894252897176543cc9d7b49
+    receipt_id: treceipt_94eb021e7894252897176543cc9d7b49
+    transaction_hash: 0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
+  acceptance_packet:
+    accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
+    policy_version: policy.live.base-sepolia-usdc.v1
+    principle: "policy precedes acceptance; accepted work plus policy creates one economic obligation"
   replay:
     status: ALREADY_SETTLED
     sameClaim: true
     additionalKeeperHubExecutions: 0
     additionalMovement: "$0"
     broadcastAttempted: false
+  same_claim_verifier:
+    sameClaim: true
+    status: ALREADY_SETTLED
+    originalImmutable: true
+    correctiveClaimRequired: false
+    broadcastAttempted: false
+    additionalMovement: "$0"
+  changed_economics_verifier:
+    override: "amount 0.01 -> 0.02"
+    candidate_claim_id: tclaim_0bc19c1a816146aa4995b57377237186
+    sameClaim: false
+    changedFields:
+      - amount
+    status: NEW_CLAIM_REQUIRES_ACCEPTANCE
+    originalImmutable: true
+    correctiveClaimRequired: true
+    broadcastAttempted: false
+    additionalMovement: "$0"
   independent_chain_proof:
     verified: true
     transactionStatus: success
@@ -107,11 +134,8 @@ ui_ux:
     - Improve information architecture, operator experience, proof/verification surface, responsive behavior, and demo readability.
 
 remaining_qa:
-  - Verify GET /api/proof.
-  - Verify GET /api/acceptance-packet.
-  - Verify POST /api/claim/verify for SAME_CLAIM.
-  - Verify POST /api/claim/verify with changed economics returns NEW_CLAIM / REQUIRES_ACCEPTANCE / $0 movement.
-  - QA desktop, mobile, reduced-motion, loading/failure states, and navigation after UI changes.
+  - QA redesigned product on desktop/mobile and reduced motion.
+  - QA loading/error/failure states and navigation after UI changes.
   - Lock demo narrative/video and final submission packaging.
 
 local_worktree_note:
@@ -126,4 +150,4 @@ do_not:
   - Do not frame Tender as a bounty marketplace or generic merge-to-pay tool.
   - Do not give the public judge runtime a value-moving execution adapter.
 
-next_action: Complete the remaining non-value-moving public API QA, then let UI/UX redesign proceed against the verified runtime while preserving Tender invariants; finish responsive/reduced-motion QA, demo/video, and submission lock.
+next_action: Treat runtime/settlement/proof as locked unless a real bug appears. Let UI/UX redesign proceed against the verified runtime, then run desktop/mobile/reduced-motion/failure-state QA and lock the <=3 minute demo/video plus final submission packaging.
