@@ -135,3 +135,29 @@ second_gate_review_delta:
   keeperhub_live_proof:
     preserved: true
     no_new_payment_executed: true
+
+production_operator_runtime_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push_and_deploy
+  purpose: strongly consistent Cloudflare operator store for value-moving Tender settlement
+  completed_work:
+    - Added TenderOperatorStoreDurableObject as the Cloudflare Durable Object authority store for operator state and one-time authorization consumption.
+    - Kept Workers KV available only as eventual-consistency mock/dev/proof fallback; workflow mode fails closed without the Durable Object binding.
+    - Bound workflow-mode operator runtime to a strong store before KeeperHub execution can be constructed.
+    - Added Cloudflare wrangler.jsonc with TENDER_OPERATOR_DO binding and mock settlement mode as the safe default.
+    - Added a two-runtime concurrency regression proving only one runtime can consume and settle the same authorized corrective claim.
+  verification:
+    command: npm run verify
+    status: pass
+    unit_tests: 33/33
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  keeperhub_live_proof:
+    preserved: true
+    no_new_payment_executed: true
+  deployment:
+    status: pending
+    required_before_workflow_mode:
+      - Confirm Cloudflare Durable Object binding is deployed.
+      - Confirm TENDER_OPERATOR_TOKEN is set server-side.
+      - Confirm KeeperHub secrets remain server-side only.
+      - Smoke QA authenticated operator endpoints in OPERATOR_SETTLEMENT_MODE=mock before enabling workflow.
