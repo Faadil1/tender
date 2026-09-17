@@ -1,6 +1,9 @@
 project: Tender
 summary: >
-  Tender is the economic clearing layer for accepted work. An acceptance adapter proves what work was accepted; Tender determines whether that acceptance creates one deterministic economic obligation; KeeperHub settles it; independent chain evidence verifies what landed.
+  Tender is the economic clearing layer for accepted work. GitHub or another
+  acceptance adapter proves what work was accepted; Tender determines whether
+  that acceptance creates an economic obligation and gives it one deterministic
+  identity; KeeperHub settles it; independent chain evidence verifies what landed.
 core:
   category: economic clearing for accepted work
   primitive: Tender Claim
@@ -16,10 +19,8 @@ current_state:
   branch: main
   canonical_live_proof_complete: true
   winning_delta_merged: true
-  operator_hardening_merged: true
-  operator_hardening_merge_sha: 3100b56755eb61a638836e34835889ca4c4b0d83
-  verification: "32/32 tests; 12 replay scenarios; 0 duplicate payouts"
-  pr_ci_run: 35180959317
+  winning_delta_merge_sha: e5b99bc1428d2812a066a2f6a47cdba47402ed44
+  local_verification_reported: "16/16 tests; 10 replay scenarios; 0 duplicate payouts"
   cloudflare_url: https://tender-settlement.faadil-casecraft.workers.dev
   latest_main_redeploy_pending: true
 important_files:
@@ -30,15 +31,28 @@ important_files:
   - src/domain/operatorRuntime.ts
   - src/adapters/keeperhub.ts
   - src/cloudflare/index.ts
-  - tests/operatorRuntime.test.ts
-  - tests/settlementEngine.test.ts
   - scripts/replay-harness.ts
+  - scripts/live-proof.ts
+  - .github/workflows/tender-preflight-diagnostic.yml
+  - .github/workflows/tender-live-proof.yml
+  - .github/workflows/verify.yml
+  - evidence/settlement-replay-harness.json
+  - evidence/keeperhub-calibration.json
   - evidence/live-proof.json
-  - docs/OPERATOR-RUNTIME.md
-  - docs/ARCHITECTURE.md
+  - public/live-proof.json
+  - public/index.html
+  - public/main.js
+  - public/styles.css
+  - public/delta.css
+  - wrangler.jsonc
+  - DEPLOYMENT.md
+  - docs/WINNING-INTELLIGENCE.md
   - docs/COMPETITIVE-WINNING-DELTA.md
-  - state/CURRENT.yaml
-  - state/HANDOVER.yaml
+  - docs/PRD.md
+  - docs/ARCHITECTURE.md
+  - docs/DESIGN-DIRECTION.md
+  - docs/OPERATOR-RUNTIME.md
+  - SUBMISSION.md
 gates:
   GATE_0: completed_research
   GATE_1: completed_product_thesis
@@ -51,8 +65,15 @@ gates:
   GATE_7: completed_tender_caused_live_proof
   GATE_7_5: completed_dynamic_judge_runtime
   GATE_7_75: completed_winning_delta_merge
-  GATE_7_9: completed_authenticated_operator_runtime_hardening
-  GATE_8: pending_strong_store_deploy_live_qa_video_and_submission_lock
+  GATE_8: pending_latest_redeploy_live_qa_video_and_submission_lock
+keeperhub:
+  workflow: "Tender: Settle Claim"
+  workflow_id: yy4ml6aevkov3zaukpx15
+  base_url: https://app.keeperhub.com
+  chain_id: 84532
+  network: Base Sepolia
+  asset: USDC
+  calibration_tx: 0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0
 canonical_live_proof:
   github_actions_run_id: 35162003096
   accepted_work_id: 3c19bd869e9223bdb1d353a864f1818ee6c2e871
@@ -64,48 +85,119 @@ canonical_live_proof:
   replay_status: ALREADY_SETTLED
   additional_keeperhub_executions: 0
   additional_movement: "$0"
+  evidence_file: evidence/live-proof.json
 judge_runtime:
+  target: Cloudflare Worker + Static Assets
   public_value_movement: disabled
-  signature_interactions:
-    - same claim -> ALREADY_SETTLED -> $0
-    - altered economics -> REQUIRES_ACCEPTANCE -> $0
-operator_runtime:
-  implemented_operations:
-    - create_and_lock_policy
-    - ingest_acceptance
-    - create_obligation
-    - authorize_exact_candidate_claim
-    - settle
-    - reconcile
-    - supersede_unsettled_claim
-    - create_corrective_claim
-  authorization_properties:
-    - exact authorizedClaimId binding
-    - linkedClaimId binding
-    - one-time atomic consumption contract
-    - sticky REQUIRES_ACCEPTANCE without valid stored authorization
-  policy_properties:
-    - policyDigest required for operator-created policies
-    - policy must be locked before acceptance
-    - locked versions cannot be overwritten
-  storage:
-    kv: dev_or_non_value_moving_only
-    value_moving_requirement: strongly_consistent_store
-    production_value_moving_status: blocked_until_strong_store_bound
-safety:
-  canonical_payment_rerun: false
-  no_new_value_moving_execution: true
-  keeperhub_secrets_exposed: false
-  public_runtime_broadcast_enabled: false
+  endpoints:
+    runtime: GET /api/runtime
+    proof: GET /api/proof
+    replay: POST /api/replay
+    claim_verifier: POST /api/claim/verify
+    acceptance_packet: GET /api/acceptance-packet
+    chain_proof: GET /api/chain-proof
+  product_surface:
+    - Acceptance Packet explains why the obligation exists.
+    - Tender Claim is the normalized deterministic economic fingerprint.
+    - Tender Receipt proves the obligation was discharged.
+    - Independent chain proof checks the Base Sepolia USDC Transfer rather than trusting KeeperHub self-report alone.
+    - Same-vs-altered Claim inspector turns identity and authorization into a judge-visible interaction.
+winning_patterns_applied:
+  - production seriousness and measured evidence rather than shallow integration
+  - reusable core primitives instead of one-off workflow glue
+  - deterministic planning and fail-closed behavior
+  - independent verification of execution outcome
+  - live runtime evidence plus explicit negative-path proof
+  - narrow memorable primitive rather than feature-count competition
+measured_proof:
+  unit_tests: 16/16
+  replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
 do_not:
-  - Do not repeat calibration or canonical payment.
-  - Do not expose KeeperHub or operator secrets.
-  - Do not enable KeeperHub workflow mode against Workers KV-only state.
-  - Do not rewrite settled receipts; use linked corrective claims.
+  - Do not repeat the manual calibration payment.
+  - Do not rerun the canonical value-moving proof without a distinct explicit reason.
+  - Do not expose KeeperHub API keys.
+  - Do not weaken the product into a generic merge-to-pay, bounty marketplace, DeFi firewall, or MCP gateway.
+  - Do not give the judge runtime a value-moving execution adapter.
 next_exact_actions:
-  - Implement and bind a strongly consistent Cloudflare operator store (Durable Object or equivalent transactional primitive) for value-moving authorization/state.
-  - Configure operator token and KeeperHub secrets server-side only.
-  - Pull latest main and rerun npm run verify once.
-  - Redeploy existing Cloudflare Worker URL.
-  - QA public and authenticated operator endpoints plus desktop/mobile/reduced-motion.
-  - Finalize demo video and DoraHacks submission copy without rerunning canonical payment.
+  - Locally restore evidence/settlement-replay-harness.json if npm run verify changed only its generated timestamp.
+  - Checkout main, pull latest main, and run npm run verify once.
+  - Run npm run deploy:cloudflare to update the existing workers.dev URL.
+  - QA /api/runtime, /api/proof, /api/replay, /api/claim/verify, /api/acceptance-packet, and /api/chain-proof.
+  - QA clearing desk on desktop/mobile/reduced-motion.
+  - If schedule permits, integrate a real live project acceptance event to strengthen the named-project evidence.
+  - Lock demo/video and final DoraHacks copy; do not run another payment.
+
+pr_2_gate_review_delta:
+  branch: work-winning-delta
+  gate_review_comment: "Gate Review — changes required before merge"
+  implemented:
+    - src/domain/operatorRuntime.ts adds a real authenticated write-path service over a durable-store interface.
+    - src/cloudflare/index.ts exposes /api/operator/* endpoints behind bearer auth and KV storage while leaving public proof endpoints non-value-moving.
+    - src/domain/settlementEngine.ts now requires verified, one-time operator authorization for corrective claims.
+    - EconomicAuthorization now binds authorizedClaimId to the exact candidate Tender Claim.
+    - tests/operatorRuntime.test.ts covers operator policy/acceptance/obligation/authorization/settlement/supersession flows.
+    - tests/settlementEngine.test.ts covers forged auth, wrong linked claim, wrong candidate claim, and auth reuse.
+    - .github/workflows/verify.yml runs on pull_request to main.
+  measured_proof:
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  safety:
+    canonical_keeperhub_live_proof_preserved: true
+    no_new_value_moving_execution: true
+    public_judge_runtime_has_no_broadcast_path_by_default: true
+  remaining_before_merge:
+    - Push PR #2 branch update.
+    - Wait for GitHub Actions verify on the PR.
+    - Review operator KV/token configuration before any production operator deploy.
+
+second_gate_review_delta:
+  branch: work-winning-delta
+  status: implemented_locally_pending_push
+  completed_work:
+    - Made REQUIRES_ACCEPTANCE sticky on retry unless exact stored authorization is consumed.
+    - Routed operator reconciliation through SettlementEngine.reconcile so Tender Receipt finalization is preserved.
+    - Enforced locked/precommitted policies before obligation creation and settlement; locked versions cannot be overwritten.
+    - Added strong-store authorization consumption contract; workflow settlement fails closed on eventual KV-only store.
+    - Preserved engine statuses in operator obligation projections.
+  verification:
+    command: npm run verify
+    status: pass
+    unit_tests: 32/32
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+  keeperhub_live_proof:
+    preserved: true
+    no_new_payment_executed: true
+
+production_operator_runtime_delta:
+  branch: work-production-operator
+  status: implemented_locally_pending_push_ci_and_pr
+  implemented:
+    - src/cloudflare/index.ts exports TenderOperatorStoreDurableObject and routes authenticated operator state through TENDER_OPERATOR_DO when bound.
+    - src/domain/operatorRuntime.ts exports validateAuthorization so the Durable Object uses the same exact authorizedClaimId/linkedClaimId/one-time-consumption rule as the domain verifier.
+    - src/domain/operatorRuntime.ts reserves every value-moving Tender Claim before preflight/broadcast and requires explicit initial_claim authorization for normal settlements.
+    - src/cloudflare/index.ts routes claim-level reservation and release through Durable Object storage transactions.
+    - wrangler.jsonc binds TENDER_OPERATOR_DO and defaults OPERATOR_SETTLEMENT_MODE to mock for non-value-moving smoke QA.
+    - tests/operatorRuntime.test.ts includes a two-runtime concurrency regression for the same authorized corrective claim.
+    - tests/operatorRuntime.test.ts includes a two-runtime first-time claim regression proving exactly one executor call.
+    - docs/OPERATOR-RUNTIME.md documents Durable Object as the value-moving store and KV as mock/dev/proof only.
+  measured_proof:
+    command: npm run verify
+    unit_tests: 35/35
+    replay_harness: "12 settlement scenarios replayed · 0 duplicate payouts"
+    cloudflare_dry_run: pass
+    cloudflare_dry_run_command: npx wrangler deploy --config wrangler.jsonc --dry-run
+    cloudflare_dry_run_bindings:
+      - TENDER_OPERATOR_DO Durable Object
+      - ASSETS
+      - OPERATOR_SETTLEMENT_MODE=mock
+  safety:
+    canonical_keeperhub_live_proof_preserved: true
+    no_new_value_moving_execution: true
+    public_judge_runtime_has_no_broadcast_path_by_default: true
+    workflow_mode_requires_strong_store: true
+  next_actions:
+    - Push branch update to PR #2.
+    - Wait for PR CI.
+    - Deploy with OPERATOR_SETTLEMENT_MODE=mock and TENDER_OPERATOR_DO bound.
+    - Run authenticated non-value-moving operator smoke QA.
+    - Enable OPERATOR_SETTLEMENT_MODE=workflow only after Durable Object binding and server-side secrets are confirmed.
