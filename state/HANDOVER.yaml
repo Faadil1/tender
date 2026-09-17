@@ -1,27 +1,35 @@
 project: Tender
 summary: >
-  Tender is settlement infrastructure for accepted software contributions.
-  GitHub proves what work was accepted. Tender determines what is economically
-  owed. KeeperHub proves it was settled.
+  Tender is the economic clearing layer for accepted work. GitHub or another
+  acceptance adapter proves what work was accepted; Tender determines whether
+  that acceptance creates an economic obligation and gives it one deterministic
+  identity; KeeperHub settles it; independent chain evidence verifies what landed.
 core:
+  category: economic clearing for accepted work
   primitive: Tender Claim
   invariant: one accepted obligation -> one settlement
   signature_artifact: Tender Receipt
-  replay_statement: same claim -> ALREADY_SETTLED -> $0 additional movement
+  acceptance_artifact: Acceptance Packet
+  north_star: "Accepted once. Owed once. Settled once."
+  replay_statement: same claim -> ALREADY_SETTLED -> 0 additional executions -> $0 movement
+  mutation_statement: changed economics -> NEW_CLAIM -> REQUIRES_ACCEPTANCE -> $0 movement
 resume_rule: Preserve current Git history and canonical evidence. Do not recreate or rerun completed value-moving proof.
 canonical_repository: https://github.com/Faadil1/tender
 current_state:
   branch: main
-  remote_history_pushed: true
   canonical_live_proof_complete: true
-  judge_ui_bound_to_canonical_evidence: true
-  cloudflare_deploy_prepared: true
-  uncommitted_work_expected: false
+  winning_delta_merged: true
+  winning_delta_merge_sha: e5b99bc1428d2812a066a2f6a47cdba47402ed44
+  local_verification_reported: "16/16 tests; 10 replay scenarios; 0 duplicate payouts"
+  cloudflare_url: https://tender-settlement.faadil-casecraft.workers.dev
+  latest_main_redeploy_pending: true
 important_files:
   - src/domain/types.ts
   - src/domain/identity.ts
+  - src/domain/obligationVerifier.ts
   - src/domain/settlementEngine.ts
   - src/adapters/keeperhub.ts
+  - src/cloudflare/index.ts
   - scripts/replay-harness.ts
   - scripts/live-proof.ts
   - .github/workflows/tender-preflight-diagnostic.yml
@@ -34,9 +42,11 @@ important_files:
   - public/index.html
   - public/main.js
   - public/styles.css
+  - public/delta.css
   - wrangler.jsonc
   - DEPLOYMENT.md
   - docs/WINNING-INTELLIGENCE.md
+  - docs/COMPETITIVE-WINNING-DELTA.md
   - docs/PRD.md
   - docs/ARCHITECTURE.md
   - docs/DESIGN-DIRECTION.md
@@ -51,8 +61,9 @@ gates:
   GATE_6: completed_replay_harness
   GATE_6_5: completed_live_proof_hardening_and_preflight
   GATE_7: completed_tender_caused_live_proof
-  GATE_7_5: completed_judge_facing_evidence_binding_and_cloudflare_prep
-  GATE_8: pending_publish_qa_video_and_submission_lock
+  GATE_7_5: completed_dynamic_judge_runtime
+  GATE_7_75: completed_winning_delta_merge
+  GATE_8: pending_latest_redeploy_live_qa_video_and_submission_lock
 keeperhub:
   workflow: "Tender: Settle Claim"
   workflow_id: yy4ml6aevkov3zaukpx15
@@ -60,9 +71,6 @@ keeperhub:
   chain_id: 84532
   network: Base Sepolia
   asset: USDC
-  runtime_bindings:
-    amount: Manual.data.amount
-    recipient: Manual.data.recipient
   calibration_tx: 0x2116cfde5ba32647c481aff669326dd18e2d736aeb68bab86ed4aa1d9a7069e0
 canonical_live_proof:
   github_actions_run_id: 35162003096
@@ -76,32 +84,43 @@ canonical_live_proof:
   additional_keeperhub_executions: 0
   additional_movement: "$0"
   evidence_file: evidence/live-proof.json
-judge_ui:
-  evidence_source: public/live-proof.json
-  default_state: SETTLED
-  replay_playback: ALREADY_SETTLED_NO_BROADCAST
-  proof_links:
-    - BaseScan canonical transaction
-    - live-proof JSON
-deployment:
-  target: Cloudflare Workers Static Assets
-  config: wrangler.jsonc
-  output_directory: dist/public
-  command: npm run deploy:cloudflare
-  status: prepared_waiting_for_cloudflare_authorization
+judge_runtime:
+  target: Cloudflare Worker + Static Assets
+  public_value_movement: disabled
+  endpoints:
+    runtime: GET /api/runtime
+    proof: GET /api/proof
+    replay: POST /api/replay
+    claim_verifier: POST /api/claim/verify
+    acceptance_packet: GET /api/acceptance-packet
+    chain_proof: GET /api/chain-proof
+  product_surface:
+    - Acceptance Packet explains why the obligation exists.
+    - Tender Claim is the normalized deterministic economic fingerprint.
+    - Tender Receipt proves the obligation was discharged.
+    - Independent chain proof checks the Base Sepolia USDC Transfer rather than trusting KeeperHub self-report alone.
+    - Same-vs-altered Claim inspector turns identity and authorization into a judge-visible interaction.
+winning_patterns_applied:
+  - production seriousness and measured evidence rather than shallow integration
+  - reusable core primitives instead of one-off workflow glue
+  - deterministic planning and fail-closed behavior
+  - independent verification of execution outcome
+  - live runtime evidence plus explicit negative-path proof
+  - narrow memorable primitive rather than feature-count competition
 measured_proof:
-  unit_tests: 13/13
+  unit_tests: 16/16
   replay_harness: "10 settlement scenarios replayed · 0 duplicate payouts"
 do_not:
   - Do not repeat the manual calibration payment.
   - Do not rerun the canonical value-moving proof without a distinct explicit reason.
   - Do not expose KeeperHub API keys.
-  - Do not weaken the product into a generic merge-to-pay or bounty marketplace.
-  - Do not replace deterministic Tender Claim identity with GitHub delivery or Action run identity.
+  - Do not weaken the product into a generic merge-to-pay, bounty marketplace, DeFi firewall, or MCP gateway.
+  - Do not give the judge runtime a value-moving execution adapter.
 next_exact_actions:
-  - From an authenticated local clone, git pull and npm run verify.
-  - Authorize Cloudflare with npx wrangler login.
-  - Run npm run deploy:cloudflare once and capture the workers.dev URL.
-  - QA desktop/mobile/reduced-motion and canonical transaction/evidence links.
-  - Capture the demo/video from the deployed canonical evidence; do not run another payment.
-  - Lock final DoraHacks copy, production URL, demo URL, and repository visibility requirements.
+  - Locally restore evidence/settlement-replay-harness.json if npm run verify changed only its generated timestamp.
+  - Checkout main, pull latest main, and run npm run verify once.
+  - Run npm run deploy:cloudflare to update the existing workers.dev URL.
+  - QA /api/runtime, /api/proof, /api/replay, /api/claim/verify, /api/acceptance-packet, and /api/chain-proof.
+  - QA clearing desk on desktop/mobile/reduced-motion.
+  - If schedule permits, integrate a real live project acceptance event to strengthen the named-project evidence.
+  - Lock demo/video and final DoraHacks copy; do not run another payment.
