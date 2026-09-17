@@ -4,18 +4,42 @@ Tender has two authority zones.
 
 ## Operator Zone
 
-The operator zone is authenticated and can perform write operations:
+The operator zone is implemented as a server-side write path. In Cloudflare it is exposed under `/api/operator/*`, requires `Authorization: Bearer <TENDER_OPERATOR_TOKEN>`, and persists product state through `TENDER_OPERATOR_STORE` KV. KeeperHub broadcast credentials stay server-side only.
+
+Implemented write operations:
 
 - create and version Settlement Policies;
+- lock Settlement Policies;
 - ingest Acceptance Packets;
 - create obligations;
-- authorize claims;
+- authorize claims bound to an exact candidate Tender Claim;
 - execute KeeperHub settlement;
 - reconcile in-flight executions;
 - supersede unsettled claims;
 - create corrective claims linked to settled receipts.
 
-The operator zone owns KeeperHub broadcast credentials. It must never expose them to the browser or public judge runtime.
+Operator-created policies require `policyDigest`. The shared policy type keeps the field optional only so historical canonical proof artifacts remain compatible.
+
+## Operator API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/operator/policies` | create a policy; requires `policyDigest` |
+| `POST` | `/api/operator/policies/:version/lock` | lock a policy version |
+| `POST` | `/api/operator/acceptances` | persist an Acceptance Packet |
+| `POST` | `/api/operator/obligations` | create a deterministic obligation/Tender Claim |
+| `GET` | `/api/operator/obligations/:claimId/status` | read machine status |
+| `POST` | `/api/operator/claims/:claimId/authorize` | create server-side authorization for a candidate claim |
+| `POST` | `/api/operator/claims/:claimId/settle` | settle through KeeperHub when execution is configured |
+| `POST` | `/api/operator/claims/:claimId/reconcile` | reconcile an in-flight claim |
+| `POST` | `/api/operator/claims/:claimId/supersede` | supersede an unsettled claim |
+| `POST` | `/api/operator/claims/:claimId/corrections` | create a linked corrective claim |
+
+If the operator token or store binding is missing, operator endpoints return `operator_runtime_not_configured`. If KeeperHub execution secrets are missing, settlement fails closed with `keeperhub_operator_execution_not_configured`. `OPERATOR_SETTLEMENT_MODE=mock` is available only for non-value-moving development/test environments.
+
+## Authorization Rule
+
+`EconomicAuthorization` is not trusted merely because it appears on a contribution. The operator runtime creates the authorization, binds it to `authorizedClaimId`, links it to the settled claim being corrected, and the settlement engine consumes it exactly once through the operator store. A forged, reused, wrong-linked, or wrong-candidate authorization returns `REQUIRES_ACCEPTANCE` and creates no KeeperHub execution.
 
 ## Public Proof Zone
 
