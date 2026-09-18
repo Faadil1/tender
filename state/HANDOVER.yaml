@@ -298,10 +298,10 @@ design_v2:
   status: direction_locked
   canonical_doc: docs/DESIGN-DIRECTION.md
   prompt_pack: docs/TRACE-DESIGN-LLM-PROMPTS.md
-  direction: Electric Clearing House
+  direction: Once-Written Clearing Instrument
   strongest_memory_object: deterministic Claim Fingerprint
   strongest_demo_interaction: "Replay -> same claim -> NO SECOND PAYMENT -> 0 extra executions -> $0 moved"
-  routes: ["/", "/obligation", "/proof", "/receipt", "/lab", "/system"]
+  routes: ["/", "/obligation", "/proof", "/lab"]
   next:
     - Run Grok adversarial art-direction review from prompt pack when external model access is available.
     - Run Kimi architecture/UX compression review from prompt pack when external model access is available.
@@ -319,3 +319,28 @@ grok_design_review:
   review_doc: docs/TRACE-DESIGN-GROK-REVIEW.md
   preliminary_effect: "Shift from colourful multi-surface environment to one once-written economic instrument viewed across states."
   final_promotion: blocked_until_kimi_and_cross_model_synthesis
+
+kimi_design_review:
+  status: received_summary
+  synthesis: docs/TRACE-DESIGN-SYNTHESIS.md
+  accepted:
+    - primary funnel is Home -> Case -> Proof -> Lab
+    - Receipt is a shareable artifact/permalink, not nav
+    - System is secondary evidence inside Proof/footer
+    - fingerprint is claim portrait, never proof
+    - replay renders zero deltas as headline
+    - five identities need distinct persistent tokens
+    - failures never reuse success styling or verdicts
+  source_limit: "Only Kimi headline conclusions were supplied, not the complete 15-section document."
+
+design_synthesis_v3:
+  status: ready_for_build
+  canonical_design: docs/DESIGN-DIRECTION.md
+  canonical_synthesis: docs/TRACE-DESIGN-SYNTHESIS.md
+  direction: Once-Written Clearing Instrument
+  primary_routes: ["/", "/obligation", "/proof", "/lab"]
+  primary_nav: [Home, Case, Proof, Lab]
+  receipt: full_screen_artifact_with_permalink
+  system: evidence_drawer_secondary
+  next_build_slice: "P0: shell/routing + ClaimInstrument + ClaimFingerprint + Home + Proof + replay refusal + failure states + Receipt artifact"
+  hard_boundary: "No settlement semantic changes; no public value movement; no canonical payment rerun."
