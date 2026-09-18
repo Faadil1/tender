@@ -64,7 +64,7 @@ Tender's design rule is:
 
 > **Authenticity is not economic uniqueness. A repeated delivery is not a new economic fact.**
 
-The full negative-evidence record and source are in [`docs/NEGATIVE-EVIDENCE.md`](docs/NEGATIVE-EVIDENCE.md).
+The full negative-evidence record and source are in [`docs/reliability/NEGATIVE-EVIDENCE.md`](docs/reliability/NEGATIVE-EVIDENCE.md).
 
 ---
 
@@ -182,7 +182,7 @@ flowchart LR
   I --> J["New claim · requires acceptance"]
 ```
 
-Detailed architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+Detailed architecture: [`docs/product/ARCHITECTURE.md`](docs/product/ARCHITECTURE.md)
 
 ---
 
@@ -227,7 +227,7 @@ The value-moving proof workflow is manual and intentionally separated from norma
 
 The **Tender × Valid Until** workflow adds an explicit typed approval input before it can broadcast anything.
 
-See [`docs/KEEPERHUB-INTEGRATION.md`](docs/KEEPERHUB-INTEGRATION.md).
+See [`docs/keeperhub/INTEGRATION.md`](docs/keeperhub/INTEGRATION.md).
 
 ---
 
