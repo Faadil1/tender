@@ -244,3 +244,25 @@ One of:
 - Prefer current source over marketing.
 - Prefer independent user evidence over theoretical elegance.
 - A negative result is valuable.
+
+
+## Current provisional primary after Grok
+
+### `mcp_direct_status_poll_contract` — SURVIVES FACT-CHECK, NOT YET FILED
+
+Verified facts:
+- Direct status computes `pollIntervalHint` from the server terminal set and emits it only as `X-Poll-Interval-Hint`.
+- `ExecutionStatusResponse` has no equivalent body field.
+- MCP `callApi()` returns only parsed JSON for successful JSON responses.
+- `get_direct_execution_status` serializes that JSON body and therefore drops the header.
+- Agent-facing docs tell `get_direct_execution_status` callers to honor `X-Poll-Interval-Hint`; `0` means terminal.
+- Maintainer guidance in #2058 says MCP/REST response shapes are intended to align and concrete mismatches should be filed separately.
+- No exact issue/PR for this mismatch was found in current searches.
+
+Scope discipline:
+- The hard proven defect is MCP visibility, not generic JSON clients.
+- Do not bundle a direct-execution wait route.
+- Do not bundle 202 write envelopes unless a reviewer proves they are necessary to preserve one invariant.
+- Do not change idempotency, terminal statuses, polling cadence, or DB state.
+
+Fresh Gemini + Kimi must attack this candidate before filing.
