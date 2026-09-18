@@ -20,6 +20,7 @@ const recipient = required("TENDER_RECIPIENT_WALLET");
 const amount = process.env.TENDER_AMOUNT_USDC ?? "0.01";
 const workflowId = required("KEEPERHUB_WORKFLOW_ID");
 const acceptedWorkId = process.env.TENDER_ACCEPTED_WORK_ID || sha;
+const externalAcceptedWork = repository !== runnerRepository;
 const stableTaskId = process.env.TENDER_TASK_ID || `accepted-${acceptedWorkId.slice(0, 16)}`;
 const stablePullRequestId = process.env.TENDER_PR_ID || stableTaskId;
 
@@ -49,13 +50,13 @@ const acceptance: AcceptanceEvidence = {
   issueId: contribution.issueId,
   pullRequestId: contribution.pullRequestId,
   merged: false,
-  mergeSha: sha,
+  mergeSha: externalAcceptedWork ? undefined : sha,
   requiredChecksPassed: true,
   requiredReviewApproved: true,
-  headSha: sha,
+  headSha: acceptedWorkId,
   sender: actor,
   signatureVerified: true,
-  rawFingerprint: `live-proof-${runId}-${sha.slice(0, 12)}`
+  rawFingerprint: `live-proof-${runId}-${acceptedWorkId.slice(0, 12)}`
 };
 
 const repo = new MemorySettlementRepository();
