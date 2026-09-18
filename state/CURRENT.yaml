@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: grok_primary_survives_prepacket_gemini_and_kimi_invalid_off_target_pending_targeted_reruns
+  status: grok_primary_survives_valid_gemini_status_body_wide_pending_targeted_kimi
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -79,8 +79,21 @@ keeperhub_bounty_intelligence:
         - "#2206 is closed, not active; PR #2213 merged the standardized protocol-write ExecuteResponse envelope."
         - "PR #2528 is a separate MCP simulate-response DX/documentation thread and does not prove a direct-status contract defect."
     gemini:
-      status: targeted_poll_contract_cross_exam_invalid_off_target_fact_checked
-      effect: no new candidate promoted; Grok provisional primary unchanged
+      status: targeted_poll_contract_cross_exam_valid_fact_checked
+      effect: promotes status-body-wide as preferred fix; Grok provisional primary strengthened
+      final_classification: PROMOTE_STATUS_BODY_WIDE
+      retained:
+        - MCP get_direct_execution_status cannot observe X-Poll-Interval-Hint because callApi returns only parsed JSON.
+        - Agent docs explicitly instruct that MCP tool to honor X-Poll-Interval-Hint and treat 0 as terminal.
+        - #2058 maintainer guidance says execute-tool MCP and REST response shapes are meant to align and concrete field mismatches should be filed separately.
+        - Adding pollIntervalHint to ExecutionStatusResponse is additive and lets MCP inherit the same body field without tool-specific synthesis.
+        - The status route already computes pollIntervalHint once before header emission, so body and header can be populated from the same local value.
+      corrections:
+        - "The explicit lower-bound status-list wording is in docs/api/executions.md, not docs/api/direct-execution.md."
+        - "Do not claim PR #1526's header-only shape was an oversight; intent is not proven. The present MCP/doc contradiction is sufficient."
+        - "Forward-compatibility is supported by the documented server-owned header terminality contract, but current direct-execution docs also still tell callers to poll until completed/failed."
+      preferred_fix: add pollIntervalHint:number to ExecutionStatusResponse and populate body + X-Poll-Interval-Hint from the same computed value
+      required_test: body.pollIntervalHint must equal numeric X-Poll-Interval-Hint for every status; 0 iff server terminal set says terminal
       retained_from_earlier_pass:
         - Do not make KeeperHub the permanent authority for Tender-style business identity.
         - Do not attempt universal semantic EVM effect fingerprinting.
@@ -202,7 +215,7 @@ keeperhub_bounty_intelligence:
         - docs/getting-started/agent.md tells get_direct_execution_status callers to wait by X-Poll-Interval-Hint and treat 0 as terminal
         - maintainer comment on #2058 says MCP/REST shapes are meant to align and concrete mismatches should be filed separately
       smallest_v1: surface the existing poll hint in the MCP-visible status result, preferably from the same value/header source; no DB or state-machine change
-      blocker: valid Gemini rerun + Kimi cross-examination before upstream filing
+      blocker: targeted Kimi cross-examination + final overlap check before upstream filing
 
   verified_overlap:
     issue_1840: open_accepted_confirmed
@@ -246,9 +259,9 @@ keeperhub_bounty_intelligence:
     - DeepSeek: source-level reliability / cross-surface parity / race windows
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - Re-run Gemini on the dedicated poll-contract packet; do not permit new-candidate generation.
-    - Re-run Kimi on the same packet; the pre-packet Kimi response does not count.
-    - Attack whether the surviving fix should be MCP-only, status-body-wide, or docs-only.
+    - Run targeted Kimi on the dedicated poll-contract packet; the pre-packet Kimi response does not count.
+    - Force Kimi to attack Gemini's status-body-wide preference against MCP-only and docs-only.
+    - If Kimi does not produce a fatal objection, re-run issue/PR overlap immediately and draft the upstream issue.
     - Re-run issue/PR overlap immediately before any filing.
     - Fact-check every current-repo claim before promotion.
     - Cross-examine candidate overlap across all reviewer outputs.
