@@ -65,7 +65,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: poll_contract_filed_waiting_for_triage
+  status: poll_contract_filed_expedited_triage_required
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -287,3 +287,9 @@ next_exact_actions:
   - Fact-check all outputs against current KeeperHub source/issues/PRs.
   - Cross-examine duplicate claims before selecting any primary candidate.
   - File nothing upstream until a distinct, unclaimed, evidence-backed candidate survives.
+
+accepted_issue_sweep_2026_09_17:
+  result: "No clean substantive accepted+unclaimed current-staging alternative found after full sweep. Keep #2560 primary."
+  blocker: "#2560 still needs-triage"
+  immediate_action: "Ask KeeperHub builder channel for expedited triage due hackathon deadline; no code before accepted."
+  implementation_if_accepted: "STATUS-BODY-WIDE: pollIntervalHint in ExecutionStatusResponse and direct status JSON body, same value as X-Poll-Interval-Hint, focused regression tests, docs update."
