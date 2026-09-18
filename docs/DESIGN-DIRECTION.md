@@ -718,3 +718,122 @@ Claim Fingerprint is the claim's portrait.
 Replay refusal is the remembered interaction.
 
 The zeros are the proof.
+
+
+---
+
+## CTA contract
+
+Exactly one visually primary action per viewport.
+
+### Home
+Primary: **Run the proof**
+Secondary: See the case.
+
+### Case
+Primary: **Verify this obligation**
+Secondary: View Receipt.
+
+### Proof
+Primary: **Replay settlement**
+Secondary:
+- Verify independently
+- View Receipt
+- Open Evidence Drawer
+
+Verification checks should already be visible on load; do not add a separate “run recompute” CTA.
+
+### Receipt
+Primary: **Share / copy link**
+Secondary:
+- View on Base Sepolia
+- Back to Case
+
+No settle/pay-adjacent language.
+
+### Lab
+Primary interaction: **Mutate an input**
+Secondary:
+- Reset to canonical
+- Replay canonical claim
+
+Candidate is always labeled:
+**Hypothetical — cannot settle**
+
+Replay always refers to the canonical claim.
+
+---
+
+## Exact mobile composition
+
+At 375px:
+
+### Home
+- single-column instrument;
+- canonical case compressed into one object;
+- sticky **Run the proof** CTA.
+
+### Case
+- vertical snap-scrolling six-state stepper;
+- one state per viewport;
+- compact six-dot progress rail;
+- identity token + short id + tap-to-copy.
+
+### Proof
+- accordion:
+  - Recompute
+  - Receipt match
+  - On-chain transaction
+- verification state visible without extra interaction;
+- sticky Replay in thumb zone;
+- replay result opens as a full-height result sheet.
+
+### Receipt
+- full-screen artifact;
+- large Claim Fingerprint;
+- details stacked;
+- share/copy action;
+- screenshot-ready composition.
+
+### Lab
+- Canonical <-> Mutated toggle;
+- fingerprint stays fixed as comparison anchor;
+- candidate fields cross-fade/change;
+- canonical replay remains separate and unambiguous.
+
+### Technical evidence
+- collapsed inside Proof;
+- tap-to-copy read-only verification material;
+- never primary nav.
+
+---
+
+## Exact failure-state vocabulary
+
+Use these states verbatim where applicable:
+
+- **UNVERIFIED — verification service unavailable**
+- **ON-CHAIN CHECK UNAVAILABLE — RPC unreachable**
+- **REPLAY COULD NOT RUN — no conclusion drawn**
+- **No fingerprint: no valid claim**
+- **Canonical proof unavailable. Nothing here is verified.**
+
+A replay failure never yields **NO SECOND PAYMENT**.
+
+A Base RPC failure may yield **Partially verified** only if the UI explicitly enumerates which independent checks still passed.
+
+Failure states are timestamped and retryable.
+
+---
+
+## Seven abstraction rules
+
+The public interface must absorb these complexities. A judge should never have to learn:
+
+1. how KeeperHub executes;
+2. Base Sepolia/network mechanics;
+3. claim-id hashing/canonicalization;
+4. backend recomputation-vs-settlement mechanics;
+5. why five distinct identities exist;
+6. what a guilloche is technically;
+7. internal policy vocabulary before the UI shows its meaning.
