@@ -413,3 +413,58 @@ The single test invariant:
 `mcp_direct_status_poll_contract` remains **PROVISIONAL PRIMARY**, now strengthened with a preferred **STATUS-BODY-WIDE** implementation shape.
 
 Do not file yet. One targeted Kimi pass remains. If Kimi cannot produce an evidence-backed fatal objection, run one final issue/PR overlap check and prepare the issue.
+
+
+## Kimi targeted poll-contract final review — valid, fact-checked
+
+Kimi returned **PROMOTE STATUS-BODY-WIDE** after a targeted product-boundary / semantics / DX attack.
+
+### What survives
+
+- `docs/getting-started/agent.md` tells `get_direct_execution_status` callers to honor `X-Poll-Interval-Hint`; `0` means terminal.
+- `lib/mcp/tools.ts` discards successful-response headers and returns only parsed JSON, so that instruction is impossible to follow through the first-class MCP tool.
+- The direct status route already computes one local `pollIntervalHint`; adding it additively to `ExecutionStatusResponse` and emitting the same value in the header creates one computed truth with two carriers.
+- An MCP-only synthesis would deliberately diverge the MCP tool result from the REST body, while #2058 says those execute-tool response shapes are meant to align.
+- A docs-only fix would remove the impossible instruction but still leave MCP unable to observe KeeperHub's server-directed polling cadence.
+
+### Important final correction
+
+Kimi/Gemini cited `docs/api/executions.md`'s “status list is a lower bound” wording as if it were direct-execution evidence. It is not. That page documents **workflow executions** under `/api/workflows/executions/{executionId}/status`.
+
+The upstream issue must not use that workflow-specific statement as proof about direct-execution status extensibility.
+
+The direct-execution case stands independently on:
+- the impossible MCP instruction in `docs/getting-started/agent.md`;
+- `docs/api/errors.md` defining `X-Poll-Interval-Hint` on status/long-poll endpoints, with `0` meaning terminal;
+- the direct status route computing and emitting the hint;
+- MCP dropping success-response headers;
+- #2058's execute-tool response-shape parity guidance.
+
+### Final duplicate sweep
+
+Checked KeeperHub `staging` at `7104df9db8d2f171731185c6349855b59136e147`.
+
+Exact and semantic searches covered:
+- `pollIntervalHint`
+- `X-Poll-Interval-Hint`
+- `poll hint`
+- `get_direct_execution_status` missing fields / response headers
+- MCP headers / response body / terminality
+- direct status body polling cadence
+- MCP response-shape direct execution status
+
+No active issue or PR owns the exact change.
+
+Historical related work only:
+- PR #1526 — introduced the poll header;
+- PR #1964 — advertised the header in docs;
+- PR #2008 — documented direct-status drift around `unconfirmed`;
+- issue #2058 — maintainer response-shape parity guidance.
+
+### Final research decision
+
+`mcp_direct_status_poll_contract` is **READY TO FILE**.
+
+Preferred proposed plan: **STATUS-BODY-WIDE**.
+
+Do not implement until the issue receives `accepted` or a maintainer supplies an amended accepted plan.
