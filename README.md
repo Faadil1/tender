@@ -231,6 +231,17 @@ See [`docs/keeperhub/INTEGRATION.md`](docs/keeperhub/INTEGRATION.md).
 
 ---
 
+## Builder feedback
+
+While integrating KeeperHub, Tender surfaced a concrete MCP/REST polling-contract gap and filed it upstream with reproduction steps, source paths, bounded scope, and a minimal fix proposal:
+
+- KeeperHub issue [#2560 — expose the documented direct-execution poll hint in the MCP-visible status response](https://github.com/KeeperHub/keeperhub/issues/2560)
+- Current status: `needs-triage`
+
+It is not counted as a shipped feature. It is included because actionable platform feedback is part of production integration work.
+
+---
+
 ## Repository map
 
 ```text
