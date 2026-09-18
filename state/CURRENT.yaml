@@ -400,7 +400,7 @@ kimi_design_review:
   synthesis_doc: docs/TRACE-DESIGN-SYNTHESIS.md
 
 design_synthesis_v3:
-  status: canonical_full_kimi_reconciled_ready_for_implementation
+  status: p0_and_core_p1_implemented_ci_green_deploy_pending
   direction: Once-Written Clearing Instrument
   primary_routes: ["/", "/obligation", "/proof", "/lab"]
   receipt: artifact_permalink_full_screen_from_case_and_proof
@@ -410,7 +410,7 @@ design_synthesis_v3:
   signature_interaction: "Replay same accepted work -> unchanged instrument -> delta 0 executions -> delta $0.00 -> Same claim. No second payment."
   failure_headline: "Cannot verify right now."
   primary_nav: [Home, Case, Proof, Lab]
-  implementation_gate: P0_shell_instrument_home_proof_replay_receipt_failure_states
+  implementation_gate: live_cloudflare_deploy_and_visual_qa
 
 kimi_full_audit_lock:
   status: complete
@@ -422,3 +422,82 @@ kimi_full_audit_lock:
   five_identity_contract_locked: true
   replay_non_event_visualization_locked: true
   seven_abstraction_rules_locked: true
+
+ui_build_2026_09_18:
+  status: p0_and_core_p1_implemented_ci_green_deploy_pending
+  implementation:
+    shell:
+      - four primary routes served by one lightweight product shell
+      - desktop nav: Home / Case / Proof / Lab
+      - mobile bottom nav: Home / Case / Proof / Lab
+      - Receipt retained as direct permalink artifact
+    instrument:
+      - persistent once-written Claim Instrument
+      - deterministic SVG Claim Fingerprint derived from claimId
+      - fingerprint explicitly labeled as visual identity, never proof
+      - five-identity token/legend system
+    home:
+      - memory sentence above fold
+      - instrument-as-hero
+      - one-one-one plus replay-zero compression
+      - Run the proof primary CTA
+    case:
+      - six-stage causal stepper
+      - distinct identity derivation
+      - Verify this obligation primary CTA
+    proof:
+      - automatic claim recomputation check
+      - receipt-reference match check
+      - independent Base RPC check
+      - replay as primary action
+      - before/after zero deltas
+      - exact verdict: Same claim. No second payment.
+      - Evidence Drawer
+      - plain partial/failure states
+    receipt:
+      - full-screen/shareable artifact at /receipt
+      - Claim Fingerprint
+      - copy permalink
+      - Base Sepolia handoff
+    lab:
+      - canonical versus hypothetical comparison
+      - candidate explicitly cannot settle
+      - uses existing /api/claim/verify
+      - invalid candidate renders no fingerprint
+    responsive:
+      - mobile bottom nav
+      - case horizontal snap-state experience
+      - proof counters collapse to mobile rows
+      - receipt full-screen composition
+      - lab stacks without page-level horizontal scroll
+    motion:
+      - restrained registration entrance
+      - replay refusal/result motion prioritized
+      - prefers-reduced-motion parity
+  route_support:
+    local_static_shell:
+      - /
+      - /obligation
+      - /proof
+      - /lab
+      - /receipt
+    cloudflare_static_shell:
+      - /
+      - /obligation
+      - /proof
+      - /lab
+      - /receipt
+  verification:
+    public_main_js_parse: pass
+    github_actions_run: 35308130698
+    github_actions_conclusion: success
+    github_actions_head_sha: 8e62928b6ee8ef5d6bbc5888e826e50a5bf0cdb1
+    command: npm run verify
+  runtime_semantics_changed: false
+  canonical_payment_rerun: false
+  next:
+    - pull latest main locally
+    - deploy through authenticated Cloudflare Wrangler path
+    - QA live routes on desktop and 375px
+    - QA replay, Base RPC partial failure, receipt permalink, Lab mutation, reduced motion and keyboard
+    - only then lock screenshot/video capture
