@@ -266,17 +266,3 @@ A docs-only clarification that typed failure detail lives at `result.errorClass`
 
 No candidate from the Claude pass is promoted.
 
-Claude's maintainer review now has one explicit sub-question in addition to broad whitespace discovery.
-
-Verified staging facts supplied to Claude:
-- `ExecuteResponse` has optional `rejection` and `errorClass`.
-- `ExecutionStatusResponse` has top-level `error` but no top-level `rejection`, `errorClass`, `errorCode` or `retryable`.
-- The status route returns persisted `output` under `result`.
-- `failExecution()` already writes `rejection` and `errorClass` into that output when available.
-
-Decision to make:
-- Is this nested-vs-top-level asymmetry intentional and sufficient?
-- Is it only a small DX/docs issue?
-- Or can Claude prove a current recurring caller problem, no active ownership, and a narrow backwards-compatible contract improvement a KeeperHub maintainer would plausibly accept?
-
-Promotion remains fail-closed: API symmetry alone is not enough. Claude must find concrete current demand or repeated caller harm caused specifically by the shape. A generic `retryable` field must not be proposed without an existing stable retryability source of truth.
