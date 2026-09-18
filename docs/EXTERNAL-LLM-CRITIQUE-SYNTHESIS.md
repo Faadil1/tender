@@ -266,3 +266,40 @@ A docs-only clarification that typed failure detail lives at `result.errorClass`
 
 No candidate from the Claude pass is promoted.
 
+
+
+## Phase 2 Grok adversarial review — received and fact-checked
+
+Grok returned one new PRIMARY candidate: expose the direct-execution poll contract to MCP instead of keeping it only in `X-Poll-Interval-Hint`.
+
+### What survived source verification
+
+- `GET /api/execute/{executionId}/status` computes `pollIntervalHint` from the server terminal set: `completed|failed -> 0`, otherwise `2`.
+- The current `ExecutionStatusResponse` JSON shape has no poll-hint field.
+- The route adds the value only through `X-Poll-Interval-Hint`.
+- `lib/mcp/tools.ts::callApi()` returns `response.json()` for successful JSON responses and does not preserve success-response headers.
+- `get_direct_execution_status` returns only `JSON.stringify(data)` to the MCP caller.
+- `docs/getting-started/agent.md` tells callers using `get_direct_execution_status` to wait according to `X-Poll-Interval-Hint`; `0` means terminal.
+- `docs/api/direct-execution.md` says status strings are a lower bound and directs clients to server-computed `X-Poll-Interval-Hint` for terminality.
+- No current issue/PR search found an exact request to surface that poll contract through the MCP-visible status result.
+- In closed issue #2058, maintainer `suisuss` states that MCP-to-REST response shapes are intended to align and asks for concrete field mismatches to be filed separately.
+
+This is stronger than the rejected typed-failure-status idea because it is a proven cross-surface contract loss: the docs tell an MCP caller to consume metadata the MCP abstraction discards.
+
+### Corrections to Grok
+
+- Do not generalize to all JSON clients; ordinary REST clients can read headers. The verified defect is MCP/tool-result visibility.
+- Do not require adding `pollIntervalHint` to every 202 write envelope in v1. The smallest proven failure is status polling.
+- Grok's n8n claim was not independently reproduced and is unnecessary to promotion.
+- Direct-execution wait, transaction-hash lookup, callbacks, and signer-accurate simulation remain secondary/research hypotheses.
+
+### Current decision
+
+`mcp_direct_status_poll_contract` becomes **PROVISIONAL PRIMARY — SURVIVES FACT-CHECK**.
+
+Do not file yet. The pre-filing gate is a fresh Gemini + Kimi cross-examination on whether the correct minimal fix is:
+1. MCP-only: surface the existing header value in `get_direct_execution_status`;
+2. status-body-wide: add an additive JSON poll hint to `ExecutionStatusResponse` and let MCP inherit it;
+3. docs-only: stop telling MCP callers to read an inaccessible header.
+
+Reject the candidate if terminality is intentionally required to remain header-only or if active ownership/duplication is discovered.
