@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: poll_contract_ready_to_file_after_final_duplicate_sweep
+  status: poll_contract_filed_waiting_for_triage
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -219,7 +219,13 @@ keeperhub_bounty_intelligence:
         - active #2503 core-team discussion already owns adjacent expectation/verification semantics
       note: potentially useful execution-layer guardrail, but not strong enough to displace the MCP poll-contract primary
     mcp_direct_status_poll_contract:
-      status: ready_to_file
+      status: filed_waiting_for_triage
+      upstream_issue: 2560
+      upstream_url: https://github.com/KeeperHub/keeperhub/issues/2560
+      labels:
+        - bug
+        - needs-triage
+      maintainer_comments: 0
       checked_staging_sha: 7104df9db8d2f171731185c6349855b59136e147
       preferred_fix: status_body_wide
       problem: MCP get_direct_execution_status drops the X-Poll-Interval-Hint terminality/cadence contract that agent docs require callers to follow
@@ -237,7 +243,7 @@ keeperhub_bounty_intelligence:
           - "#1964 advertised the hint in docs"
           - "#2008 documented direct-status drift around unconfirmed"
           - "#2058 stated MCP execute-tool response shapes are meant to match REST references"
-      blocker: none_research_gate_complete
+      blocker: wait_for_accepted_or_maintainer_plan_amendment
 
   verified_overlap:
     issue_1840: open_accepted_confirmed
@@ -281,8 +287,10 @@ keeperhub_bounty_intelligence:
     - DeepSeek: source-level reliability / cross-surface parity / race windows
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - File the prepared upstream issue only; do not implement yet.
-    - Wait for accepted or a maintainer-amended accepted plan before KeeperHub code changes.
+    - Wait for KeeperHub triage on issue #2560.
+    - If accepted with no amendment, implement the filed STATUS-BODY-WIDE plan.
+    - If maintainers amend the plan before accepted, that amended plan becomes the implementation contract.
+    - If needs-discussion, respond only to the specific objections; do not code yet.
     - Re-check staging and overlap immediately before implementation if accepted.
     - Re-run issue/PR overlap immediately before any filing.
     - Fact-check every current-repo claim before promotion.
@@ -306,4 +314,4 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. Research gate complete: mcp_direct_status_poll_contract is READY TO FILE with STATUS-BODY-WIDE proposed plan. Automated issue creation was attempted but blocked by GitHub 403 Resource not accessible by integration; file manually or reconnect with issue-write permission, then wait for accepted before implementation.
+next_action: Keep Tender runtime/proof locked. KeeperHub issue #2560 is filed and currently needs-triage. Do not implement until accepted or a maintainer-amended accepted plan is recorded.
