@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: poll_contract_filed_waiting_for_triage
+  status: poll_contract_filed_expedited_triage_required
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -314,4 +314,13 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. KeeperHub issue #2560 is filed and currently needs-triage. Do not implement until accepted or a maintainer-amended accepted plan is recorded.
+next_action: Keep Tender runtime/proof locked. KeeperHub issue #2560 remains the primary bounty candidate. Full accepted-issue sweep found no clean substantive unclaimed alternative suitable for the remaining hackathon window. Request expedited maintainer triage in the KeeperHub builder channel; do not implement before accepted. If accepted, re-check staging/overlap and execute the STATUS-BODY-WIDE plan immediately.
+
+accepted_issue_sweep_2026_09_17:
+  verdict: no_clean_substantive_unclaimed_alternative
+  primary_candidate: keeperhub_issue_2560
+  constraints:
+    - do_not_race_claimed_or_active_contributors
+    - do_not_build_on_unmerged_dependency
+    - do_not_implement_without_accepted
+  expedited_triage: required
