@@ -326,7 +326,7 @@ accepted_issue_sweep_2026_09_17:
   expedited_triage: required
 
 design_v2:
-  status: direction_locked_pending_external_cross_exam_and_build
+  status: grok_received_waiting_for_kimi_then_synthesis
   canonical_doc: docs/DESIGN-DIRECTION.md
   prompt_pack: docs/TRACE-DESIGN-LLM-PROMPTS.md
   direction: Electric Clearing House
@@ -367,3 +367,21 @@ design_v2:
     - canonical value-moving proof must not be rerun
     - public judge surface remains non-value-moving
     - operator credentials never enter public UI
+
+grok_design_review:
+  status: received_preliminary_cross_exam_complete
+  canonical_review_doc: docs/TRACE-DESIGN-GROK-REVIEW.md
+  strongest_retained:
+    - instrument_as_hero
+    - claim_fingerprint_as_material_not_badge
+    - replay_refusal_as_signature_motion
+    - plate_registration_as_motion_language
+    - reduced_palette_sprawl
+    - persistent_one_one_one_compression
+    - five_proof_register
+  challenged:
+    - six_top_level_routes
+    - System_as_primary_surface
+    - Mutation_Lab_as_destination
+    - Electric_direction_name
+  synthesis_status: waiting_for_Kimi_before_final_promotion
