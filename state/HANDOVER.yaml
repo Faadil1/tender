@@ -313,3 +313,9 @@ design_v2:
 design_commits_2026_09_18:
   - "25de286: design: lock Electric Clearing House multi-surface direction"
   - "846530e: design: add Grok Kimi and build prompt pack"
+
+grok_design_review:
+  status: received
+  review_doc: docs/TRACE-DESIGN-GROK-REVIEW.md
+  preliminary_effect: "Shift from colourful multi-surface environment to one once-written economic instrument viewed across states."
+  final_promotion: blocked_until_kimi_and_cross_model_synthesis
