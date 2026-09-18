@@ -36,6 +36,7 @@ Do NOT rescue or re-propose these unless you can prove current repo state change
 - #2373 asynchronous idempotency release;
 - #2495/#2552 partial payout resume / web3/disburse;
 - #2408 softened-error execution reporting;
+- top-level direct-execution typed failure status normalization as a bounty candidate (Claude + source fact-check found no recurring caller harm; keep RESEARCH ONLY unless new evidence appears);
 - generic post-broadcast outcome/reconciliation;
 - generic sequential simulation / invariant firewall;
 - receipt export;
@@ -54,6 +55,7 @@ Known verified state:
 - #2177 closed/completed.
 - #2374 closed; PR #2386 merged.
 - #1979 closed/completed.
+- #2206 closed; PR #2213 merged and current staging now returns the standardized ExecuteResponse envelope for protocol writes.
 - #2408 closed/completed/accepted/confirmed; PR #2446 merged; remaining execution-level shape retained by core team.
 - #2495 open/accepted/confirmed; PR #2552 open, mergeable, not merged.
 
@@ -111,7 +113,7 @@ Act as a KeeperHub maintainer and senior reviewer.
 Optimize for mergeability, hidden coupling, scope discipline, API compatibility, review burden and maintainer acceptance.
 Try to reject candidates before recommending one.
 
-#### Targeted adjudication: direct-execution typed failure status
+#### Targeted adjudication result: direct-execution typed failure status — RESEARCH ONLY
 
 Treat this as a specific RESEARCH-ONLY hypothesis to adjudicate, not as a preselected bounty candidate.
 
@@ -145,6 +147,8 @@ Promotion bar:
 - Mere API symmetry or convenience => keep RESEARCH ONLY.
 - A concrete recurring caller problem + no active owner + bounded backwards-compatible patch + clear tests => candidate may be promoted.
 - If evidence is insufficient, explicitly return RESEARCH PRIMARY FURTHER or NO BOUNTY CANDIDATE SURVIVES.
+
+Claude completed this adjudication and found no concrete recurring caller harm, no repeated parsing workaround, and no evidence that the nested placement itself caused an unsafe decision. Fact-check also established that adjacent issue #2206 is already closed via merged PR #2213. Therefore the hypothesis is locked at RESEARCH ONLY unless another reviewer produces materially new evidence.
 
 ### Gemini
 Act as a systems/API/schema reviewer.
