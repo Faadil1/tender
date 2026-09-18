@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { KeeperHubExecutor } from "../src/adapters/keeperhub.js";
 import { MemorySettlementRepository } from "../src/adapters/memoryRepository.js";
 import { SettlementEngine } from "../src/domain/settlementEngine.js";
@@ -126,7 +127,9 @@ const evidence = {
   }
 };
 
-await mkdir("evidence", { recursive: true });
-await writeFile("evidence/live-proof.json", `${JSON.stringify(evidence, null, 2)}\n`);
+const evidencePath = process.env.TENDER_EVIDENCE_PATH ?? "evidence/live-proof.json";
+await mkdir(dirname(evidencePath), { recursive: true });
+await writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(`Tender live proof: ${settledSnapshot.status} claim=${settledSnapshot.claim.claimId} replay=${replay.status}`);
+console.log(`Evidence: ${evidencePath}`);
 console.log(`Transaction: ${tx}`);
