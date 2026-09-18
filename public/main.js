@@ -1,5 +1,9 @@
 const app = document.querySelector("#app");
 
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+
 const ROUTES = new Set(["/", "/obligation", "/proof", "/lab", "/receipt"]);
 
 const escapeHtml = (value) => String(value ?? "")
@@ -409,7 +413,8 @@ const receiptMarkup = (proof) => {
           '<div class="receipt-top">',
             "<div>",
               '<p class="meta-label">Tender Receipt</p>',
-              '<h2 class="instrument-title">' + escapeHtml(receipt.receiptId) + "</h2>",
+              '<h2 class="receipt-title">Settlement receipt</h2>',
+              '<p class="receipt-id">' + escapeHtml(receipt.receiptId) + "</p>",
             "</div>",
             '<span class="instrument-state">Settled once</span>',
           "</div>",
@@ -738,14 +743,14 @@ const bindLab = (data) => {
         result.innerHTML = [
           '<p class="kicker">Canonical identity</p>',
           "<strong>SAME CLAIM · ALREADY SETTLED</strong>",
-          '<div class="fingerprint" style="position:relative;inset:auto;min-height:170px;margin-top:14px;color:var(--claim)">' + fingerprintSvg(candidate.candidateClaimId) + "</div>",
+          '<div class="candidate-portrait"><div class="fingerprint">' + fingerprintSvg(candidate.candidateClaimId) + '</div><span class="candidate-portrait-label">Same portrait · unchanged</span></div>',
           '<small>Unchanged economics -> unchanged claim. This public lab cannot settle anything.</small>'
         ].join("");
       } else {
         result.innerHTML = [
           '<p class="kicker">Hypothetical — cannot settle</p>',
           "<strong>NEW CLAIM · REQUIRES ACCEPTANCE</strong>",
-          '<div class="fingerprint" style="position:relative;inset:auto;min-height:170px;margin-top:14px;color:var(--warning)">' + fingerprintSvg(candidate.candidateClaimId) + "</div>",
+          '<div class="candidate-portrait changed"><div class="fingerprint">' + fingerprintSvg(candidate.candidateClaimId) + '</div><span class="candidate-portrait-label">Different portrait · changed economics</span></div>',
           '<small>' + escapeHtml((candidate.changedFields || []).join(", ") || "Economic identity changed") + " · " + escapeHtml(short(candidate.candidateClaimId, 18, 10)) + "</small>"
         ].join("");
       }
@@ -788,8 +793,12 @@ const boot = async () => {
         ? "Tender — Accepted once. Owed once. Settled once."
         : "Tender — " +
           ({ "/obligation": "Case", "/proof": "Proof", "/lab": "Invariant Lab", "/receipt": "Receipt" }[path] || "Proof");
-    app.focus({ preventScroll: true });
     await bindPage(path, data);
+
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+    }
 
     if (window.location.hash) {
       requestAnimationFrame(() => {
