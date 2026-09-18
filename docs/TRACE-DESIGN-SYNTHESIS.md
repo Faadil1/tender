@@ -5,12 +5,11 @@ Date: 2026-09-18
 Inputs:
 - Canonical Tender design v2
 - Grok adversarial art-direction review
-- Kimi UX/IA audit summary supplied by the user
+- Full Kimi IA/UX audit supplied by the user (`docs/TRACE-DESIGN-KIMI-AUDIT.md`)
 
 Status: **canonical synthesis for implementation**
 
-Important limitation:
-The Kimi input available to this synthesis is the headline audit summary, not the complete 15-section document. Only conclusions explicitly present in that summary are promoted here. Detailed per-page hierarchy/copy/CTA decisions not included in the summary remain open to implementation QA rather than being fabricated.
+Kimi's full 15-section audit has now been ingested and reconciled. The synthesis below incorporates its page hierarchy, CTA contract, 30s/90s paths, 375px mobile conversion, failure-state rules, five-identity system, Claim Fingerprint framing, replay interaction, judge-compression model, and seven-complexity abstraction rules.
 
 ---
 
@@ -493,17 +492,17 @@ Kimi's 30-second conclusion is accepted.
 
 ### 90 seconds
 
-The exact deeper path is not fully supplied in the Kimi summary.
+Kimi's full path is promoted:
 
-Canonical provisional extension:
-1. complete the 30-second proof path;
-2. open Case to inspect why value became owed;
-3. open Receipt artifact;
-4. open Lab and mutate one economic input;
-5. see new claim / new fingerprint / requires acceptance;
-6. optionally open technical Evidence Drawer.
+1. Home: invariant + canonical case + one-line six-step sequence.
+2. Case: scan the timeline, timestamps and identity labels; open Receipt from the terminal state.
+3. Proof: inspect recompute, receipt match and on-chain transaction; open **Verify independently**; press Replay.
+4. Lab: mutate one economic input while the canonical fingerprint stays pinned; candidate fingerprint changes; replay remains canonical and unchanged.
+5. Optional: open the technical Evidence Drawer.
 
-This remains subject to full Kimi-document reconciliation if the complete audit is provided.
+The product contrast is explicit:
+
+**Mutation changes identity. Replay changes nothing.**
 
 ---
 
@@ -654,3 +653,120 @@ System is evidence.
 The Claim Fingerprint is the claim's portrait.
 Replay refusal is the remembered interaction.
 The zeros are the proof.
+
+
+---
+
+## 21. Full Kimi hierarchy / CTA lock
+
+The complete Kimi audit adds implementation-level specificity that is now canonical.
+
+### Home
+Hierarchy:
+1. invariant;
+2. canonical case proof;
+3. six-step sequence;
+4. raw/method detail hidden.
+
+Primary CTA:
+**Run the proof**
+
+Secondary:
+See the case.
+
+### Case
+Headline candidate:
+**One obligation, settled exactly once.**
+
+Hierarchy:
+1. terminal settled state;
+2. six-state timeline;
+3. per-state terms/evidence;
+4. raw JSON/log hidden.
+
+Primary CTA:
+**Verify this obligation**
+
+Secondary:
+View Receipt.
+
+### Proof
+Kimi headline candidate:
+**Recompute it. Replay it. Nothing moves twice.**
+
+TRACE keeps the existing stronger proof copy available for testing:
+**The payment happened. The replay did not.**
+
+Hierarchy:
+1. independently verified state + replay non-event;
+2. recompute / receipt match / on-chain check + replay result;
+3. Verify independently;
+4. RPC/raw ids/execution reliability in Evidence Drawer.
+
+Primary CTA:
+**Replay settlement**
+
+No separate “recompute” CTA: verification checks load as evidence, not as optional marketing interactions.
+
+### Receipt
+Headline:
+**The settlement, permanent and public.**
+
+Primary CTA:
+**Share / copy link**
+
+No settle/pay-adjacent controls.
+
+### Lab
+Headline:
+**Change the economics. Watch the identity change.**
+
+Canonical instrument is permanently pinned.
+Candidate is labeled:
+
+**Hypothetical — cannot settle**
+
+Primary interaction:
+**Mutate an input**
+
+Replay, if present, always refers to the canonical claim.
+
+### Mobile
+At 375px:
+- Home sticky Run the proof;
+- Case vertical snap stepper;
+- Proof pre-expanded verification accordion + sticky Replay;
+- replay result full-height sheet;
+- Receipt full-screen screenshot-ready artifact;
+- Lab Canonical <-> Mutated toggle;
+- technical material collapsed.
+
+### Failure precision
+Promote the following exact state language:
+- **UNVERIFIED — verification service unavailable**
+- **ON-CHAIN CHECK UNAVAILABLE — RPC unreachable**
+- **REPLAY COULD NOT RUN — no conclusion drawn**
+- **No fingerprint: no valid claim**
+- **Canonical proof unavailable. Nothing here is verified.**
+
+Partial verification must identify exactly which checks passed and which did not.
+
+### Identity legend
+Every identity token must have:
+- fixed name;
+- stable shape/icon;
+- semantic accent;
+- role caption;
+- derivation relationship.
+
+Never show a bare truncated id without identity context.
+
+### Seven abstraction rules
+Users must never need to learn:
+1. KeeperHub execution mechanics.
+2. Base Sepolia/network literacy.
+3. claim-id hashing/canonicalization mechanics.
+4. recomputation-vs-settlement backend distinction.
+5. why five ids exist.
+6. what guilloche means technically.
+7. internal economic-policy vocabulary before the UI demonstrates it.
