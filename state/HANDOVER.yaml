@@ -334,7 +334,7 @@ kimi_design_review:
   audit_doc: docs/TRACE-DESIGN-KIMI-AUDIT.md
 
 design_synthesis_v3:
-  status: full_kimi_reconciled_ready_for_build
+  status: ui_implemented_ci_green_deploy_pending
   canonical_design: docs/DESIGN-DIRECTION.md
   canonical_synthesis: docs/TRACE-DESIGN-SYNTHESIS.md
   direction: Once-Written Clearing Instrument
@@ -342,7 +342,7 @@ design_synthesis_v3:
   primary_nav: [Home, Case, Proof, Lab]
   receipt: full_screen_artifact_with_permalink
   system: evidence_drawer_secondary
-  next_build_slice: "P0: shell/routing + ClaimInstrument + ClaimFingerprint + Home + Proof + replay refusal + failure states + Receipt artifact"
+  next_build_slice: "Cloudflare deploy + live visual QA; implementation slice already landed on main."
   hard_boundary: "No settlement semantic changes; no public value movement; no canonical payment rerun."
 
 kimi_full_audit_lock:
@@ -358,3 +358,21 @@ kimi_full_audit_lock:
     - replay_before_after_zero_deltas
     - seven_user_abstraction_rules
   next: "Begin P0 implementation; no further design-research gate is required."
+
+ui_build_2026_09_18:
+  status: implemented_ci_green_deploy_pending
+  commits:
+    - "0acdaec ui: add Tender multi-route product shell"
+    - "066a789 ui: implement once-written instrument visual system"
+    - "11d6aa2 ui: build instrument routes proof replay receipt and lab"
+    - "42e0d6f ui: serve product routes through Tender shell locally"
+    - "8e62928 ui: route product surfaces through Cloudflare shell"
+  ci:
+    run_id: 35308130698
+    result: success
+    verified_sha: 8e62928b6ee8ef5d6bbc5888e826e50a5bf0cdb1
+  primary_routes: ["/", "/obligation", "/proof", "/lab"]
+  receipt_permalink: /receipt
+  runtime_changed: false
+  payment_rerun: false
+  next: "Deploy current main with npm run deploy:cloudflare from an authenticated local clone, then perform live visual/device/failure-state QA."
