@@ -122,9 +122,24 @@ Bound accepted work:
 - Integration code: [`src/integrations/validUntil.ts`](src/integrations/validUntil.ts)
 - Regression tests: [`tests/validUntilIntegration.test.ts`](tests/validUntilIntegration.test.ts)
 
-The integration proves that Tender's economic identity is stable across delivery/event retries and changes when the accepted work's economics change.
+The integration is now proven end-to-end with a distinct KeeperHub execution and Base Sepolia settlement tied to the Valid Until accepted-work SHA.
 
-**Truth boundary:** the dedicated Valid Until value-moving settlement is guarded behind an explicit approval workflow and is not represented as completed until that distinct KeeperHub transaction actually exists.
+| Evidence | Value |
+| --- | --- |
+| Accepted work | `aeec4ed165eb0917688a885b960175d58f729692` |
+| Tender Claim | `tclaim_b5b5600f73b00dd1790a6747e1bc2ac4` |
+| Tender Receipt | `treceipt_b5b5600f73b00dd1790a6747e1bc2ac4` |
+| KeeperHub execution | `50m417t2khmb8a17iggt7` |
+| Amount | `0.01 USDC` |
+| Network | Base Sepolia |
+| Transaction | `0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b` |
+| Replay | `ALREADY_SETTLED` |
+| Extra KeeperHub executions | `0` |
+| Extra movement | `$0` |
+
+Machine-readable proof: [`evidence/valid-until-live-proof.json`](evidence/valid-until-live-proof.json)
+
+Transaction: https://sepolia.basescan.org/tx/0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b
 
 ---
 
@@ -264,13 +279,21 @@ No design research, competitive intelligence, LLM-review packets, or private han
 
 ---
 
-## What is intentionally unfinished
+## Truth boundary
 
-- The canonical KeeperHub execution proof is complete and frozen.
-- The **Valid Until-specific settlement binding is implemented and tested**, but its dedicated real KeeperHub transfer is not claimed as complete until an explicitly approved transaction is executed.
-- The public runtime remains non-value-moving by design.
+Complete and proven:
+- the canonical Tender KeeperHub settlement;
+- the replay invariant;
+- the Valid Until-specific integration;
+- the distinct Valid Until KeeperHub settlement;
+- the separate machine-readable evidence records.
 
-That boundary is intentional: Tender does not turn “almost verified” into “verified.”
+Intentionally not claimed:
+- mainnet settlement;
+- public value-moving execution;
+- KeeperHub issue #2560 as shipped or accepted.
+
+The public runtime remains non-value-moving by design. Tender does not turn “almost verified” into “verified.”
 
 ---
 
