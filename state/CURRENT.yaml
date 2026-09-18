@@ -48,7 +48,7 @@ production_operator_runtime:
   operator_flow_verified: "CREATE POLICY -> LOCK -> ACCEPTANCE -> CLAIM -> AUTHORIZE -> SETTLE(mock) -> RECEIPT"
 
 ui_ux:
-  status: redesign_review_in_progress
+  status: electric_clearing_house_direction_locked
   collaborator: Benita
   constraints:
     - Product does not need to remain one page.
@@ -314,7 +314,7 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. KeeperHub issue #2560 remains the primary bounty candidate. Full accepted-issue sweep found no clean substantive unclaimed alternative suitable for the remaining hackathon window. Request expedited maintainer triage in the KeeperHub builder channel; do not implement before accepted. If accepted, re-check staging/overlap and execute the STATUS-BODY-WIDE plan immediately.
+next_action: Keep Tender runtime/proof locked. Execute the Electric Clearing House design gate: run Grok/Kimi cross-examination from docs/TRACE-DESIGN-LLM-PROMPTS.md if available, synthesize only evidence-backed deltas, then implement the multi-surface UI in reviewable slices. In parallel, KeeperHub #2560 remains the primary bounty candidate and still requires accepted before implementation.
 
 accepted_issue_sweep_2026_09_17:
   verdict: no_clean_substantive_unclaimed_alternative
@@ -324,3 +324,46 @@ accepted_issue_sweep_2026_09_17:
     - do_not_build_on_unmerged_dependency
     - do_not_implement_without_accepted
   expedited_triage: required
+
+design_v2:
+  status: direction_locked_pending_external_cross_exam_and_build
+  canonical_doc: docs/DESIGN-DIRECTION.md
+  prompt_pack: docs/TRACE-DESIGN-LLM-PROMPTS.md
+  direction: Electric Clearing House
+  memory_sentence: "Accepted once. Owed once. Settled once."
+  signature_mechanism: deterministic Claim Fingerprint generated from claimId using security-print / guilloche language
+  architecture:
+    - "/: Clearing House"
+    - "/obligation: canonical obligation case"
+    - "/proof: live proof + independent chain verification + replay"
+    - "/receipt: Tender Receipt artifact"
+    - "/lab: economic mutation / claim fingerprint comparison"
+    - "/system: architecture, reliability, fail-closed evidence"
+  visual_system:
+    shell: dark chromatic clearing terminal
+    evidence: warm ledger paper
+    accents:
+      - Proof Cyan
+      - Settlement Lime
+      - Claim Coral
+      - Receipt Pink
+      - Signal Violet
+      - Warning Amber
+  reference_router:
+    product_flow: [Mobbin, Pageflows, Appbrainy, "UXGoodies / Janus", Fiona Lim]
+    art_direction: ["Annual Report Gallery", "Studio Thonik", "Cue Design", "Daniel Snows", Inspora, Awwwards]
+    interaction: ["60FPS Design", Transitions.dev, "Motion Primitives", "Rare UI", "Sohrab Khan", Codrops]
+    components: ["shadcn/ui", ReUI, "Beautiful UI", OpenSourceUI, "Component Gallery"]
+    brand_material: [Logosystem, "The Met Collection", Schoolbell, Are.na]
+  ethonline_reference_rule: use finalist examples for compression, recognisable object, and proof density; do not copy showcase-card aesthetic
+  external_review:
+    grok: adversarial art direction / anti-genericity / bold mutations
+    kimi: product architecture / UX compression / mobile / failure states
+    direct_connector_available: false
+    prompts_ready: true
+  implementation_lock:
+    - presentation may change aggressively
+    - runtime settlement semantics remain locked
+    - canonical value-moving proof must not be rerun
+    - public judge surface remains non-value-moving
+    - operator credentials never enter public UI
