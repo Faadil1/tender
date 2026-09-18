@@ -67,6 +67,8 @@ const policy: SettlementPolicy = {
   requireReview: false
 };
 
+const APP_ROUTES = new Set(["/", "/obligation", "/proof", "/lab", "/receipt"]);
+
 const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
 const BASE_SEPOLIA_USDC = "0x036cbd53842c5426634e7929541ec2318f3dcf7e";
 const ERC20_TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
@@ -438,6 +440,10 @@ export default {
       if (request.method === "POST" && url.pathname === "/api/replay") return json(await replayCanonicalClaim(request, env));
       if (request.method === "POST" && url.pathname === "/api/claim/verify") return json(await verifyCandidate(request, env));
       if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);
+      if (request.method === "GET" && APP_ROUTES.has(url.pathname)) {
+        const shellUrl = new URL("/index.html", request.url);
+        return env.ASSETS.fetch(new Request(shellUrl.toString(), { method: "GET", headers: request.headers }));
+      }
       return env.ASSETS.fetch(request);
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown runtime error";
