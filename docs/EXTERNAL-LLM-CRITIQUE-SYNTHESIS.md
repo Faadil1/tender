@@ -303,3 +303,31 @@ Do not file yet. The pre-filing gate is a fresh Gemini + Kimi cross-examination 
 3. docs-only: stop telling MCP callers to read an inaccessible header.
 
 Reject the candidate if terminality is intentionally required to remain header-only or if active ownership/duplication is discovered.
+
+
+## Gemini targeted poll-contract cross-exam — invalid/off-target, fact-checked
+
+Gemini did **not** evaluate the Grok-surviving `mcp_direct_status_poll_contract` candidate. Instead it generated a new queue-expiration / `expires_at` proposal based on a relayer architecture that does not match current KeeperHub direct execution.
+
+### Fatal source corrections
+
+1. **No verified direct-execution `QUEUED -> CLAIMED/RUNNING -> BROADCASTING -> CONFIRMED/FAILED` pipeline.**
+   Current `directExecutions` schema defaults to `pending`; direct-execution types/services use `pending | running | unconfirmed | completed | failed`. The routes reserve/create the row, call `markRunning(executionId)`, and proceed into execution/sign/broadcast in the same request path.
+
+2. **The proposed worker-dispatch files/endpoints are not current KeeperHub surfaces.**
+   No `POST /v1/executions`, `packages/core/src/queue/processor.ts`, `packages/cli/src/commands/dispatch.ts`, or `packages/mcp/src/tools/dispatch.ts` was found.
+
+3. **The TTL problem is therefore not demonstrated on direct execution.**
+   A queue-level `expires_at` guard cannot be promoted for a delayed direct-execution queue that current source does not show.
+
+4. **The cancellation secondary has the same architecture problem.**
+   KeeperHub does have `POST /api/executions/{executionId}/cancel`, but it operates on `workflowExecutions` and requires a running workflow. That does not prove a missing queued direct-execution cancellation primitive.
+
+5. **PR #2372 is not a merged precedent.**
+   Issue #1840 is open/accepted and PR #2372 is still open. Its proposed definite-failure idempotency release semantics cannot be treated as an already-established reusable primitive.
+
+### Decision
+
+Gemini's `expires_at` PRIMARY and queued-cancel SECONDARY are **REJECTED AS SOURCE-MISMATCHED**.
+
+This pass does not count as the required targeted Gemini cross-examination. The Grok provisional primary remains unchanged. Gemini must be rerun against the dedicated poll-contract packet and may only return one of the allowed decisions about MCP-only vs status-body-wide vs docs-only handling.
