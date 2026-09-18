@@ -1,0 +1,68 @@
+name: Tender × Valid Until Live Settlement
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient_wallet:
+        description: Recipient wallet for this distinct Valid Until accepted-work settlement
+        required: true
+      amount_usdc:
+        description: Minimal Base Sepolia USDC amount
+        required: true
+        default: "0.01"
+      confirm_real_keeperhub_transfer:
+        description: Type I_APPROVE_REAL_KEEPERHUB_TRANSFER to allow broadcast
+        required: true
+
+jobs:
+  settle-valid-until:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      KEEPERHUB_API_KEY: ${{ secrets.KEEPERHUB_API_KEY }}
+      KEEPERHUB_BASE_URL: ${{ secrets.KEEPERHUB_BASE_URL }}
+      KEEPERHUB_WORKFLOW_ID: ${{ secrets.KEEPERHUB_WORKFLOW_ID }}
+      TENDER_RECIPIENT_WALLET: ${{ inputs.recipient_wallet }}
+      TENDER_AMOUNT_USDC: ${{ inputs.amount_usdc }}
+      TENDER_SOURCE_REPOSITORY: Faadil1/valid-until-agent-os
+      TENDER_ACCEPTED_WORK_ID: aeec4ed165eb0917688a885b960175d58f729692
+      TENDER_TASK_ID: valid-until-exact-action-binding
+      TENDER_PR_ID: commit-aeec4ed165eb
+    steps:
+      - name: Enforce explicit value-moving approval
+        shell: bash
+        run: |
+          if [ "${{ inputs.confirm_real_keeperhub_transfer }}" != "I_APPROVE_REAL_KEEPERHUB_TRANSFER" ]; then
+            echo "Refusing value-moving execution without explicit approval."
+            exit 1
+          fi
+
+      - name: Checkout Tender
+        uses: actions/checkout@v4
+
+      - name: Confirm named live project commit exists
+        shell: bash
+        run: |
+          curl --fail --silent --show-error             https://api.github.com/repos/Faadil1/valid-until-agent-os/commits/aeec4ed165eb0917688a885b960175d58f729692             > /tmp/valid-until-commit.json
+          grep -q '"sha": "aeec4ed165eb0917688a885b960175d58f729692"' /tmp/valid-until-commit.json
+
+      - name: Confirm named live project is reachable
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --location --max-time 20             https://valid-until-agent-os.pages.dev             > /dev/null
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+      - run: npm run verify
+      - name: Execute distinct Tender settlement through KeeperHub
+        run: npm run live:proof
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tender-valid-until-live-proof
+          path: evidence/live-proof.json
