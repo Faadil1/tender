@@ -334,7 +334,7 @@ kimi_design_review:
   audit_doc: docs/TRACE-DESIGN-KIMI-AUDIT.md
 
 design_synthesis_v3:
-  status: ui_deployed_visual_qa_pending
+  status: first_visual_polish_ci_green_redeploy_pending
   canonical_design: docs/DESIGN-DIRECTION.md
   canonical_synthesis: docs/TRACE-DESIGN-SYNTHESIS.md
   direction: Once-Written Clearing Instrument
@@ -387,3 +387,19 @@ cloudflare_deploy_2026_09_18:
     github_actions_run: 35308266789
     github_actions_result: success
   limitation: "Assistant external fetch tools cannot resolve the workers.dev hostname, so visual/live interaction QA requires user browser screenshots/results."
+
+visual_qa_video_2026_09_18:
+  status: desktop_video_review_complete_first_polish_ci_green
+  fixed:
+    - cyan_main_focus_outline
+    - route_scroll_restoration
+    - proof_instrument_height
+    - receipt_id_overflow
+    - receipt_vertical_spacing
+    - lab_same_claim_portrait_material
+  commits:
+    - "1034c4a ui: polish proof receipt focus and lab identity"
+    - "434c49b ui: stabilize route scroll receipt id and claim portraits"
+  ci_run: 35322243227
+  ci_result: success
+  next: "Pull main and redeploy Cloudflare, then verify desktop fixes and provide 375px Home + Proof capture for mobile QA."
