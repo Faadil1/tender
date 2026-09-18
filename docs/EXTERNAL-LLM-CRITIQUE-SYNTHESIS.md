@@ -161,3 +161,42 @@ Canonical packet: `docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md`.
 DeepSeek is specifically tasked with finding narrow source-level failures at boundaries such as REST↔MCP↔CLI, simulation↔broadcast, sponsored↔direct, workflow↔direct execution, DB↔reconciler, plugin↔core, auth/policy↔execution, and chain adapter↔shared abstraction.
 
 The output of this phase is not a vote. Candidate promotion requires current-source verification, independent evidence, no active ownership, and a bounded mergeable v1. If no candidate survives, the bounty is skipped.
+
+
+## Phase 2 Perplexity whitespace review — received and fact-checked
+
+Perplexity returned a limitation warning because it could not directly inspect the KeeperHub repository. Its candidate generation is therefore treated as hypothesis generation, not source truth.
+
+### Candidate fact-check
+
+1. **Execution liveness probe / engine supervision — REJECTED as proposed.**
+   Current KeeperHub source already exposes substantial health/liveness infrastructure:
+   - public `GET /api/health` is documented in OpenAPI as an unauthenticated liveness probe;
+   - scheduler/dispatcher components expose Prometheus metrics and deployment liveness probes;
+   - Solana/event tracker components expose `/livez`, `/healthz`, and/or metrics;
+   - the repository already tracks execution and stuck-pending related metrics.
+   The proposed single `/healthz/engine` model assumes a monolithic engine loop that does not match KeeperHub's distributed scheduler/executor/event architecture. A new aggregate user-facing execution-plane health endpoint would be a different, larger product decision and currently lacks KeeperHub-specific demand.
+
+2. **Execution completion webhook / callback — RESEARCH ONLY.**
+   No direct `callbackUrl` / `callback_url` completion API or matching issue was found in the current repository search. However KeeperHub already has:
+   - generic outbound webhook actions;
+   - workflow execution wait endpoint (`GET /api/workflows/executions/{executionId}/wait`) to avoid tight polling;
+   - SSE/progress infrastructure on MCP and live analytics surfaces.
+   A durable signed completion-callback system would require retry policy, delivery persistence, signing, SSRF/egress rules, auth scope, and duplicate-delivery semantics. This is not yet evidenced as a narrow bounty feature. Keep only as a research hypothesis if other reviewers find independent KeeperHub demand.
+
+3. **Idempotency request-hash validation — REJECTED / ALREADY EXISTS.**
+   Current source stores `requestHash`, compares an existing record's hash against the new request hash, and returns `409 idempotency_conflict` with `originalExecutionId` and `retryable:false` when the same key is reused with a different body. This candidate is a direct duplicate.
+
+4. **Execution timeout parameter — REJECTED FOR NOW.**
+   Timeout controls already exist in several node/runtime components and a workflow execution wait endpoint accepts `timeoutMs`. No verified KeeperHub-specific demand was found for a new generic direct-execution `timeout_seconds` contract, and defining whether timeout means cancel, stop waiting, or change chain execution semantics would expand scope substantially.
+
+5. **Execution cancellation — REJECTED / EXISTING CAPABILITY.**
+   Current source exposes a cancel execution client path to `POST /api/executions/{executionId}/cancel`. Extending cancellation after broadcast would be semantically unsafe without a much narrower evidenced bug.
+
+### Phase 2 Perplexity result
+
+Perplexity's proposed PRIMARY, engine liveness, does not survive source verification.
+Its SECONDARY, completion callbacks, remains only a hypothesis and is not promoted.
+No candidate from this Perplexity pass is ready to file.
+
+This reinforces the purpose of the multi-reviewer gate: adjacent-system evidence is useful for candidate generation, but current KeeperHub source and ownership checks decide promotion.
