@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: multi_llm_whitespace_discovery_perplexity_phase2_fact_checked
+  status: multi_llm_whitespace_discovery_perplexity_and_deepseek_phase2_fact_checked
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -84,6 +84,16 @@ keeperhub_bounty_intelligence:
         - Phase-2 liveness candidate was rejected because KeeperHub already has public /api/health plus distributed component liveness/metrics.
         - Phase-2 idempotency request-hash candidate was rejected because requestHash conflict handling already exists.
         - Completion callbacks remain research-only: absence found, but no narrow KeeperHub-specific demand yet.
+    deepseek:
+      status: phase2_received_fact_checked
+      retained:
+        - Returned RESEARCH PRIMARY FURTHER rather than inventing a source-level candidate without adequate access.
+        - REST/MCP parity must be proven with a concrete dropped field; current idempotency_key and gas_limit_multiplier propagation are covered.
+        - Top-level direct-status typed errors remain a low-confidence DX observation only.
+      corrections:
+        - "#2004 is open/accepted and already covers simulate parity across /api/execute/*."
+        - "lib/reaper/reap-stale-executions.ts already handles stale pending/running workflow executions."
+        - "#2425 is open/accepted/confirmed and already owns a chain/function-set invariant gap."
     kimi:
       status: received_and_fact_checked
       retained:
