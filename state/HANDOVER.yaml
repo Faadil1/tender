@@ -334,7 +334,7 @@ kimi_design_review:
   audit_doc: docs/TRACE-DESIGN-KIMI-AUDIT.md
 
 design_synthesis_v3:
-  status: first_visual_polish_ci_green_redeploy_pending
+  status: judge_reality_gate_integrated_redeploy_pending
   canonical_design: docs/DESIGN-DIRECTION.md
   canonical_synthesis: docs/TRACE-DESIGN-SYNTHESIS.md
   direction: Once-Written Clearing Instrument
@@ -403,3 +403,14 @@ visual_qa_video_2026_09_18:
   ci_run: 35322243227
   ci_result: success
   next: "Pull main and redeploy Cloudflare, then verify desktop fixes and provide 375px Home + Proof capture for mobile QA."
+
+judge_compression_reality_gate_2026_09_18:
+  status: integrated
+  docs:
+    - docs/NEGATIVE-EVIDENCE.md
+    - docs/JUDGE-COMPRESSION-GATE.md
+  UI: "Home now contains a sourced Real failure > fake success evidence block."
+  submission: "SUBMISSION.md synchronized to production URL, 39/39 tests, 12 scenarios, negative event, Q&A and timing gates."
+  current_video: "66.8s QA recording passes <=3m but fails final <=15s proof-start gate; Replay appears around 22–26s because Case is visited first."
+  final_video_route: "Home -> Proof/Replay -> independent chain/Receipt -> Lab mutation -> optional Case context."
+  next: "Pull, verify and redeploy; then final mobile QA and judge-compressed final video."
