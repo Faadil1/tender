@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: grok_primary_survives_gemini_cross_exam_invalid_off_target_pending_gemini_rerun_and_kimi
+  status: grok_primary_survives_prepacket_gemini_and_kimi_invalid_off_target_pending_targeted_reruns
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -128,6 +128,17 @@ keeperhub_bounty_intelligence:
         - "Do not include 202 write envelopes in v1 unless cross-examination proves they are necessary; the minimal proven defect is status polling."
         - "The n8n header-precedence claim was not independently verified in this fact-check and is not needed for promotion."
       primary: mcp_direct_status_poll_contract
+    kimi_pre_packet:
+      status: received_before_targeted_packet_fact_checked_invalid_as_cross_exam
+      effect: no candidate promoted; Grok provisional primary unchanged
+      proposed_primary: contract_code_hash_admission_guardrail
+      corrections:
+        - "#2408 is closed/completed, not open; PR #2446 merged the docs scope and closed the issue."
+        - "Current KeeperHub simulateContractCall does not return snapshot.contractCodeSha256 or any contract-code hash."
+        - "ProofPulse computes contractCodeSha256 client-side from its own eth_getCode RPC response using Node crypto SHA-256 before calling KeeperHub."
+        - "The external workaround is real evidence of a user need, but it is not evidence that KeeperHub already exposes the hash building block."
+        - "#2503 is an active needs-discussion maintainer/core-team thread about caller expectations versus executed-call verification; the code-hash proposal is adjacent and should not be filed without resolving overlap."
+      disposition: research_only_do_not_file
     kimi:
       status: received_and_fact_checked
       retained:
@@ -171,6 +182,17 @@ keeperhub_bounty_intelligence:
     direct_execution_typed_failure_status:
       status: research_only_do_not_file
       reason: no concrete recurring caller harm or workaround caused by nested typed-error placement; adjacent #2206 gap already fixed by merged PR #2213
+    contract_code_hash_admission_guardrail:
+      status: research_only_do_not_file
+      evidence:
+        - ProofPulse performs client-side eth_getCode + SHA-256 pinning and refuses live execution if bytecode changes
+      blockers:
+        - KeeperHub simulate does not currently expose the claimed code hash
+        - only one verified external workaround found
+        - proxy implementation changes are not captured by proxy runtime-code hash
+        - admission check remains TOCTOU relative to mining
+        - active #2503 core-team discussion already owns adjacent expectation/verification semantics
+      note: potentially useful execution-layer guardrail, but not strong enough to displace the MCP poll-contract primary
     mcp_direct_status_poll_contract:
       status: provisional_primary_survives_fact_check
       problem: MCP get_direct_execution_status drops the X-Poll-Interval-Hint terminality/cadence contract that agent docs require callers to follow
@@ -225,7 +247,7 @@ keeperhub_bounty_intelligence:
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
     - Re-run Gemini on the dedicated poll-contract packet; do not permit new-candidate generation.
-    - Run Kimi on the same packet.
+    - Re-run Kimi on the same packet; the pre-packet Kimi response does not count.
     - Attack whether the surviving fix should be MCP-only, status-body-wide, or docs-only.
     - Re-run issue/PR overlap immediately before any filing.
     - Fact-check every current-repo claim before promotion.
