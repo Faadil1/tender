@@ -331,3 +331,44 @@ Gemini did **not** evaluate the Grok-surviving `mcp_direct_status_poll_contract`
 Gemini's `expires_at` PRIMARY and queued-cancel SECONDARY are **REJECTED AS SOURCE-MISMATCHED**.
 
 This pass does not count as the required targeted Gemini cross-examination. The Grok provisional primary remains unchanged. Gemini must be rerun against the dedicated poll-contract packet and may only return one of the allowed decisions about MCP-only vs status-body-wide vs docs-only handling.
+
+
+## Kimi pre-packet whitespace review — fact-checked, not a targeted cross-exam
+
+This Kimi response was produced before the dedicated poll-contract packet, so it does **not** satisfy the required Kimi adjudication of `mcp_direct_status_poll_contract`.
+
+Kimi proposed a new PRIMARY: an optional contract-code-hash admission guardrail for direct execution.
+
+### What is real
+
+- ProofPulse is a real KeeperHub integration with a verified Sepolia execution.
+- ProofPulse performs a real bytecode-pinning safeguard: it calls `eth_getCode`, hashes the runtime bytecode with SHA-256, stores `contractCodeSha256` in its own snapshot, requires `EXPECTED_CONTRACT_CODE_SHA256` for live mode, and refuses when the hash changes.
+- This is execution-layer safety rather than Tender business semantics.
+
+### Fatal corrections
+
+1. **#2408 status correction was wrong.**
+   Direct issue fetch shows #2408 is closed with state_reason `completed`, accepted + confirmed; PR #2446 merged the docs portion and closed it. Our prior canon was correct.
+
+2. **KeeperHub does not currently compute/expose the claimed hash in direct simulation.**
+   Current `lib/execute/simulate.ts` returns simulation fields such as `from`, `to`, `gasEstimate`, `simulatedReturnValue`, and revert/error metadata. It contains no `snapshot.contractCodeSha256`, no SHA-256 bytecode digest, and no equivalent response field.
+
+3. **The hash is ProofPulse-owned client logic.**
+   ProofPulse's `src/rpc.js` independently calls `eth_getCode`, hashes the returned runtime bytes using Node's `createHash("sha256")`, and compares the result with `EXPECTED_CONTRACT_CODE_SHA256` before the KeeperHub call.
+
+4. **The candidate therefore does not reuse an existing KeeperHub building block.**
+   It would introduce a new admission contract and a new bytecode-fetch/hash step on KeeperHub's write path.
+
+5. **Adjacent expectation semantics are already under core-team discussion.**
+   Open issue #2503 is `needs-discussion` and asks KeeperHub to verify direct execution against caller expectations. Maintainer `suisuss` says the gap is real but is actively settling the shape with the core team, including when caller expectations are valuable and how not to overstate best-effort evidence. A code-hash expectation is pre-broadcast rather than post-execution, so it is not a direct duplicate, but it is close enough that filing a parallel expectation contract now would create avoidable overlap.
+
+6. **The guarantee is inherently narrow.**
+   Hashing target runtime code does not detect an implementation upgrade behind a stable proxy, and an admission-time check still has a check-to-mining TOCTOU window. Those limitations can be documented, but they weaken the case for a new public guarantee.
+
+### Decision
+
+`contract_code_hash_admission_guardrail` is **RESEARCH ONLY / DO NOT FILE**.
+
+The external workaround is valuable evidence and should remain in the research ledger. It is not currently stronger than the already source-proven MCP poll-contract mismatch and does not displace that provisional primary.
+
+Kimi must be rerun against the dedicated poll-contract packet.
