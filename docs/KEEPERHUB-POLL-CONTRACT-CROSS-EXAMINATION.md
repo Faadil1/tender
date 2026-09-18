@@ -157,3 +157,18 @@ Corrections:
 - current direct-execution docs still explicitly require the polling header, which MCP cannot expose.
 
 Kimi must now try to kill this exact STATUS-BODY-WIDE preference. Do not generate replacement candidates.
+
+
+## Kimi targeted final result
+
+Classification: **PROMOTE STATUS-BODY-WIDE**
+
+Final correction:
+- Do not use `docs/api/executions.md`'s lower-bound wording as direct-execution evidence; that page documents workflow executions.
+- The direct candidate remains supported by the impossible MCP instruction in `docs/getting-started/agent.md`, the generic poll-header contract in `docs/api/errors.md`, the current direct status route, and #2058 parity guidance.
+
+Final duplicate sweep at KeeperHub staging `7104df9db8d2f171731185c6349855b59136e147`: no exact active owner found.
+
+Research gate: COMPLETE.
+Candidate: READY TO FILE.
+Preferred plan: STATUS-BODY-WIDE.
