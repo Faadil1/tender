@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: multi_llm_whitespace_discovery_perplexity_deepseek_and_claude_phase2_fact_checked
+  status: grok_primary_survives_fact_check_pending_gemini_kimi_cross_exam
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -106,6 +106,20 @@ keeperhub_bounty_intelligence:
         - "#2004 is open/accepted and already covers simulate parity across /api/execute/*."
         - "lib/reaper/reap-stale-executions.ts already handles stale pending/running workflow executions."
         - "#2425 is open/accepted/confirmed and already owns a chain/function-set invariant gap."
+    grok:
+      status: phase2_received_and_fact_checked
+      effect: one narrow primary survives fact-check; not filed yet
+      retained:
+        - Direct status computes X-Poll-Interval-Hint from the server terminal set and sends it only as an HTTP header.
+        - get_direct_execution_status consumes only the JSON body through callApi and JSON.stringify, so MCP does not receive the poll hint.
+        - Agent-facing docs explicitly tell get_direct_execution_status callers to honor X-Poll-Interval-Hint and treat 0 as terminal.
+        - No matching open/closed issue or PR was found for surfacing this poll contract through MCP/body.
+        - Maintainer guidance in closed issue #2058 says MCP/REST response shapes are intended to align and concrete field mismatches should be filed separately.
+      corrections:
+        - "Do not generalize to all JSON clients; ordinary HTTP clients can read headers. The hard proven gap is MCP/tool-result visibility."
+        - "Do not include 202 write envelopes in v1 unless cross-examination proves they are necessary; the minimal proven defect is status polling."
+        - "The n8n header-precedence claim was not independently verified in this fact-check and is not needed for promotion."
+      primary: mcp_direct_status_poll_contract
     kimi:
       status: received_and_fact_checked
       retained:
@@ -149,6 +163,16 @@ keeperhub_bounty_intelligence:
     direct_execution_typed_failure_status:
       status: research_only_do_not_file
       reason: no concrete recurring caller harm or workaround caused by nested typed-error placement; adjacent #2206 gap already fixed by merged PR #2213
+    mcp_direct_status_poll_contract:
+      status: provisional_primary_survives_fact_check
+      problem: MCP get_direct_execution_status drops the X-Poll-Interval-Hint terminality/cadence contract that agent docs require callers to follow
+      strongest_evidence:
+        - status route computes pollIntervalHint from server terminal statuses and emits it only in X-Poll-Interval-Hint
+        - lib/mcp/tools.ts callApi returns response.json and get_direct_execution_status JSON.stringify(data), so response headers are discarded
+        - docs/getting-started/agent.md tells get_direct_execution_status callers to wait by X-Poll-Interval-Hint and treat 0 as terminal
+        - maintainer comment on #2058 says MCP/REST shapes are meant to align and concrete mismatches should be filed separately
+      smallest_v1: surface the existing poll hint in the MCP-visible status result, preferably from the same value/header source; no DB or state-machine change
+      blocker: fresh Gemini + Kimi cross-examination before upstream filing
 
   verified_overlap:
     issue_1840: open_accepted_confirmed
@@ -192,8 +216,9 @@ keeperhub_bounty_intelligence:
     - DeepSeek: source-level reliability / cross-surface parity / race windows
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - Run Grok against the updated whitespace packet for adversarial duplicate/competition/recurrence discovery.
-    - If Grok finds no surviving candidate, run fresh Gemini + Kimi passes against the updated no-go set.
+    - Run fresh Gemini + Kimi targeted cross-examination against mcp_direct_status_poll_contract.
+    - Attack whether this should be MCP-only, status-body-wide, or docs-only; prefer the smallest maintainer-acceptable invariant.
+    - Re-run issue/PR overlap immediately before any filing.
     - Fact-check every current-repo claim before promotion.
     - Cross-examine candidate overlap across all reviewer outputs.
     - If nothing high-signal survives, skip the bounty rather than duplicate active work.
@@ -215,4 +240,4 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. Run Grok next against the updated KeeperHub whitespace packet; if nothing survives, run fresh Gemini + Kimi passes. Fact-check every surviving claim and file nothing unless one independently evidenced unclaimed candidate survives.
+next_action: Keep Tender runtime/proof locked. Run fresh Gemini + Kimi against docs/KEEPERHUB-POLL-CONTRACT-CROSS-EXAMINATION.md. File nothing until both attacks are fact-checked and the minimal MCP poll-contract scope still survives.
