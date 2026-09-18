@@ -229,3 +229,21 @@ No candidate from the DeepSeek pass is promoted.
 The only surviving observation is that direct execution status error classification is not normalized at the top level, but current output already carries `errorClass`/rejection in many failure paths and there is no independently evidenced demand. Status remains RESEARCH ONLY.
 
 DeepSeek's main value in this round was restraint: it did not invent a primary candidate without source access.
+
+
+## Claude targeted adjudication queued — direct execution typed failure status
+
+Claude's maintainer review now has one explicit sub-question in addition to broad whitespace discovery.
+
+Verified staging facts supplied to Claude:
+- `ExecuteResponse` has optional `rejection` and `errorClass`.
+- `ExecutionStatusResponse` has top-level `error` but no top-level `rejection`, `errorClass`, `errorCode` or `retryable`.
+- The status route returns persisted `output` under `result`.
+- `failExecution()` already writes `rejection` and `errorClass` into that output when available.
+
+Decision to make:
+- Is this nested-vs-top-level asymmetry intentional and sufficient?
+- Is it only a small DX/docs issue?
+- Or can Claude prove a current recurring caller problem, no active ownership, and a narrow backwards-compatible contract improvement a KeeperHub maintainer would plausibly accept?
+
+Promotion remains fail-closed: API symmetry alone is not enough. Claude must find concrete current demand or repeated caller harm caused specifically by the shape. A generic `retryable` field must not be proposed without an existing stable retryability source of truth.
