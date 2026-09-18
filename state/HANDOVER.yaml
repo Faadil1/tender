@@ -321,7 +321,7 @@ grok_design_review:
   final_promotion: blocked_until_kimi_and_cross_model_synthesis
 
 kimi_design_review:
-  status: received_summary
+  status: full_audit_received
   synthesis: docs/TRACE-DESIGN-SYNTHESIS.md
   accepted:
     - primary funnel is Home -> Case -> Proof -> Lab
@@ -331,10 +331,10 @@ kimi_design_review:
     - replay renders zero deltas as headline
     - five identities need distinct persistent tokens
     - failures never reuse success styling or verdicts
-  source_limit: "Only Kimi headline conclusions were supplied, not the complete 15-section document."
+  audit_doc: docs/TRACE-DESIGN-KIMI-AUDIT.md
 
 design_synthesis_v3:
-  status: ready_for_build
+  status: full_kimi_reconciled_ready_for_build
   canonical_design: docs/DESIGN-DIRECTION.md
   canonical_synthesis: docs/TRACE-DESIGN-SYNTHESIS.md
   direction: Once-Written Clearing Instrument
@@ -344,3 +344,17 @@ design_synthesis_v3:
   system: evidence_drawer_secondary
   next_build_slice: "P0: shell/routing + ClaimInstrument + ClaimFingerprint + Home + Proof + replay refusal + failure states + Receipt artifact"
   hard_boundary: "No settlement semantic changes; no public value movement; no canonical payment rerun."
+
+kimi_full_audit_lock:
+  status: complete
+  source_doc: docs/TRACE-DESIGN-KIMI-AUDIT.md
+  promoted:
+    - exact_page_hierarchy
+    - exact_cta_contract
+    - exact_30s_and_90s_judge_paths
+    - mobile_375_native_conversion
+    - failure_state_contract
+    - five_identity_token_system
+    - replay_before_after_zero_deltas
+    - seven_user_abstraction_rules
+  next: "Begin P0 implementation; no further design-research gate is required."
