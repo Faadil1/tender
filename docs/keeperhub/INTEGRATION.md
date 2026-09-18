@@ -27,7 +27,7 @@ Tender never asks KeeperHub to decide whether two deliveries are economically th
 - Extra KeeperHub executions: `0`
 - Extra movement: `$0`
 
-Machine-readable proof: [../evidence/live-proof.json](../evidence/live-proof.json)
+Machine-readable proof: [../../evidence/live-proof.json](../../evidence/live-proof.json)
 
 ## Execution sequence
 
@@ -52,8 +52,8 @@ Tender includes a specific integration binding for the deployed project **Valid 
 - Repository: https://github.com/Faadil1/valid-until-agent-os
 - Accepted work: https://github.com/Faadil1/valid-until-agent-os/commit/aeec4ed165eb0917688a885b960175d58f729692
 - Change: `Bind exact action into execution validity contract`
-- Tender integration: [../src/integrations/validUntil.ts](../src/integrations/validUntil.ts)
-- Integration tests: [../tests/validUntilIntegration.test.ts](../tests/validUntilIntegration.test.ts)
+- Tender integration: [../../src/integrations/validUntil.ts](../../src/integrations/validUntil.ts)
+- Integration tests: [../../tests/validUntilIntegration.test.ts](../../tests/validUntilIntegration.test.ts)
 
 The integration binds the real project repository and accepted-work SHA into Tender's claim identity.
 
@@ -98,4 +98,4 @@ Tender fails closed on:
 
 Public judge routes cannot broadcast KeeperHub payments.
 
-See [OPERATOR-RUNTIME.md](OPERATOR-RUNTIME.md) for the authenticated write boundary and [NEGATIVE-EVIDENCE.md](NEGATIVE-EVIDENCE.md) for the real failure motivating the design.
+See [operator runtime](../reliability/OPERATOR-RUNTIME.md) for the authenticated write boundary and [negative evidence](../reliability/NEGATIVE-EVIDENCE.md) for the real failure motivating the design.
