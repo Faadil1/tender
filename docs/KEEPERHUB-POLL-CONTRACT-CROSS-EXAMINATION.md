@@ -4,6 +4,12 @@ Date: 2026-09-17
 Status: provisional PRIMARY after Grok + ChatGPT source fact-check
 Rule: one evidence-backed fatal objection defeats promotion.
 
+## Hard constraint for reruns
+
+This is **not a whitespace-generation task**. Do not generate replacement bounty candidates.
+Evaluate only `mcp_direct_status_poll_contract` and choose among the allowed decisions below.
+If you believe a different problem is more important, mention it in one sentence at most and still adjudicate this candidate.
+
 ## Candidate
 
 Working name: `mcp_direct_status_poll_contract`
