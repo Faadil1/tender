@@ -372,3 +372,44 @@ Kimi proposed a new PRIMARY: an optional contract-code-hash admission guardrail 
 The external workaround is valuable evidence and should remain in the research ledger. It is not currently stronger than the already source-proven MCP poll-contract mismatch and does not displace that provisional primary.
 
 Kimi must be rerun against the dedicated poll-contract packet.
+
+
+## Gemini targeted poll-contract rerun — valid, fact-checked
+
+Gemini finally adjudicated the intended candidate and returned **PROMOTE STATUS-BODY-WIDE**.
+
+### What survives fact-check
+
+- The direct status route computes one local `pollIntervalHint` from its server terminal set and passes that value to the header helper.
+- `ExecutionStatusResponse` still lacks a poll-hint field.
+- MCP `callApi()` returns only parsed JSON for successful JSON responses; `get_direct_execution_status` serializes that body and cannot observe `X-Poll-Interval-Hint`.
+- `docs/getting-started/agent.md` explicitly tells `get_direct_execution_status` callers to wait according to `X-Poll-Interval-Hint`; `0` means terminal.
+- `docs/api/errors.md` defines `X-Poll-Interval-Hint` on status/long-poll endpoints as the server-recommended polling interval, with `0` meaning terminal.
+- In #2058, maintainer `suisuss` states that MCP execute-tool response shapes are meant to match their REST reference bodies and explicitly asks for concrete field mismatches to be filed separately.
+- Current exact issue/PR searches still find no owner for surfacing this poll hint in the direct status body/MCP result.
+
+### Corrections to Gemini
+
+1. The explicit “status list is a lower bound” wording is in `docs/api/executions.md`, not `docs/api/direct-execution.md`. Direct-execution docs do, however, require honoring the header and separately document `unconfirmed` as non-terminal.
+2. Do not claim PR #1526's header-only design was an “oversight.” The PR intentionally introduced polling headers; whether MCP omission was foreseen is not evidenced. The current contradiction is enough.
+3. The body/header dual-source objection is manageable because the route can add `pollIntervalHint` to the response object from the exact same local value already supplied to `applyRateLimitHeaders`. The invariant should pin equality in tests.
+
+### Preferred architecture after Gemini
+
+**STATUS-BODY-WIDE** is now the leading shape:
+
+- add additive `pollIntervalHint: number` to `ExecutionStatusResponse`;
+- compute it once from the current server terminal set;
+- put that same value in both the JSON body and `X-Poll-Interval-Hint`;
+- MCP inherits it automatically through its existing body pass-through;
+- no DB migration, persistence change, new status, or state-machine change.
+
+The single test invariant:
+
+> For every successful direct-status response, `body.pollIntervalHint === Number(X-Poll-Interval-Hint)`; the value is `0` iff the route's server terminal set classifies the execution as terminal.
+
+### Decision
+
+`mcp_direct_status_poll_contract` remains **PROVISIONAL PRIMARY**, now strengthened with a preferred **STATUS-BODY-WIDE** implementation shape.
+
+Do not file yet. One targeted Kimi pass remains. If Kimi cannot produce an evidence-backed fatal objection, run one final issue/PR overlap check and prepare the issue.
