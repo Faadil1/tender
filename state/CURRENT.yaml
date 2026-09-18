@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: grok_primary_survives_fact_check_pending_gemini_kimi_cross_exam
+  status: grok_primary_survives_gemini_cross_exam_invalid_off_target_pending_gemini_rerun_and_kimi
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -79,12 +79,20 @@ keeperhub_bounty_intelligence:
         - "#2206 is closed, not active; PR #2213 merged the standardized protocol-write ExecuteResponse envelope."
         - "PR #2528 is a separate MCP simulate-response DX/documentation thread and does not prove a direct-status contract defect."
     gemini:
-      status: received_and_fact_checked
-      retained:
+      status: targeted_poll_contract_cross_exam_invalid_off_target_fact_checked
+      effect: no new candidate promoted; Grok provisional primary unchanged
+      retained_from_earlier_pass:
         - Do not make KeeperHub the permanent authority for Tender-style business identity.
         - Do not attempt universal semantic EVM effect fingerprinting.
         - Permanent reference uniqueness plus request binding creates hard retry/lifecycle semantics.
         - Metadata-only caller correlation is simpler than a second permanent dedup state machine.
+      latest_pass_corrections:
+        - "The proposed QUEUED -> CLAIMED/RUNNING -> BROADCASTING -> CONFIRMED/FAILED direct-execution lifecycle does not match current staging."
+        - "directExecutions uses pending/running/completed/failed plus unconfirmed in service/types; direct routes reserve then immediately markRunning and execute in-request."
+        - "No generic POST /v1/executions dispatch route, packages/core queue processor, packages/cli dispatch command, or packages/mcp dispatch tool was found."
+        - "PR #2372 is still open and not merged, so it cannot be treated as an already-established reusable release primitive."
+        - "Pre-broadcast queue TTL and queued cancellation candidates rely on a direct-execution queue that is not present on the verified surface."
+      required_action: rerun the dedicated poll-contract packet without generating replacement candidates
     perplexity:
       status: phase1_and_phase2_received_fact_checked
       retained:
@@ -172,7 +180,7 @@ keeperhub_bounty_intelligence:
         - docs/getting-started/agent.md tells get_direct_execution_status callers to wait by X-Poll-Interval-Hint and treat 0 as terminal
         - maintainer comment on #2058 says MCP/REST shapes are meant to align and concrete mismatches should be filed separately
       smallest_v1: surface the existing poll hint in the MCP-visible status result, preferably from the same value/header source; no DB or state-machine change
-      blocker: fresh Gemini + Kimi cross-examination before upstream filing
+      blocker: valid Gemini rerun + Kimi cross-examination before upstream filing
 
   verified_overlap:
     issue_1840: open_accepted_confirmed
@@ -216,8 +224,9 @@ keeperhub_bounty_intelligence:
     - DeepSeek: source-level reliability / cross-surface parity / race windows
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - Run fresh Gemini + Kimi targeted cross-examination against mcp_direct_status_poll_contract.
-    - Attack whether this should be MCP-only, status-body-wide, or docs-only; prefer the smallest maintainer-acceptable invariant.
+    - Re-run Gemini on the dedicated poll-contract packet; do not permit new-candidate generation.
+    - Run Kimi on the same packet.
+    - Attack whether the surviving fix should be MCP-only, status-body-wide, or docs-only.
     - Re-run issue/PR overlap immediately before any filing.
     - Fact-check every current-repo claim before promotion.
     - Cross-examine candidate overlap across all reviewer outputs.
