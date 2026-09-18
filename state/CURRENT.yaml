@@ -400,7 +400,7 @@ kimi_design_review:
   synthesis_doc: docs/TRACE-DESIGN-SYNTHESIS.md
 
 design_synthesis_v3:
-  status: p0_and_core_p1_implemented_ci_green_deploy_pending
+  status: ui_deployed_live_visual_qa_pending
   direction: Once-Written Clearing Instrument
   primary_routes: ["/", "/obligation", "/proof", "/lab"]
   receipt: artifact_permalink_full_screen_from_case_and_proof
@@ -410,7 +410,7 @@ design_synthesis_v3:
   signature_interaction: "Replay same accepted work -> unchanged instrument -> delta 0 executions -> delta $0.00 -> Same claim. No second payment."
   failure_headline: "Cannot verify right now."
   primary_nav: [Home, Case, Proof, Lab]
-  implementation_gate: live_cloudflare_deploy_and_visual_qa
+  implementation_gate: live_visual_qa_and_polish
 
 kimi_full_audit_lock:
   status: complete
@@ -501,3 +501,31 @@ ui_build_2026_09_18:
     - QA live routes on desktop and 375px
     - QA replay, Base RPC partial failure, receipt permalink, Lab mutation, reduced motion and keyboard
     - only then lock screenshot/video capture
+
+cloudflare_deploy_2026_09_18:
+  status: deployed
+  url: https://tender-settlement.faadil-casecraft.workers.dev
+  version_id: ff19bde7-cb62-40bd-9c83-4040320a21e5
+  deployed_assets:
+    - /index.html
+    - /styles.css
+    - /main.js
+  worker_startup_ms: 8
+  bindings:
+    - TENDER_OPERATOR_DO
+    - ASSETS
+    - OPERATOR_SETTLEMENT_MODE=mock
+  local_verify_before_deploy:
+    tests: 39_pass_0_fail
+    replay_harness: 12_scenarios_0_duplicate_payouts
+  github_verify_after_deploy:
+    run_id: 35308266789
+    head_sha: 2c558535ad13c35c59b31c8c4de94a87688da958
+    result: success
+  assistant_live_fetch_limit: workers_dev_hostname_not_resolvable_from_current_external_tools
+  next:
+    - browser_visual_QA_home_case_proof_lab_receipt
+    - capture_desktop_home_proof_lab_receipt
+    - capture_mobile_home_proof
+    - verify replay and independent Base check manually
+    - apply polish in one block if defects are found
