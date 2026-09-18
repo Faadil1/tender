@@ -29,6 +29,7 @@ jobs:
       TENDER_ACCEPTED_WORK_ID: aeec4ed165eb0917688a885b960175d58f729692
       TENDER_TASK_ID: valid-until-exact-action-binding
       TENDER_PR_ID: commit-aeec4ed165eb
+      TENDER_EVIDENCE_PATH: evidence/valid-until-live-proof.json
     steps:
       - name: Enforce explicit value-moving approval
         shell: bash
@@ -65,4 +66,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tender-valid-until-live-proof
-          path: evidence/live-proof.json
+          path: evidence/valid-until-live-proof.json
