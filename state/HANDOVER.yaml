@@ -65,7 +65,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: grok_primary_survives_fact_check_pending_gemini_kimi_cross_exam
+  status: grok_primary_survives_gemini_cross_exam_invalid_off_target_pending_gemini_rerun_and_kimi
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -87,13 +87,20 @@ keeperhub_bounty_handoff:
         - "Current staging already returns executionId/status for protocol writes."
         - "PR #2528 is separate MCP simulate-response documentation/DX work."
     gemini:
-      status: received_fact_checked
-      effect: enforcing Effect-Bound Execution Reference demoted
-      strongest_supported_points:
+      status: targeted_poll_contract_cross_exam_invalid_off_target_fact_checked
+      effect: latest pass rejected; Grok provisional primary unchanged
+      strongest_supported_points_from_earlier_pass:
         - KeeperHub should not own Tender-style permanent business identity.
         - Universal semantic EVM effect fingerprinting is not credible.
         - Permanent reference uniqueness creates difficult retry/lifecycle semantics.
         - Metadata-only caller correlation is simpler but needs independent demand.
+      latest_pass_fact_check:
+        - "Direct execution is not a delayed QUEUED worker-dispatch pipeline on current staging."
+        - "directExecutions is an audit/state row: pending -> running -> completed/failed/unconfirmed; routes mark running and execute in the request path."
+        - "The proposed /v1/executions and packages/core|cli|mcp dispatch files were not found."
+        - "PR #2372 remains open, not merged."
+        - "expires_at TTL and queued cancel therefore do not survive as current direct-execution bounty candidates."
+      next: "Rerun the dedicated MCP poll-contract packet without generating replacement candidates."
     perplexity:
       status: phase1_and_phase2_received_fact_checked
       effect: enforcing candidate moved to stop_do_not_file
@@ -161,7 +168,7 @@ keeperhub_bounty_handoff:
     mcp_direct_status_poll_contract:
       status: provisional_primary_survives_fact_check
       note: "MCP get_direct_execution_status cannot expose X-Poll-Interval-Hint even though agent docs require it; #2058 maintainer guidance treats concrete MCP/REST mismatches as separate bugs"
-      next: "Fresh Gemini + Kimi cross-examination, then ChatGPT fact-check; no upstream filing before that gate"
+      next: "Valid Gemini rerun + Kimi cross-examination, then ChatGPT fact-check; no upstream filing before that gate"
 
   verified_overlap_and_ownership:
     - "#1840 open accepted confirmed; PR #2372 open mergeable not merged"
@@ -233,7 +240,8 @@ do_not:
 next_exact_actions:
   - Keep Tender runtime/proof locked.
   - Continue Benita UI/UX work and main-track live-product binding.
-  - Run fresh Gemini + Kimi targeted cross-examination against mcp_direct_status_poll_contract.
+  - Re-run Gemini strictly against docs/KEEPERHUB-POLL-CONTRACT-CROSS-EXAMINATION.md; no replacement-candidate generation.
+  - Run Kimi on the same packet.
   - Force both to test MCP-only vs status-body-wide vs docs-only fixes.
   - Fact-check both reviews before filing anything upstream.
   - Fact-check all outputs against current KeeperHub source/issues/PRs.
