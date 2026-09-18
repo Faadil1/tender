@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: multi_llm_whitespace_discovery_perplexity_and_deepseek_phase2_fact_checked
+  status: multi_llm_whitespace_discovery_perplexity_deepseek_and_claude_phase2_fact_checked
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -67,11 +67,17 @@ keeperhub_bounty_intelligence:
 
   external_reviews:
     claude:
-      status: targeted_direct_status_contract_review_queued
-      focus:
-        - Decide whether ExecuteResponse.errorClass/rejection -> status.result.errorClass/rejection is intentional, merely DX debt, or a real maintainer-acceptable API contract gap.
-        - Require concrete current caller harm or repeated workaround before promotion.
-        - Do not invent retryable semantics without a stable existing source of truth.
+      status: phase2_received_and_fact_checked
+      effect: no candidate promoted; direct execution typed failure status locked RESEARCH ONLY
+      retained:
+        - Cited reliability incidents do not implicate nested status error fields.
+        - No repeated consumer workaround or caller harm from result.errorClass/result.rejection placement was found.
+        - ExecuteResponse immediate fields versus durable status.result is a plausible intentional boundary.
+        - Top-level normalization is not bounty-worthy on API symmetry alone.
+        - Generic retryable semantics remain unsupported without a stable source of truth.
+      corrections:
+        - "#2206 is closed, not active; PR #2213 merged the standardized protocol-write ExecuteResponse envelope."
+        - "PR #2528 is a separate MCP simulate-response DX/documentation thread and does not prove a direct-status contract defect."
     gemini:
       status: received_and_fact_checked
       retained:
@@ -140,6 +146,9 @@ keeperhub_bounty_intelligence:
       status: no_go_occupied
       issue: 2408
       reason: issue closed/completed; docs merged via PR 2446; remaining execution-level shape retained by core team
+    direct_execution_typed_failure_status:
+      status: research_only_do_not_file
+      reason: no concrete recurring caller harm or workaround caused by nested typed-error placement; adjacent #2206 gap already fixed by merged PR #2213
 
   verified_overlap:
     issue_1840: open_accepted_confirmed
@@ -151,6 +160,8 @@ keeperhub_bounty_intelligence:
     issue_2374: closed_completed
     pr_2386: merged
     issue_1979: closed_completed
+    issue_2206: closed_completed
+    pr_2213: merged
     issue_2408: closed_completed_accepted_confirmed
     pr_2446: merged
     issue_2495: open_accepted_confirmed
@@ -181,8 +192,8 @@ keeperhub_bounty_intelligence:
     - DeepSeek: source-level reliability / cross-surface parity / race windows
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi, and DeepSeek; Claude must explicitly adjudicate the direct-execution typed failure status asymmetry.
-    - DeepSeek must inspect source-level boundary failures and sibling-route parity specifically.
+    - Run Grok against the updated whitespace packet for adversarial duplicate/competition/recurrence discovery.
+    - If Grok finds no surviving candidate, run fresh Gemini + Kimi passes against the updated no-go set.
     - Fact-check every current-repo claim before promotion.
     - Cross-examine candidate overlap across all reviewer outputs.
     - If nothing high-signal survives, skip the bounty rather than duplicate active work.
@@ -204,4 +215,4 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. Run the new KeeperHub whitespace packet across Claude, Gemini, Grok, Perplexity, Kimi and DeepSeek, fact-check all outputs, then select at most one independently evidenced unclaimed candidate.
+next_action: Keep Tender runtime/proof locked. Run Grok next against the updated KeeperHub whitespace packet; if nothing survives, run fresh Gemini + Kimi passes. Fact-check every surviving claim and file nothing unless one independently evidenced unclaimed candidate survives.
