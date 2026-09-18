@@ -65,7 +65,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: grok_primary_survives_valid_gemini_status_body_wide_pending_targeted_kimi
+  status: poll_contract_ready_to_file_after_final_duplicate_sweep
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -156,6 +156,13 @@ keeperhub_bounty_handoff:
         - "ProofPulse computes runtime bytecode SHA-256 locally from eth_getCode before KeeperHub execution."
         - "#2503 is active needs-discussion and under core-team shape review for adjacent expectation/verification semantics."
       next: "Do not file code-hash guardrail; rerun Kimi on the dedicated poll-contract packet."
+    kimi_final:
+      status: targeted_poll_contract_cross_exam_valid_fact_checked
+      effect: confirms status-body-wide; no fatal product-boundary objection
+      final_classification: PROMOTE_STATUS_BODY_WIDE
+      correction:
+        - "docs/api/executions.md lower-bound wording is workflow-specific; do not use it as direct-execution evidence."
+      next: "File prepared issue; wait for accepted before implementation."
     kimi:
       status: received_fact_checked
       effect: rejection strengthened; "#2408 alternative rejected as occupied"
@@ -190,9 +197,12 @@ keeperhub_bounty_handoff:
       status: research_only_do_not_file
       note: "Real ProofPulse client-side workaround, but KeeperHub does not expose the claimed hash primitive and #2503 already has adjacent expectation/verification shape under core-team discussion."
     mcp_direct_status_poll_contract:
-      status: provisional_primary_survives_fact_check
+      status: ready_to_file
+      checked_staging_sha: 7104df9db8d2f171731185c6349855b59136e147
+      preferred_fix: status_body_wide
       note: "MCP get_direct_execution_status cannot expose X-Poll-Interval-Hint even though agent docs require it; #2058 maintainer guidance treats concrete MCP/REST mismatches as separate bugs"
-      next: "Targeted Kimi cross-examination, then final overlap check; no upstream filing before that gate"
+      final_overlap: "Exact + semantic duplicate sweeps clean; no active exact owner found."
+      next: "File prepared issue; wait for accepted before implementation."
 
   verified_overlap_and_ownership:
     - "#1840 open accepted confirmed; PR #2372 open mergeable not merged"
@@ -264,9 +274,9 @@ do_not:
 next_exact_actions:
   - Keep Tender runtime/proof locked.
   - Continue Benita UI/UX work and main-track live-product binding.
-  - Run targeted Kimi against docs/KEEPERHUB-POLL-CONTRACT-CROSS-EXAMINATION.md; the pre-packet Kimi response does not count.
-  - Force Kimi to attack STATUS-BODY-WIDE versus MCP-only and docs-only.
-  - If no fatal objection survives fact-check, re-run issue/PR overlap and draft the upstream issue.
+  - File docs/KEEPERHUB-POLL-CONTRACT-UPSTREAM-ISSUE.md upstream.
+  - Do not implement until KeeperHub applies accepted or supplies an amended accepted plan.
+  - Re-check staging and overlap immediately before implementation.
   - Fact-check both reviews before filing anything upstream.
   - Fact-check all outputs against current KeeperHub source/issues/PRs.
   - Cross-examine duplicate claims before selecting any primary candidate.
