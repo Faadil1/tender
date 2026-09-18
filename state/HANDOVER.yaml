@@ -162,7 +162,8 @@ keeperhub_bounty_handoff:
       final_classification: PROMOTE_STATUS_BODY_WIDE
       correction:
         - "docs/api/executions.md lower-bound wording is workflow-specific; do not use it as direct-execution evidence."
-      next: "File prepared issue; wait for accepted before implementation."
+      filing_attempt: "blocked: GitHub integration returned 403 Resource not accessible by integration when creating KeeperHub issue"
+      next: "File prepared issue manually or after reconnecting GitHub with issue-write permission; wait for accepted before implementation."
     kimi:
       status: received_fact_checked
       effect: rejection strengthened; "#2408 alternative rejected as occupied"
