@@ -32,10 +32,10 @@ A Tender Receipt records the accepted contribution, claim ID, policy version, re
 The Settlement Replay Harness reports:
 
 ```text
-10 settlement scenarios replayed · 0 duplicate payouts
+12 settlement scenarios replayed · 0 duplicate payouts
 ```
 
-Unit verification currently passes `13/13` tests.
+Unit verification currently passes `39/39` tests.
 
 Evidence: `evidence/settlement-replay-harness.json`.
 
@@ -104,4 +104,37 @@ This runs build, unit tests, and the replay harness.
 
 ## Current Status
 
-Core product proof is complete. Remaining hackathon work is judge-facing deployment, demo/video packaging, and final submission polish.
+Core product proof and judge-facing deployment are complete. Remaining hackathon work is final mobile QA, judge-compressed video capture, and submission packaging.
+
+
+## Concrete Negative Evidence
+
+Tender's reliability thesis is grounded in a real production failure pattern, not only synthetic tests.
+
+A 2025 TanStack Ship production postmortem reports a retried payment webhook being processed twice, resulting in duplicate credits for 18 accounts, unintended downgrades for 2 accounts, and $1,247 in duplicate credits that had to be reversed.
+
+Tender's design implication:
+
+> A repeated delivery is not a new economic fact.
+
+Evidence and source notes:
+
+`docs/NEGATIVE-EVIDENCE.md`
+
+Tender also keeps negative paths in its own evidence record instead of hiding them: not accepted, failed checks, malformed recipient, changed economics requiring acceptance, forged authorization, unconfirmed settlement, and post-broadcast reconciliation.
+
+## Judge Compression
+
+Canonical gate:
+
+`docs/JUDGE-COMPRESSION-GATE.md`
+
+Final demo target:
+
+- <=15s: problem + Tender invariant + Proof action begins
+- 30–45s: replay verdict + zero deltas + chain/receipt evidence + counter-case
+- <=3m: complete Problem -> Solution -> Demo -> Why Us narrative
+
+Production:
+
+`https://tender-settlement.faadil-casecraft.workers.dev`
