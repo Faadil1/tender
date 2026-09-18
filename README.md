@@ -7,7 +7,7 @@ It turns acceptance into one deterministic obligation, delegates value movement 
 
 **Live product:** https://tender-settlement.faadil-casecraft.workers.dev  
 **Canonical KeeperHub transaction:** https://sepolia.basescan.org/tx/0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db  
-**Tests:** 39/39 passing · **Replay harness:** 12 scenarios · **Duplicate payouts:** 0
+**Tests:** 42/42 passing · **Replay harness:** 12 scenarios · **Duplicate payouts:** 0
 
 ---
 
