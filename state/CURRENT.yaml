@@ -387,7 +387,7 @@ grok_design_review:
   synthesis_status: waiting_for_Kimi_before_final_promotion
 
 kimi_design_review:
-  status: received_summary_and_synthesized
+  status: full_audit_received_and_synthesized
   strongest_retained:
     - four_surface_primary_funnel
     - receipt_as_artifact_not_primary_nav
@@ -396,11 +396,11 @@ kimi_design_review:
     - claim_fingerprint_captioned_as_visual_identity_not_proof
     - five_identity_token_system
     - plain_failure_states
-  limitation: full_15_section_kimi_document_not_supplied_only_headline_summary_promoted
+  canonical_audit_doc: docs/TRACE-DESIGN-KIMI-AUDIT.md
   synthesis_doc: docs/TRACE-DESIGN-SYNTHESIS.md
 
 design_synthesis_v3:
-  status: canonical_ready_for_implementation
+  status: canonical_full_kimi_reconciled_ready_for_implementation
   direction: Once-Written Clearing Instrument
   primary_routes: ["/", "/obligation", "/proof", "/lab"]
   receipt: artifact_permalink_full_screen_from_case_and_proof
@@ -411,3 +411,14 @@ design_synthesis_v3:
   failure_headline: "Cannot verify right now."
   primary_nav: [Home, Case, Proof, Lab]
   implementation_gate: P0_shell_instrument_home_proof_replay_receipt_failure_states
+
+kimi_full_audit_lock:
+  status: complete
+  source_doc: docs/TRACE-DESIGN-KIMI-AUDIT.md
+  hierarchy_locked: true
+  cta_contract_locked: true
+  mobile_375_locked: true
+  failure_state_vocabulary_locked: true
+  five_identity_contract_locked: true
+  replay_non_event_visualization_locked: true
+  seven_abstraction_rules_locked: true
