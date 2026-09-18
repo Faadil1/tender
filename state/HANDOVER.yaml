@@ -65,7 +65,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: multi_llm_whitespace_discovery_perplexity_phase2_fact_checked
+  status: multi_llm_whitespace_discovery_perplexity_and_deepseek_phase2_fact_checked
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -94,6 +94,15 @@ keeperhub_bounty_handoff:
         - Phase-2 proposed engine-liveness endpoint does not survive repo verification: KeeperHub already exposes /api/health plus distributed liveness/metrics.
         - Request-hash idempotency validation already exists with 409 conflict semantics.
         - Completion callback/webhook remains research-only, not promoted.
+    deepseek:
+      status: phase2_received_fact_checked
+      effect: no candidate promoted
+      strongest_supported_points:
+        - Current source already carries MCP idempotency_key and gas_limit_multiplier propagation plus regression tests.
+        - "#2004 already owns simulate parity across /api/execute/*."
+        - "stale pending/running execution cleanup already exists in lib/reaper/reap-stale-executions.ts."
+        - "#2425 already owns a chain/function-set coverage gap."
+        - "direct execution status typed-error normalization remains research-only because errorClass/rejection are already persisted inside result/output on failure paths."
     kimi:
       status: received_fact_checked
       effect: rejection strengthened; "#2408 alternative rejected as occupied"
