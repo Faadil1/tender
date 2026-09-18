@@ -111,6 +111,41 @@ Act as a KeeperHub maintainer and senior reviewer.
 Optimize for mergeability, hidden coupling, scope discipline, API compatibility, review burden and maintainer acceptance.
 Try to reject candidates before recommending one.
 
+#### Targeted adjudication: direct-execution typed failure status
+
+Treat this as a specific RESEARCH-ONLY hypothesis to adjudicate, not as a preselected bounty candidate.
+
+Verified on current `staging`:
+- `ExecuteResponse` exposes optional `rejection` and `errorClass`.
+- `ExecutionStatusResponse` exposes top-level `error` but not top-level `rejection`, `errorClass`, `errorCode` or `retryable`.
+- `GET /api/execute/{executionId}/status` returns the persisted execution `output` as `result`.
+- `failExecution()` already persists `rejection` and `errorClass` inside that output when those values are available.
+- Historical incidents such as #1979 and #2374 show why callers need to make safe post-failure decisions, but those incidents do **not** by themselves prove that top-level normalization is the missing primitive; their underlying status/outcome defects were separately addressed.
+
+Your job is to decide whether this asymmetry is:
+1. an intentional/acceptable contract where typed details belong in `result`;
+2. a small DX/documentation issue that is not bounty-worthy;
+3. or a real, recurring API-contract gap that a maintainer would plausibly accept as a narrow feature/fix.
+
+Before recommending any change:
+- inspect current status-route consumers, CLI/MCP/client helpers, docs, tests, open/closed issues and PRs;
+- identify at least one concrete current caller failure, repeated parsing workaround, contract drift, or independently evidenced demand caused specifically by the nested-vs-top-level shape;
+- check whether another maintainer/core-team thread already owns this contract area;
+- distinguish `errorClass` / `rejection` exposure from a much stronger `retryable` promise.
+
+Important safety constraint:
+- Do **not** invent a generic `retryable` boolean unless KeeperHub already has a stable source of truth for that semantic. A caller must not be encouraged to retry merely because an execution has `status: "failed"` or a particular error class.
+
+If you think a change is justified, propose the smallest backwards-compatible v1 and explain why it is better than:
+- documenting `result.errorClass` / `result.rejection`;
+- adding a typed client helper;
+- or leaving the current nested contract intact.
+
+Promotion bar:
+- Mere API symmetry or convenience => keep RESEARCH ONLY.
+- A concrete recurring caller problem + no active owner + bounded backwards-compatible patch + clear tests => candidate may be promoted.
+- If evidence is insufficient, explicitly return RESEARCH PRIMARY FURTHER or NO BOUNTY CANDIDATE SURVIVES.
+
 ### Gemini
 Act as a systems/API/schema reviewer.
 Focus on data model, migrations, state machines, concurrency, persistence, retention, multi-surface parity and backward compatibility.
