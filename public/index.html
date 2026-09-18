@@ -3,137 +3,70 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Tender clears economic obligations created by accepted work, exactly once through KeeperHub." />
-    <title>Tender — Economic clearing for accepted work</title>
+    <meta name="theme-color" content="#0c0910" />
+    <meta
+      name="description"
+      content="Tender turns accepted work into one deterministic economic obligation, settles it once through KeeperHub, and preserves the proof."
+    />
+    <title>Tender — Accepted once. Owed once. Settled once.</title>
     <link rel="stylesheet" href="/styles.css" />
-    <link rel="stylesheet" href="/delta.css" />
   </head>
   <body>
-    <main class="packet">
-      <div class="evidence-bar" aria-label="Canonical proof metadata">
-        <span id="runtime-mode">CONNECTING TO RUNTIME</span>
-        <span>BASE SEPOLIA</span>
-        <span>GITHUB RUN 35162003096</span>
-      </div>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="brand" href="/" aria-label="Tender home">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="brand-word">Tender</span>
+        </a>
 
-      <header class="hero">
-        <p class="eyebrow">Economic clearing for accepted work</p>
-        <h1>Tender</h1>
-        <p class="promise">Accepted once.<br />Owed once.<br />Settled once.</p>
-        <p class="dek">Acceptance creates an obligation. Tender gives that obligation one deterministic identity. KeeperHub clears it. Every later replay, mutation, or verification must preserve the economic record.</p>
-        <div class="actions">
-          <a class="button primary" id="tx-link" href="#" target="_blank" rel="noreferrer">Inspect onchain transaction</a>
-          <button class="button" id="chain-button" type="button">Verify independently on Base</button>
-          <button class="button" id="replay-button" type="button">Verify same obligation</button>
-          <a class="button" href="/api/proof" target="_blank" rel="noreferrer">Open canonical proof API</a>
+        <nav class="desktop-nav" aria-label="Primary">
+          <a href="/" data-nav="/">Home</a>
+          <a href="/obligation" data-nav="/obligation">Case</a>
+          <a href="/proof" data-nav="/proof">Proof</a>
+          <a href="/lab" data-nav="/lab">Lab</a>
+        </nav>
+
+        <div class="public-lock" title="This public surface cannot broadcast another payment">
+          <span class="lock-dot" aria-hidden="true"></span>
+          Public proof · no broadcast
         </div>
-        <p class="microcopy">The public runtime is judge-safe: it can recompute claims, replay already-settled obligations, and independently verify the chain. It has no value-moving executor and cannot broadcast another payment.</p>
       </header>
 
-      <section class="ledger" aria-live="polite">
-        <div>
-          <p class="label">Economic state</p>
-          <h2 id="status">SETTLED</h2>
-          <p class="settlement-line"><strong id="amount">0.01 USDC</strong> · accepted obligation cleared through KeeperHub</p>
-        </div>
-        <div class="stamp SETTLED" id="stamp" data-state="SETTLED">SETTLED<br />ONCHAIN</div>
-      </section>
+      <main id="app" class="app-main" tabindex="-1" aria-live="polite">
+        <section class="loading-state">
+          <span class="registration-mark" aria-hidden="true"></span>
+          <p>Registering canonical proof…</p>
+        </section>
+      </main>
 
-      <section class="proof-grid">
-        <article class="sheet">
-          <div class="sheet-head">
-            <p class="label">Why money became owed</p>
-            <h3>Acceptance Packet</h3>
-          </div>
-          <dl id="acceptance-facts"></dl>
-        </article>
-
-        <article class="sheet claim-sheet">
-          <div class="sheet-head">
-            <p class="label">Immutable economic identity</p>
-            <h3>Tender Claim</h3>
-          </div>
-          <dl id="claim-facts"></dl>
-        </article>
-      </section>
-
-      <section class="proof-grid">
-        <article class="sheet receipt-sheet">
-          <div class="sheet-head">
-            <p class="label">Settlement artifact</p>
-            <h3>Tender Receipt</h3>
-          </div>
-          <dl id="receipt-facts"></dl>
-        </article>
-
-        <article class="sheet chain-sheet" id="chain-panel">
-          <div class="sheet-head">
-            <p class="label">Trust but verify</p>
-            <h3>Independent Chain Proof</h3>
-          </div>
-          <p class="chain-copy" id="chain-proof">KeeperHub produced the receipt. Tender can independently query Base Sepolia and match the USDC Transfer event against the recipient and amount.</p>
-        </article>
-      </section>
-
-      <section class="inspector" aria-labelledby="inspector-title">
-        <div class="inspector-copy">
-          <p class="label">Counterfactual verification</p>
-          <h3 id="inspector-title">Economic fingerprint inspector</h3>
-          <p>Change nothing and Tender must return the same settled claim. Change amount, recipient, policy, or accepted work and Tender must produce a different claim that is not authorized to settle.</p>
-        </div>
-        <form class="inspector-form" id="claim-inspector">
-          <label>Amount<input id="inspect-amount" name="amount" autocomplete="off" /></label>
-          <label>Recipient<input id="inspect-recipient" name="recipient" autocomplete="off" /></label>
-          <label>Policy version<input id="inspect-policy" name="policyVersion" autocomplete="off" /></label>
-          <button class="button primary" id="inspect-button" type="submit">Verify economic identity</button>
-        </form>
-        <div class="verification-result" id="verification-result" aria-live="polite">
-          <span class="label">Awaiting candidate</span>
-          <strong>Same economics → same claim.</strong>
-          <small>No KeeperHub execution is available from this surface.</small>
-        </div>
-      </section>
-
-      <section class="replay-panel" id="replay-panel">
-        <div>
-          <p class="label">Exactly-once runtime proof</p>
-          <p class="proof" id="proof">Ask Tender to verify the exact same obligation again.</p>
-        </div>
-        <div class="replay-numbers" aria-label="Replay result">
-          <div><strong id="same-claim">TRUE</strong><span>same claim</span></div>
-          <div><strong id="extra-executions">0</strong><span>extra executions</span></div>
-          <div><strong id="extra-movement">$0</strong><span>extra movement</span></div>
-        </div>
-      </section>
-
-      <section class="proof-grid lower-grid">
-        <article class="sheet">
-          <div class="sheet-head">
-            <p class="label">Causal chain</p>
-            <h3>Accepted → owed → cleared</h3>
-          </div>
-          <ol class="timeline" id="timeline"></ol>
-        </article>
-
-        <article class="sheet metrics-sheet">
-          <div class="sheet-head">
-            <p class="label">Measured reliability</p>
-            <h3>Failure-first evidence</h3>
-          </div>
-          <div class="metrics">
-            <div><strong>16/16</strong><span>expected tests after this delta</span></div>
-            <div><strong>10</strong><span>settlement scenarios replayed</span></div>
-            <div><strong>0</strong><span>duplicate payouts</span></div>
-          </div>
-        </article>
-      </section>
-
-      <footer>
+      <footer class="site-footer">
         <span>Tender</span>
-        <span>POLICY → ACCEPTANCE → CLAIM → CLEARING → RECEIPT</span>
-        <span id="proof-time">Canonical proof</span>
+        <span>Accepted → Claim → Settlement → Receipt</span>
+        <a href="/proof#evidence">Technical evidence</a>
       </footer>
-    </main>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Primary mobile">
+      <a href="/" data-nav="/">
+        <span aria-hidden="true">⌂</span>
+        Home
+      </a>
+      <a href="/obligation" data-nav="/obligation">
+        <span aria-hidden="true">Ⅰ</span>
+        Case
+      </a>
+      <a href="/proof" data-nav="/proof">
+        <span aria-hidden="true">◎</span>
+        Proof
+      </a>
+      <a href="/lab" data-nav="/lab">
+        <span aria-hidden="true">≠</span>
+        Lab
+      </a>
+    </nav>
+
     <script type="module" src="/main.js"></script>
   </body>
 </html>
