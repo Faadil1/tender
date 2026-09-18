@@ -137,3 +137,23 @@ Fact-check established:
 - #2503 is already under core-team discussion for adjacent caller-expectation / execution-verification semantics.
 
 For the targeted Kimi rerun, do not revive the code-hash candidate. Adjudicate only the poll-contract candidate above.
+
+
+## Gemini targeted result
+
+Status: VALID + FACT-CHECKED
+
+Gemini classification: **PROMOTE STATUS-BODY-WIDE**
+
+Preferred invariant:
+- add additive `pollIntervalHint: number` to `ExecutionStatusResponse`;
+- derive body and `X-Poll-Interval-Hint` from the same local computed value;
+- test exact equality between body and header;
+- `0` iff the server terminal set says terminal.
+
+Corrections:
+- “lower bound” wording is in `docs/api/executions.md`, not direct-execution.md;
+- do not claim PR #1526's header-only choice was an oversight;
+- current direct-execution docs still explicitly require the polling header, which MCP cannot expose.
+
+Kimi must now try to kill this exact STATUS-BODY-WIDE preference. Do not generate replacement candidates.
