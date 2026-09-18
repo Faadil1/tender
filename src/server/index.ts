@@ -97,8 +97,10 @@ async function handleApi(req: any, res: any, path: string) {
   return json(res, 404, { error: "not_found" });
 }
 
+const APP_ROUTES = new Set(["/", "/obligation", "/proof", "/lab", "/receipt"]);
+
 async function serveStatic(res: any, path: string) {
-  const file = path === "/" ? "index.html" : path.slice(1);
+  const file = APP_ROUTES.has(path) ? "index.html" : path.slice(1);
   const full = join(publicDir, file);
   try {
     const body = await readFile(full);
