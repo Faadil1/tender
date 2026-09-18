@@ -414,3 +414,19 @@ judge_compression_reality_gate_2026_09_18:
   current_video: "66.8s QA recording passes <=3m but fails final <=15s proof-start gate; Replay appears around 22–26s because Case is visited first."
   final_video_route: "Home -> Proof/Replay -> independent chain/Receipt -> Lab mutation -> optional Case context."
   next: "Pull, verify and redeploy; then final mobile QA and judge-compressed final video."
+
+judge_compression_integrity_2026_09_18:
+  status: locked
+  canonical_docs:
+    - docs/NEGATIVE-EVIDENCE.md
+    - docs/JUDGE-COMPRESSION-GATE.md
+    - SUBMISSION.md
+  build_rule: "Every build must include a real negative event, observable impact, design lesson, mitigation, retained counter-case, and explicit UNKNOWN/UNVERIFIED/refusal behavior."
+  tender_ui: "Concrete negative event is now exposed on Home as a five-part evidence record."
+  final_video_gap: "Current 66.8s QA recording reaches Replay too late for <=15s and does not surface the real negative incident before the solution."
+  final_video_route: "Home -> Run the proof -> Replay first; Case later."
+  commits:
+    - "72c2c3a ui: expose concrete negative event in judge flow"
+    - "9139f8e ui: style five-part negative evidence record"
+  ci_run: 35323620172
+  ci_result: success
