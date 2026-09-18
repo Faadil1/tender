@@ -293,3 +293,23 @@ accepted_issue_sweep_2026_09_17:
   blocker: "#2560 still needs-triage"
   immediate_action: "Ask KeeperHub builder channel for expedited triage due hackathon deadline; no code before accepted."
   implementation_if_accepted: "STATUS-BODY-WIDE: pollIntervalHint in ExecutionStatusResponse and direct status JSON body, same value as X-Poll-Interval-Hint, focused regression tests, docs update."
+
+design_v2:
+  status: direction_locked
+  canonical_doc: docs/DESIGN-DIRECTION.md
+  prompt_pack: docs/TRACE-DESIGN-LLM-PROMPTS.md
+  direction: Electric Clearing House
+  strongest_memory_object: deterministic Claim Fingerprint
+  strongest_demo_interaction: "Replay -> same claim -> NO SECOND PAYMENT -> 0 extra executions -> $0 moved"
+  routes: ["/", "/obligation", "/proof", "/receipt", "/lab", "/system"]
+  next:
+    - Run Grok adversarial art-direction review from prompt pack when external model access is available.
+    - Run Kimi architecture/UX compression review from prompt pack when external model access is available.
+    - Synthesize without averaging away contradictions.
+    - Implement shell/routing, shared components, then surfaces.
+    - QA 375px, desktop, reduced motion, keyboard and failure states.
+  hard_boundary: "No runtime settlement-semantic changes; no public value movement; do not rerun canonical payment."
+
+design_commits_2026_09_18:
+  - "25de286: design: lock Electric Clearing House multi-surface direction"
+  - "846530e: design: add Grok Kimi and build prompt pack"
