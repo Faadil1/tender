@@ -306,4 +306,4 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. Research gate complete: mcp_direct_status_poll_contract is READY TO FILE with STATUS-BODY-WIDE proposed plan. File the issue, then wait for accepted before implementation.
+next_action: Keep Tender runtime/proof locked. Research gate complete: mcp_direct_status_poll_contract is READY TO FILE with STATUS-BODY-WIDE proposed plan. Automated issue creation was attempted but blocked by GitHub 403 Resource not accessible by integration; file manually or reconnect with issue-write permission, then wait for accepted before implementation.
