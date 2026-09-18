@@ -57,7 +57,7 @@ ui_ux:
     - Preserve fail-closed states, replay/mutation proof, and separation of public proof vs authenticated operator surfaces.
 
 keeperhub_bounty_intelligence:
-  status: grok_primary_survives_valid_gemini_status_body_wide_pending_targeted_kimi
+  status: poll_contract_ready_to_file_after_final_duplicate_sweep
   separate_buidl_required: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -152,6 +152,18 @@ keeperhub_bounty_intelligence:
         - "The external workaround is real evidence of a user need, but it is not evidence that KeeperHub already exposes the hash building block."
         - "#2503 is an active needs-discussion maintainer/core-team thread about caller expectations versus executed-call verification; the code-hash proposal is adjacent and should not be filed without resolving overlap."
       disposition: research_only_do_not_file
+    kimi_final:
+      status: targeted_poll_contract_cross_exam_valid_fact_checked
+      effect: confirms status-body-wide; no fatal product-boundary objection
+      final_classification: PROMOTE_STATUS_BODY_WIDE
+      strongest_objection: poll hint is transport metadata and should remain header-only
+      fatal: false
+      correction:
+        - "docs/api/executions.md lower-bound wording is workflow-specific and must not be used as direct-execution evidence."
+      retained:
+        - Direct agent docs require get_direct_execution_status callers to honor X-Poll-Interval-Hint; MCP cannot observe that header.
+        - Body plus header can share one computed pollIntervalHint value, avoiding policy re-derivation in MCP.
+        - Docs-only would remove the impossible instruction but leave MCP unable to observe server-directed cadence.
     kimi:
       status: received_and_fact_checked
       retained:
@@ -207,7 +219,9 @@ keeperhub_bounty_intelligence:
         - active #2503 core-team discussion already owns adjacent expectation/verification semantics
       note: potentially useful execution-layer guardrail, but not strong enough to displace the MCP poll-contract primary
     mcp_direct_status_poll_contract:
-      status: provisional_primary_survives_fact_check
+      status: ready_to_file
+      checked_staging_sha: 7104df9db8d2f171731185c6349855b59136e147
+      preferred_fix: status_body_wide
       problem: MCP get_direct_execution_status drops the X-Poll-Interval-Hint terminality/cadence contract that agent docs require callers to follow
       strongest_evidence:
         - status route computes pollIntervalHint from server terminal statuses and emits it only in X-Poll-Interval-Hint
@@ -215,7 +229,15 @@ keeperhub_bounty_intelligence:
         - docs/getting-started/agent.md tells get_direct_execution_status callers to wait by X-Poll-Interval-Hint and treat 0 as terminal
         - maintainer comment on #2058 says MCP/REST shapes are meant to align and concrete mismatches should be filed separately
       smallest_v1: surface the existing poll hint in the MCP-visible status result, preferably from the same value/header source; no DB or state-machine change
-      blocker: targeted Kimi cross-examination + final overlap check before upstream filing
+      final_overlap:
+        exact_and_semantic_sweeps: clean
+        active_exact_owner: none_found
+        historical_related_only:
+          - "#1526 introduced X-Poll-Interval-Hint"
+          - "#1964 advertised the hint in docs"
+          - "#2008 documented direct-status drift around unconfirmed"
+          - "#2058 stated MCP execute-tool response shapes are meant to match REST references"
+      blocker: none_research_gate_complete
 
   verified_overlap:
     issue_1840: open_accepted_confirmed
@@ -259,9 +281,9 @@ keeperhub_bounty_intelligence:
     - DeepSeek: source-level reliability / cross-surface parity / race windows
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - Run targeted Kimi on the dedicated poll-contract packet; the pre-packet Kimi response does not count.
-    - Force Kimi to attack Gemini's status-body-wide preference against MCP-only and docs-only.
-    - If Kimi does not produce a fatal objection, re-run issue/PR overlap immediately and draft the upstream issue.
+    - File the prepared upstream issue only; do not implement yet.
+    - Wait for accepted or a maintainer-amended accepted plan before KeeperHub code changes.
+    - Re-check staging and overlap immediately before implementation if accepted.
     - Re-run issue/PR overlap immediately before any filing.
     - Fact-check every current-repo claim before promotion.
     - Cross-examine candidate overlap across all reviewer outputs.
@@ -284,4 +306,4 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. Run fresh Gemini + Kimi against docs/KEEPERHUB-POLL-CONTRACT-CROSS-EXAMINATION.md. File nothing until both attacks are fact-checked and the minimal MCP poll-contract scope still survives.
+next_action: Keep Tender runtime/proof locked. Research gate complete: mcp_direct_status_poll_contract is READY TO FILE with STATUS-BODY-WIDE proposed plan. File the issue, then wait for accepted before implementation.
