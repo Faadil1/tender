@@ -66,6 +66,12 @@ keeperhub_bounty_intelligence:
   contribution_rule: "Issue -> Reason/Scope/Plan -> wait for accepted -> implement -> test -> PR to staging"
 
   external_reviews:
+    claude:
+      status: targeted_direct_status_contract_review_queued
+      focus:
+        - Decide whether ExecuteResponse.errorClass/rejection -> status.result.errorClass/rejection is intentional, merely DX debt, or a real maintainer-acceptable API contract gap.
+        - Require concrete current caller harm or repeated workaround before promotion.
+        - Do not invent retryable semantics without a stable existing source of truth.
     gemini:
       status: received_and_fact_checked
       retained:
@@ -175,7 +181,7 @@ keeperhub_bounty_intelligence:
     - DeepSeek: source-level reliability / cross-surface parity / race windows
     - ChatGPT: fact-check / synthesis / final overlap gate
   next_gate:
-    - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi, and DeepSeek.
+    - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi, and DeepSeek; Claude must explicitly adjudicate the direct-execution typed failure status asymmetry.
     - DeepSeek must inspect source-level boundary failures and sibling-route parity specifically.
     - Fact-check every current-repo claim before promotion.
     - Cross-examine candidate overlap across all reviewer outputs.
