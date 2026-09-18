@@ -65,7 +65,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: grok_primary_survives_gemini_cross_exam_invalid_off_target_pending_gemini_rerun_and_kimi
+  status: grok_primary_survives_prepacket_gemini_and_kimi_invalid_off_target_pending_targeted_reruns
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -135,6 +135,15 @@ keeperhub_bounty_handoff:
         - Narrow the defect to MCP visibility; ordinary REST clients can read headers.
         - Do not require adding the hint to all 202 write envelopes in v1.
         - Do not rely on the unverified n8n claim.
+    kimi_pre_packet:
+      status: received_before_targeted_packet_fact_checked_invalid_as_cross_exam
+      effect: code-hash guardrail retained only as research hypothesis; Grok primary unchanged
+      fact_check:
+        - "#2408 is closed/completed."
+        - "KeeperHub simulate.ts has no contractCodeSha256 or snapshot hash field."
+        - "ProofPulse computes runtime bytecode SHA-256 locally from eth_getCode before KeeperHub execution."
+        - "#2503 is active needs-discussion and under core-team shape review for adjacent expectation/verification semantics."
+      next: "Do not file code-hash guardrail; rerun Kimi on the dedicated poll-contract packet."
     kimi:
       status: received_fact_checked
       effect: rejection strengthened; "#2408 alternative rejected as occupied"
@@ -165,6 +174,9 @@ keeperhub_bounty_handoff:
     direct_execution_typed_failure_status:
       status: research_only_do_not_file
       note: "No current caller harm/workaround tied to nested typed-error placement; #2206 adjacent envelope gap already fixed by merged PR #2213"
+    contract_code_hash_admission_guardrail:
+      status: research_only_do_not_file
+      note: "Real ProofPulse client-side workaround, but KeeperHub does not expose the claimed hash primitive and #2503 already has adjacent expectation/verification shape under core-team discussion."
     mcp_direct_status_poll_contract:
       status: provisional_primary_survives_fact_check
       note: "MCP get_direct_execution_status cannot expose X-Poll-Interval-Hint even though agent docs require it; #2058 maintainer guidance treats concrete MCP/REST mismatches as separate bugs"
@@ -241,7 +253,7 @@ next_exact_actions:
   - Keep Tender runtime/proof locked.
   - Continue Benita UI/UX work and main-track live-product binding.
   - Re-run Gemini strictly against docs/KEEPERHUB-POLL-CONTRACT-CROSS-EXAMINATION.md; no replacement-candidate generation.
-  - Run Kimi on the same packet.
+  - Re-run Kimi on the same packet; the pre-packet Kimi response does not count.
   - Force both to test MCP-only vs status-body-wide vs docs-only fixes.
   - Fact-check both reviews before filing anything upstream.
   - Fact-check all outputs against current KeeperHub source/issues/PRs.
