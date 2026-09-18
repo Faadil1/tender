@@ -82,7 +82,25 @@ The workflow also verifies:
 3. Tender's full test + replay suite passes;
 4. only then may the distinct KeeperHub settlement execute.
 
-Until that explicit run exists, Tender does **not** claim that the Valid Until-specific transfer has been completed.
+That guarded run has now been completed successfully.
+
+### Proven Valid Until settlement
+
+- GitHub Actions run: `35328265031`
+- Accepted work: `aeec4ed165eb0917688a885b960175d58f729692`
+- Tender Claim: `tclaim_b5b5600f73b00dd1790a6747e1bc2ac4`
+- Tender Receipt: `treceipt_b5b5600f73b00dd1790a6747e1bc2ac4`
+- KeeperHub execution: `50m417t2khmb8a17iggt7`
+- Transaction: `0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b`
+- Replay: `ALREADY_SETTLED`
+- Extra KeeperHub executions: `0`
+- Extra movement: `$0`
+
+Machine-readable proof: [../../evidence/valid-until-live-proof.json](../../evidence/valid-until-live-proof.json)
+
+The evidence keeps project provenance separate from runner provenance:
+- `repository` / `acceptedWorkId` identify the Valid Until work;
+- `runnerRepository` / `commitSha` identify the Tender revision that executed the proof run.
 
 ## Reliability boundaries
 
