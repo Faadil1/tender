@@ -10,7 +10,8 @@ function required(name: string) {
   return value;
 }
 
-const repository = process.env.GITHUB_REPOSITORY ?? "Faadil1/tender";
+const runnerRepository = process.env.GITHUB_REPOSITORY ?? "Faadil1/tender";
+const repository = process.env.TENDER_SOURCE_REPOSITORY ?? runnerRepository;
 const sha = process.env.GITHUB_SHA ?? `local-${Date.now()}`;
 const runId = process.env.GITHUB_RUN_ID ?? "local";
 const actor = process.env.GITHUB_ACTOR ?? "manual";
@@ -94,6 +95,7 @@ const tx = settledSnapshot.transactionHash;
 const evidence = {
   generatedAt: new Date().toISOString(),
   repository,
+  runnerRepository,
   commitSha: sha,
   contribution: {
     taskId: contribution.taskId,
