@@ -606,3 +606,72 @@ judge_compression_reality_gate_2026_09_18:
     - redeploy_cloudflare
     - final_375px_QA
     - recut_final_judge_video_to_15s_45s_3m_gates
+
+judge_compression_integrity_2026_09_18:
+  status: product_and_submission_compliant_demo_cut_still_requires_timing_fix
+  mandatory_for_every_build:
+    negative_event_pattern:
+      - signal_or_opportunity
+      - concrete_real_verifiable_negative_event
+      - observable_impact
+      - design_implication
+      - mitigation_or_refusal
+    adjacent_rules:
+      - real_failure_gt_fake_success
+      - failures_remain_in_evidence_record
+      - every_build_has_counter_case
+      - insufficient_evidence_returns_unknown_unverified_or_refusal
+    canonical_pipeline:
+      - RUBRIC
+      - PAIN
+      - PROBLEM
+      - DIFFERENTIATOR
+      - EXECUTION
+      - EVIDENCE
+      - STORY
+      - DEMO
+      - Q&A
+    proof_unit:
+      - Claim
+      - Demonstration
+      - Receipt
+    narrative:
+      - Problem
+      - Solution
+      - Demo
+      - Why_Us
+    timing:
+      - <=15s_problem_claim_product_action
+      - 30_45s_invariant_plus_receipt_or_chain_evidence_plus_counter_case
+      - <=3m_complete_story
+  tender_negative_event:
+    source_doc: docs/NEGATIVE-EVIDENCE.md
+    source: https://tanstackship.com/blog/postmortem-stripe-webhook-duplicate-delivery
+    incident_date: 2025-12-03
+    event: retried_Stripe_invoice_paid_processed_more_than_once
+    impact:
+      - 18_accounts_duplicate_credits
+      - 2_unintended_subscription_downgrades
+      - 1247_USD_duplicate_credits_reported_and_reversed
+    implication: repeated_delivery_is_not_a_new_economic_fact
+    mitigation: same_economics_same_claim_existing_receipt_zero_additional_execution_and_movement
+  public_ui_negative_event:
+    status: implemented_ci_green
+    commits:
+      - 72c2c3a2a0bd42a36caa6fbd7d95653451d467c8
+      - 9139f8ee60cd52d739b55532f7ed4ec88d915363
+    ci_run: 35323620172
+  current_video_audit:
+    duration_seconds: 66.8
+    pass:
+      - <=3m
+      - Claim_Demonstration_Receipt
+      - real_product_flow
+      - replay_zero_delta_proof
+      - independent_transaction_evidence
+      - Lab_counter_case_surface
+    partial:
+      - real_negative_event_not_shown_before_solution
+      - replay_action_begins_after_15s
+      - Why_Us_not_explicit_in_recording
+    final_cut_required_route: Home_to_Proof_first
