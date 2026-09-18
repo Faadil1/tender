@@ -200,3 +200,32 @@ Its SECONDARY, completion callbacks, remains only a hypothesis and is not promot
 No candidate from this Perplexity pass is ready to file.
 
 This reinforces the purpose of the multi-reviewer gate: adjacent-system evidence is useful for candidate generation, but current KeeperHub source and ownership checks decide promotion.
+
+
+## Phase 2 DeepSeek whitespace review — received and fact-checked
+
+DeepSeek could not directly inspect enough current KeeperHub source and correctly returned RESEARCH PRIMARY FURTHER rather than fabricating a candidate. Its candidate list was treated as hypotheses and checked against staging.
+
+### Candidate fact-check
+
+1. **REST ↔ MCP parameter propagation mismatch — not supported as a fresh candidate.**
+   Current staging already exposes MCP `idempotency_key` and forwards critical execute fields such as `gas_limit_multiplier`; dedicated regression tests exist for MCP execute argument coercion and field naming. There may still be individual parity bugs, but DeepSeek did not identify one concrete surviving field mismatch.
+
+2. **Simulation vs broadcast error classification — occupied.**
+   Current accepted tracking issue `#2004` explicitly covers uniform `simulate` behavior across `/api/execute/*`, including protocol-action differences and rejected/ignored simulation flags. This is active accepted work, so it is not whitespace.
+
+3. **Missing typed direct-execution status errors — weak / research-only.**
+   The top-level `ExecutionStatusResponse` exposes a plain `error` string and does not expose a dedicated top-level `errorClass` or `retryable`. However, failure persistence already writes `rejection` and `errorClass` into the execution's `output`, and the status API returns that object under `result`. Therefore the information is partly present, just not normalized at the top level. No independent user demand or current issue was found for promoting this into a new status contract. Keep as a low-confidence DX observation, not a bounty candidate.
+
+4. **Stale workflow `running` executions — already handled.**
+   Current source contains `lib/reaper/reap-stale-executions.ts`, with explicit classification for stale `running` / `pending` executions and timeout/error transitions. DeepSeek's proposed new timeout reconciler would duplicate existing machinery.
+
+5. **Chain-specific adapter bypasses shared invariants — active occupied territory.**
+   Accepted+confirmed issue `#2425` currently covers protocol actions advertised on chains whose deployed contracts do not implement the declared function set, plus a proposed coverage check. This is precisely the kind of chain/surface invariant gap DeepSeek hypothesized, and it is already owned.
+
+### DeepSeek result
+
+No candidate from the DeepSeek pass is promoted.
+The only surviving observation is that direct execution status error classification is not normalized at the top level, but current output already carries `errorClass`/rejection in many failure paths and there is no independently evidenced demand. Status remains RESEARCH ONLY.
+
+DeepSeek's main value in this round was restraint: it did not invent a primary candidate without source access.
