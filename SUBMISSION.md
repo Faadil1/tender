@@ -1,167 +1,120 @@
-# Tender Submission
+# Tender — Submission
 
-## Product Name
-
-Tender
-
-## Memory Sentence
+## One sentence
 
 **Accepted once. Owed once. Settled once.**
 
-## Short Description
+Tender turns accepted software work into one deterministic economic obligation, executes the authorized settlement through KeeperHub, and preserves a durable Tender Receipt.
 
-Tender is settlement infrastructure for accepted software contributions. It turns accepted work into one deterministic economic obligation, settles it through KeeperHub, and preserves a Tender Receipt exactly once.
+## Live links
+
+- Product: https://tender-settlement.faadil-casecraft.workers.dev
+- Repository: https://github.com/Faadil1/tender
+- Canonical KeeperHub transaction: https://sepolia.basescan.org/tx/0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db
+- Named live project: https://valid-until-agent-os.pages.dev
 
 ## Problem
 
 Automated systems retry.
 
-A delivery can be valid and still represent the same underlying economic fact as an earlier delivery. If transport identity, retry identity, Action-run identity, or callback identity is mistaken for economic identity, one accepted obligation can produce repeated economic effects.
+A valid delivery can still represent the same underlying economic fact as an earlier delivery. If retry identity, webhook identity, Action-run identity, or callback identity is mistaken for economic identity, one accepted obligation can create repeated economic effects.
 
-A concrete production example is recorded in `docs/NEGATIVE-EVIDENCE.md`: a 2025 TanStack Ship postmortem reports a retried Stripe webhook being processed twice, producing duplicate credits for 18 accounts, unintended downgrades for 2 accounts, and $1,247 in duplicate credits that had to be reversed.
+A concrete production Stripe-webhook postmortem reported duplicate credits across 18 accounts, two unintended subscription downgrades, and $1,247 in duplicate credits that had to be reversed.
 
-The lesson Tender adopts is simple:
+Tender's lesson:
 
-> A repeated delivery is not a new economic fact.
+> **A repeated delivery is not a new economic fact.**
+
+Source and design implications: `docs/reliability/NEGATIVE-EVIDENCE.md`.
 
 ## Solution
 
-GitHub proves what work was accepted.
-
-Tender determines whether that acceptance creates a new economic obligation.
-
-KeeperHub executes the value movement.
-
-Tender then preserves the causal settlement record.
-
 Canonical sequence:
 
-`Policy -> Acceptance -> Claim -> Authorization -> Settlement -> Receipt`
+```text
+Policy
+→ Acceptance
+→ Tender Claim
+→ Authorization
+→ KeeperHub execution
+→ Tender Receipt
+```
 
-Core invariant:
+Same economics converge on the same Tender Claim.
 
-`one accepted obligation -> one settlement`
+Changed economics create a different claim and require new acceptance.
 
-## Differentiator
+## Why KeeperHub
 
-Tender does not merely dedupe webhook/event deliveries.
+KeeperHub is Tender's execution layer.
 
-It derives one deterministic **Tender Claim** from accepted work + pre-committed settlement policy + economic terms.
+Tender does not rebuild:
+- transaction execution;
+- workflow preflight;
+- execution identity;
+- gas / retry infrastructure;
+- execution audit.
 
-Same economics:
+Tender adds the decision layer above execution:
 
-- same Tender Claim;
-- existing settlement/receipt;
-- no second KeeperHub execution;
-- $0 additional movement.
+> **Does this accepted work represent a new economic obligation at all?**
 
-Changed economics:
+Integration details: `docs/keeperhub/INTEGRATION.md`.
 
-- different Tender Claim;
-- `NEW_CLAIM_REQUIRES_ACCEPTANCE`;
-- no silent mutation of the settled obligation.
+## Canonical execution proof
 
-## KeeperHub Integration
+A real `0.01 USDC` Base Sepolia settlement executed through KeeperHub.
 
-Tender uses KeeperHub as the settlement execution layer.
+| Evidence | Value |
+| --- | --- |
+| Accepted work | `3c19bd869e9223bdb1d353a864f1818ee6c2e871` |
+| Tender Claim | `tclaim_94eb021e7894252897176543cc9d7b49` |
+| Tender Receipt | `treceipt_94eb021e7894252897176543cc9d7b49` |
+| KeeperHub execution | `7k14qt2a1989rrc5r370d` |
+| Transaction | `0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db` |
+| Replay | `ALREADY_SETTLED` |
+| Additional KeeperHub executions | `0` |
+| Additional movement | `$0` |
 
-Configured workflow:
+Machine-readable proof: `evidence/live-proof.json`.
 
-- Workflow: `Tender: Settle Claim`
-- Workflow ID: `yy4ml6aevkov3zaukpx15`
-- Network: Base Sepolia (`84532`)
-- Asset: USDC
-- Runtime inputs: `recipient`, `amount`
-- Runtime bindings: `Manual.data.recipient`, `Manual.data.amount`
+## Named live-project integration
 
-Before the canonical live transaction, the preflight path verified API-key scope, workflow visibility, dynamic bindings, workflow simulation response, and an equivalent Base Sepolia USDC dry-run.
+Tender includes a specific integration with **Valid Until**, a deployed agent-safety product.
 
-## Canonical Tender-Caused Proof
+- Repository: `Faadil1/valid-until-agent-os`
+- Production: https://valid-until-agent-os.pages.dev
+- Accepted work: `aeec4ed165eb0917688a885b960175d58f729692`
+- Change: **Bind exact action into execution validity contract**
+- Integration implementation: `src/integrations/validUntil.ts`
+- Tests: `tests/validUntilIntegration.test.ts`
 
-GitHub Actions run: `35162003096`
+The binding is implemented and tested.
 
-- Accepted work: `3c19bd869e9223bdb1d353a864f1818ee6c2e871`
-- Tender Claim: `tclaim_94eb021e7894252897176543cc9d7b49`
-- Tender Receipt: `treceipt_94eb021e7894252897176543cc9d7b49`
-- KeeperHub execution ID: `7k14qt2a1989rrc5r370d`
-- Amount: `0.01 USDC`
-- Settlement status: `SETTLED`
-- Transaction: `0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db`
-- Replay status: `ALREADY_SETTLED`
-- Same claim: `true`
-- Additional KeeperHub executions: `0`
-- Additional movement: `$0`
+A dedicated value-moving workflow exists with an explicit approval gate. Tender does **not** claim the Valid Until-specific KeeperHub transfer as completed until that distinct transaction has actually been executed.
 
-BaseScan:
+## Reliability / negative paths
 
-`https://sepolia.basescan.org/tx/0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db`
+Current deterministic verification:
 
-Canonical evidence:
+- **42 tests**
+- **12 replay scenarios**
+- **0 duplicate payouts**
 
-`evidence/live-proof.json`
+Negative paths remain visible rather than being converted into fake success:
 
-## Measured Reliability Evidence
+- not accepted → `NOT_ACCEPTED`
+- checks incomplete → `ACCEPTANCE_INCOMPLETE`
+- malformed recipient → `BLOCKED`
+- changed economics → `REQUIRES_ACCEPTANCE`
+- forged authorization → rejected
+- in-flight uncertainty → reconcile same execution; do not rebroadcast
+- proof unavailable → `UNVERIFIED`
+- replay failure → no positive replay verdict
 
-Current verification:
+Replay evidence: `evidence/settlement-replay-harness.json`.
 
-- `39/39` tests pass.
-- `12` settlement scenarios replayed.
-- `0` duplicate payouts.
-
-Replay evidence:
-
-`evidence/settlement-replay-harness.json`
-
-Negative paths retained in the evidence record include:
-
-- PR closed without acceptance -> `NOT_ACCEPTED`
-- failed checks -> `ACCEPTANCE_INCOMPLETE`
-- malformed recipient -> `BLOCKED`
-- changed economics -> `REQUIRES_ACCEPTANCE`
-- forged corrective authorization -> rejected
-- unconfirmed KeeperHub result -> `SETTLING` / reconcile same claim
-- callback interruption after broadcast -> reconcile without rebroadcast
-
-## Real Failure > Fake Success
-
-Tender deliberately preserves refusal and uncertainty.
-
-If proof is insufficient, the public product does not manufacture a successful verdict:
-
-- verification unavailable -> `UNVERIFIED` / `Cannot verify right now`
-- Base RPC unavailable -> partial verification only
-- replay failure -> `REPLAY COULD NOT RUN — no conclusion drawn`
-- invalid candidate -> `No fingerprint: no valid claim`
-
-`NO SECOND PAYMENT` is shown only after the replay invariant is actually verified.
-
-Concrete negative evidence:
-
-`docs/NEGATIVE-EVIDENCE.md`
-
-## Product Surfaces
-
-Primary:
-
-- `/` — Home / claim compression
-- `/obligation` — Case / why value became owed
-- `/proof` — Proof / recompute + chain verification + replay
-- `/lab` — Invariant Lab / changed economics vs replay
-
-Secondary:
-
-- `/receipt` — shareable Tender Receipt artifact
-- technical evidence — Proof drawer / machine-readable evidence
-
-## Production URL
-
-`https://tender-settlement.faadil-casecraft.workers.dev`
-
-## Repository URL
-
-`https://github.com/Faadil1/tender`
-
-## Claim -> Demonstration -> Receipt
+## Claim → Demonstration → Receipt
 
 ### Claim
 
@@ -169,144 +122,91 @@ Secondary:
 
 ### Demonstration
 
-1. Open Proof.
-2. Recompute canonical claim identity.
-3. Confirm Receipt references.
+1. Open `/proof`.
+2. Recompute the canonical Tender Claim.
+3. Match the Tender Receipt.
 4. Verify the Base Sepolia transfer independently.
 5. Replay the same accepted work.
 6. Observe:
-   - same Tender Claim;
+   - same claim;
    - unchanged Claim Fingerprint;
-   - Δ 0 additional KeeperHub executions;
-   - Δ $0.00 additional movement.
-7. Change one economic input in Lab.
-8. Observe a different candidate Claim requiring new acceptance.
+   - Δ KeeperHub executions = 0;
+   - Δ movement = $0.00.
+7. Change one economic input in `/lab`.
+8. Observe a different claim requiring acceptance.
 
 ### Receipt
 
-Close the loop with:
-
+Close the proof loop with:
 - Tender Receipt;
-- KeeperHub execution;
-- Base transaction;
-- independent chain verification;
-- machine-readable proof.
+- KeeperHub execution ID;
+- transaction hash;
+- independent Base verification;
+- machine-readable evidence.
 
-## Demo Compression
+## Judge path
 
-### <=15 seconds
-
-The judge must understand the problem and see Tender act:
+### First 15 seconds
 
 1. “Retries are normal. Duplicate economic effects are not.”
 2. “Accepted once. Owed once. Settled once.”
-3. Click **Run the proof**.
-4. Trigger Replay.
+3. **Run the proof**
+4. **Replay settlement**
 
-### 30–45 seconds
+### By 45 seconds
 
-The judge must see:
-
+The judge has seen:
 - replay verdict;
 - Δ0 executions;
 - Δ$0.00;
-- independent chain evidence;
-- receipt or transaction proof;
+- independent transaction evidence;
+- Receipt;
 - one changed-economics counter-case.
 
-### <=3 minutes
+### Full story
 
-Full narrative:
+**Problem → Solution → Demo → Why Tender**
 
-`Problem -> Solution -> Demo -> Why Us`
+Architecture follows comprehension, not the other way around.
 
-Preferred final video length:
+## Why it is different
 
-`60–100 seconds`
+Webhook/event idempotency asks:
 
-The current mobile QA recording is evidence of the product flow, not the final judge cut; it reaches Replay too late for the <=15-second gate because Case is visited first.
+> Have I processed this delivery before?
 
-Canonical timing gate:
-
-`docs/JUDGE-COMPRESSION-GATE.md`
-
-## Why Tender
-
-Webhook idempotency answers:
-
-> Have I already processed this delivery/event?
-
-Tender answers a different economic question:
+Tender asks:
 
 > Does this accepted work + policy + economics represent a new obligation at all?
 
-KeeperHub executes a settlement.
+KeeperHub answers the execution question.
 
-Tender decides whether there is a new economic claim to execute.
+Tender answers the economic-identity question.
 
-## Q&A
+## KeeperHub judging criteria mapping
 
-**Why not just use webhook idempotency?**
-
-Transport/event dedupe is necessary but not sufficient for Tender's problem. Tender binds the economic obligation across delivery/run/retry identities and distinguishes retries from changed economics.
-
-**Why KeeperHub?**
-
-KeeperHub is the execution layer. Tender does not rebuild value movement.
-
-**What if amount, recipient, or policy changes?**
-
-The economic identity changes, producing a different Tender Claim that requires acceptance.
-
-**What if verification is unavailable?**
-
-Tender returns UNVERIFIED/UNKNOWN and withholds the positive replay verdict.
-
-**Is Claim Fingerprint proof?**
-
-No. It is the visual identity of the Claim. Proof is recomputation + receipt + KeeperHub execution + on-chain verification.
-
-**Can the public demo pay again?**
-
-No. The judge-facing runtime contains no value-moving executor.
-
-**What survives execution?**
-
-A Tender Receipt, machine-readable evidence, KeeperHub execution reference, and transaction proof.
-
-## Submission Integrity Gate
-
-Current:
-
-- [x] Production deployment
-- [x] Public repository
-- [x] Canonical KeeperHub value-moving proof
-- [x] Canonical proof frozen — no casual rerun
-- [x] 39/39 tests
-- [x] 12 scenarios / 0 duplicate payouts
-- [x] Real negative incident sourced
-- [x] Counter-cases retained
-- [x] UNVERIFIED/UNKNOWN behavior
-- [x] Public runtime cannot broadcast another payment
-- [ ] Latest visual polish redeployed
-- [ ] 375px Home + Proof final QA
-- [ ] Final judge video recut to <=15s proof-start gate
-- [ ] Final DoraHacks copy/video fields submitted
-
-## Judging Criteria Mapping
-
-| Criterion | Tender Evidence |
+| Criterion | Tender evidence |
 | --- | --- |
-| Integration depth | GitHub acceptance -> Tender Claim -> KeeperHub execution -> Tender Receipt, with runtime-bound settlement inputs. |
-| Real execution | Canonical 0.01 USDC Base Sepolia transaction with KeeperHub execution ID and transaction hash. |
-| Reliability and observability | Deterministic economic identity, authorization gates, reconciliation, 39/39 tests, 12-scenario Replay Harness, explicit failure states. |
-| Replay safety | Same Claim -> ALREADY_SETTLED -> 0 additional KeeperHub executions -> $0 additional movement. |
-| Usefulness and originality | Separates acceptance/economic identity from transport/execution identity; settles accepted work without a public bounty race. |
-| Developer experience | TypeScript domain model, adapters, tests, GitHub Actions, machine-readable evidence, live Proof/Lab, canonical state/handover. |
+| Integration depth | Specific Valid Until binding + accepted-work identity + guarded project-specific live settlement workflow |
+| Execution through KeeperHub | Real Base Sepolia USDC transaction, KeeperHub execution ID, independent chain verification |
+| Reliability / observability | deterministic claims, reconciliation, explicit UNKNOWN/failure states, 42 tests, 12 replay scenarios |
+| Usefulness / originality | exactly-once economic identity for accepted work rather than transport-event dedupe |
+| Developer experience / code quality | small TypeScript domain core, isolated adapters/integrations, reproducible verify command, machine-readable evidence, guarded value-moving workflows |
 
-## What Is Still Unfinished
+## Truth boundary / unfinished
 
-- Redeploy the latest visual/negative-evidence UI polish.
-- Final 375px visual QA.
-- Final judge video cut using Home -> Proof first.
-- Final DoraHacks packaging and submission lock.
+Complete:
+- public product;
+- canonical KeeperHub transaction;
+- replay proof;
+- independent chain verification;
+- Tender Receipt;
+- deterministic test/replay suite;
+- Valid Until-specific integration code and tests.
+
+Still intentionally pending:
+- the **distinct Valid Until-specific real KeeperHub settlement**, which requires explicit approval before broadcasting;
+- final redeploy of the latest visual/negative-evidence polish;
+- final mobile/judge-video capture.
+
+Tender does not label pending work as completed.
