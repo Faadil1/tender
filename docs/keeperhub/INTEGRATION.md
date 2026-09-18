@@ -102,6 +102,8 @@ The evidence keeps project provenance separate from runner provenance:
 - `repository` / `acceptedWorkId` identify the Valid Until work;
 - `runnerRepository` / `commitSha` identify the Tender revision that executed the proof run.
 
+**Raw-artifact provenance note:** this completed run was produced before the external-attestation serializer stopped populating the optional receipt `mergeSha` field with the runner checkout SHA. Tender's economic identity uses `acceptedWorkId` first, so the claim above is bound to `aeec4ed...`, not the Tender runner commit. The proof script is now patched so future external-project attestations leave `mergeSha` unset and use the accepted-work SHA as `headSha`.
+
 ## Reliability boundaries
 
 Tender fails closed on:
