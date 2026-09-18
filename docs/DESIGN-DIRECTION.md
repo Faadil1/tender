@@ -1,673 +1,720 @@
-# Tender — TRACE Design Direction v2
+# Tender — TRACE Design Direction v3
 
-## Canonical Direction
+Canonical synthesis: `docs/TRACE-DESIGN-SYNTHESIS.md`
 
-**Direction name:** Electric Clearing House
+## Direction
+
+**Internal direction:** Once-Written Clearing Instrument
+
+**Product:** Tender
 
 **Memory sentence:** **Accepted once. Owed once. Settled once.**
 
-**Product sentence:** Tender turns accepted work into one deterministic economic obligation, clears it through KeeperHub, and preserves the causal proof.
+Tender is one once-written economic instrument viewed across four jobs.
 
-**Proof sentence:** The canonical obligation settled once; replay returned the same claim, created zero additional KeeperHub executions, and moved $0 again.
+The design must make the user understand:
+1. why value became owed;
+2. what economic identity was created;
+3. what actually settled onchain;
+4. why replay creates no second payment.
 
-Tender should no longer present itself as one long evidence page. The judge-facing product becomes a **multi-surface clearing system** whose visual language sits between:
+The visual system combines:
+- security printing / guilloche;
+- clearing-house registration/stamping;
+- editorial evidence hierarchy;
+- restrained product interaction.
 
-- a clearing house / settlement terminal;
-- a security-printed receipt or certificate;
-- an editorial evidence dossier;
-- a live product interface with explicit state transitions.
-
-It is not a wallet dashboard, bounty board, generic crypto product, purple-gradient AI SaaS, glassmorphism demo, or a Dribbble composition pretending to be a product.
-
-The redesign changes presentation, IA, navigation, interaction and visual identity. It **does not change Tender's economic semantics or settlement runtime**.
-
----
-
-## 1. Why this direction is native to Tender
-
-Tender's product is an identity-and-clearing system.
-
-The important states are:
-
-`POLICY -> ACCEPTANCE -> CLAIM -> AUTHORIZATION -> SETTLEMENT -> RECEIPT`
-
-The UI therefore needs to make four things legible:
-
-1. **Why money became owed.**
-2. **What exact economic identity was created.**
-3. **What moved value and what proved it.**
-4. **Why a replay did not move value again.**
-
-The interface should feel like a system where obligations become legible, settle, and leave evidence.
+It is not:
+- a wallet dashboard;
+- a bounty board;
+- a generic crypto product;
+- a purple-gradient AI SaaS;
+- an Awwwards composition without product meaning;
+- a one-page evidence essay.
 
 ---
 
-## 2. Signature device: Claim Fingerprint
+## Canonical information architecture
 
-Every Tender Claim gets a deterministic procedural visual mark generated from the `claimId`.
+### `/` — Home
 
-### Form
+Question:
+**What is Tender, and why should I care?**
 
-Use an SVG/canvas guilloche / interference-line motif inspired by security printing, settlement certificates and anti-counterfeit marks.
-
-The mark should derive stable visual parameters from the claim hash:
-
-- line count;
-- phase;
-- radial frequency;
-- angle;
-- intersection density;
-- accent pair;
-- crop.
-
-### Product meaning
-
-This is not decorative branding.
-
-- Same economics -> same claim -> same fingerprint.
-- Changed amount / recipient / policy / accepted work -> different claim -> different fingerprint.
-- Replay -> fingerprint remains unchanged and the existing receipt is referenced.
-- Mutation Lab -> fingerprint visibly morphs when a candidate creates a different claim.
-
-This becomes Tender's recognisable symbol in the same way strong ETHOnline finalists compress an idea into one visual object.
-
-### Reduced motion
-
-The fingerprint renders as the final static SVG with no interpolation.
-
----
-
-## 3. Visual system
-
-### 3.1 Palette
-
-Take materially more chromatic risk than the current ivory page while keeping proof surfaces readable.
-
-| Token | Value | Role |
-| --- | --- | --- |
-| Void Plum | `#160B24` | Main dark shell / deep background |
-| Carbon | `#0C0910` | Highest-contrast structural black |
-| Ledger Paper | `#F3E9D8` | Receipts, evidence sheets, readable long-form |
-| Proof Cyan | `#40E8E0` | Independent verification / links / active proof |
-| Settlement Lime | `#D8FF43` | Settled / verified economic state |
-| Claim Coral | `#FF624F` | Claims, action, attention |
-| Receipt Pink | `#FF4DAF` | Artifact / signature moments |
-| Signal Violet | `#7B61FF` | Navigation / system context |
-| Warning Amber | `#FFC247` | Review / pending / caution |
-| Muted Lilac | `#A99AB8` | Secondary text on dark |
-
-Rules:
-
-- Never use colour as the only state indicator.
-- Ledger Paper remains available for dense evidence and receipt reading.
-- No generic blue-purple gradient background.
-- Gradients, if used, belong inside the claim fingerprint or state transition only.
-- Lime is scarce: it should feel earned when settlement is proven.
-
-### 3.2 Material language
-
-Primary material cues:
-
-- security-print guilloche;
-- perforation / tear rules;
-- registration marks;
-- ledger row numbers;
-- audit stamps;
-- microtype metadata;
-- signal stripes;
-- clipped receipt edges;
-- translucent ink overlays, not frosted-glass cards.
-
-Background texture may use Backgrounds Supply only when licensing is clean and the texture remains subordinate to evidence.
-
-### 3.3 Typography
-
-Use a three-layer system:
-
-1. **Display:** expressive editorial serif / display face for large declarations.
-2. **Product UI:** neutral grotesk / sans for navigation, controls and dense states.
-3. **Data:** monospace for ids, transaction hashes, timestamps and economic evidence.
-
-**Schoolbell** is allowed only as a sparse annotation layer: “same claim”, “verified”, “$0 again”, or hand-marked demo callouts. Never body copy.
-
-Studio Thonik is the reference for using typography as composition rather than simply styling text.
-
----
-
-## 4. TRACE reference routing for this build
-
-Do not use all references simultaneously. Route by problem.
-
-### Product flow / mobile
-
-Primary:
-- Mobbin — real product behaviours and mobile conventions.
-- Pageflows — task sequencing and interaction order.
-- Appbrainy — mobile financial / commerce flows.
-- UXGoodies / Janus — AI-native product patterns.
-- Fiona Lim — conversion/friction where judge action needs compression.
-
-### Art direction
-
-Primary:
-- Annual Report Gallery — evidence hierarchy, information storytelling, graphic systems.
-- Studio Thonik — typography as identity and composition.
-- Cue Design — premium anti-generic interactions.
-- Daniel Snows — high-impact hero composition.
-- Inspora — uniqueness audit / accidental-lineage check.
-- Awwwards — quality bar, not UX authority.
-
-Secondary discovery only:
-- Dribbble, Behance, SiteInspire, Lapa Ninja, Framer Gallery.
-
-### Motion / signature interaction
-
-Primary:
-- 60FPS Design — motion quality bar.
-- Transitions.dev — component/state transition logic.
-- Motion Primitives — state changes and disclosures.
-- Rare UI — one or two signature interactions.
-- Sohrab Khan — creative-development quality.
-- Emil Kowalski — veto unnecessary animation.
-
-Selective:
-- React Bits / Aceternity / Canvas UI / Codrops for the deterministic fingerprint and only other mechanisms with product meaning.
-
-### Components / systems
-
-Primary:
-- shadcn/ui — accessible foundations.
-- ReUI — dense evidence/data surfaces.
-- Beautiful UI — AI-native approval / status patterns where useful.
-- OpenSourceUI — inspectable implementation references.
-- Component Gallery — compare real system patterns before choosing.
-
-### Brand / material
-
-Primary:
-- Logosystem — symbol/wordmark discipline.
-- The Met Collection — motif/proportion/material research.
-- Schoolbell — sparse annotations.
-- Are.na — cross-domain research.
-
----
-
-## 5. ETHOnline finalist lessons
-
-The supplied finalist references are useful for **compression**, not for copying their purple showcase cards.
-
-Observed useful traits:
-
-- LeekWallet: one physical/security idea, immediately legible.
-- Novi Corpus: one strange but concrete institutional proposition.
-- TARE: one measurable claim plus a memorable number.
-- OpenBook: one market promise compressed into a sentence.
-- Cordon: one coordination problem.
-- Petri: one metaphor that explains the mechanism.
-- OnchainRouter: one category analogy (“OpenRouter for onchain tools”).
-- ETH Arcade: one surprising product object with a clear interaction metaphor.
-
-Tender should match that compression quality:
-
-> **Accepted once. Owed once. Settled once.**
-
-Then prove it quickly:
-
-> **Replay verified: same claim · 0 extra executions · $0 moved again.**
-
-The UI should let a judge understand that before reading architecture text.
-
----
-
-## 6. Multi-surface information architecture
-
-### Surface 1 — `/` — Clearing House
-
-Purpose: compressed product understanding.
+Primary CTA:
+**Run the proof**
 
 Above the fold:
+- Tender
+- **Accepted once. Owed once. Settled once.**
+- canonical once-written instrument
+- Claim Fingerprint
+- 1 / 1 / 1 compression
+- proof entry
 
-- Tender wordmark + compact navigation.
-- Memory sentence: **Accepted once. Owed once. Settled once.**
-- Product line: “Accepted work becomes one economic obligation. Tender clears it once.”
-- Large animated Claim Fingerprint for the canonical claim.
-- Proof strip:
-  - 1 accepted work
-  - 1 claim
-  - 1 settlement
-  - 1 receipt
-  - replay -> $0
-- CTAs:
-  - **See the live proof**
-  - **Open the obligation**
-- A compact settlement rail showing the six states.
+### `/obligation` — Case
 
-The homepage should not contain every receipt field.
-
-### Surface 2 — `/obligation` — Obligation Case
-
-Purpose: explain why value became owed and show the complete causal case.
-
-Layout:
-
-- Case header with status, amount, recipient and accepted-work id.
-- Settlement Rail: Policy -> Acceptance -> Claim -> Authorization -> Settlement -> Receipt.
-- Acceptance evidence module.
-- Economic Claim module.
-- Compact policy card.
-- Expandable raw evidence drawer.
-- Link to canonical receipt.
-
-Judge question answered: **Why did this payment exist?**
-
-### Surface 3 — `/proof` — Live Proof Room
-
-Purpose: judge-facing proof theatre.
+Question:
+**Why did this money become owed?**
 
 Contains:
+- Policy
+- Acceptance
+- Tender Claim
+- Authorization
+- causal derivation
+- raw evidence disclosure
 
-- KeeperHub execution id.
-- transaction hash and explorer action.
-- independent Base verification.
-- receipt verification state.
-- replay control.
+Do not duplicate replay/transaction theatre here.
 
-The replay interaction is the central demo:
+### `/proof` — Proof
 
-1. press Verify same obligation;
-2. settlement rail does **not** create a new settlement node;
-3. fingerprint remains identical;
-4. a large seal arrives: **NO SECOND PAYMENT**;
-5. proof numbers settle to:
-   - SAME CLAIM = TRUE
-   - EXTRA EXECUTIONS = 0
-   - EXTRA MOVEMENT = $0
-
-Judge question answered: **Did it really move once, and only once?**
-
-### Surface 4 — `/receipt` — Receipt Artifact
-
-Purpose: make the output feel like a real product artifact.
-
-The canonical Tender Receipt is rendered as a full-height security-print object:
-
-- deterministic Claim Fingerprint;
-- receipt id;
-- claim id;
-- accepted-work identity;
-- policy version;
-- recipient;
-- amount / asset;
-- KeeperHub execution;
-- transaction;
-- timestamp;
-- settlement state.
-
-Actions:
-
-- Inspect transaction.
-- Copy receipt id.
-- Open machine-readable proof.
-
-Avoid fake PDF/download behaviour unless implemented.
-
-Judge question answered: **What artifact survives after settlement?**
-
-### Surface 5 — `/lab` — Mutation Lab
-
-Purpose: expose the product's strongest technical invariant interactively.
-
-Inputs:
-
-- amount;
-- recipient;
-- policy version.
-
-Optional later:
-- accepted-work id.
-
-Behaviour:
-
-- baseline fingerprint appears on left;
-- candidate fingerprint appears on right;
-- changing economics produces a new claim/fingerprint;
-- same economics returns existing settled claim;
-- changed economics returns **NEW CLAIM · REQUIRES ACCEPTANCE**;
-- no value-moving control exists here.
-
-Use a split comparison layout, not a generic form.
-
-Judge question answered: **What prevents retries/mutations from becoming duplicate payments?**
-
-### Surface 6 — `/system` — System / Reliability
-
-Purpose: deeper technical proof without polluting the homepage.
+Question:
+**Can I verify that it settled once and did not settle twice?**
 
 Contains:
+- KeeperHub execution
+- transaction
+- independent Base verification
+- replay
+- before/after counters
+- five-proof register
+- technical Evidence Drawer
+- failure states
 
-- domain boundary diagram;
-- acceptance vs obligation vs execution identity;
-- KeeperHub role;
-- replay harness results;
-- test status;
-- fail-closed rules;
-- runtime lock / public-vs-operator boundary;
-- machine-readable evidence links.
+Primary CTA:
+**Replay the same accepted work**
 
-Judge question answered: **Is this engineered or staged?**
+### `/lab` — Invariant Lab
 
-### Explicitly separate operator surface
+Question:
+**What happens if I change the economics?**
 
-Do **not** expose the authenticated value-moving operator as a public judge control.
+Contains:
+- baseline claim
+- candidate claim
+- Claim Fingerprint comparison
+- changed fields
+- NEW CLAIM -> REQUIRES ACCEPTANCE
+- no settlement action
 
-A later operator console can exist, but the current public product remains proof/replay/read-only. The redesign must preserve this security boundary.
+This is a hostile invariant test, not a playground.
 
 ---
 
-## 7. Navigation
+## Secondary surfaces
+
+### Receipt
+
+Receipt is an artifact, not primary navigation.
+
+Requirements:
+- stable permalink;
+- full-screen artifact from Case/Proof;
+- direct-linkable;
+- copyable/inspectable evidence;
+- removed from primary nav.
+
+### System / Reliability
+
+System is evidence, not a primary user job.
+
+Move:
+- architecture;
+- test evidence;
+- fail-closed rules;
+- public/operator boundary;
+- machine-readable evidence;
+
+into:
+- an Evidence Drawer inside Proof;
+- optional footer/deep-link technical page.
+
+Do not place System in primary nav.
+
+---
+
+## Navigation
 
 ### Desktop
 
-Persistent compact top navigation:
-
-- Clearing House
-- Obligation
-- Proof
-- Receipt
-- Lab
-- System
-
-A thin **Settlement Rail** persists across product surfaces and visually indicates the current causal stage.
-
-### Mobile
-
-Follow Mobbin/Pageflows conventions instead of shrinking desktop.
-
-Bottom navigation:
-
+Primary:
 - Home
 - Case
 - Proof
 - Lab
 
-Receipt opens from Case/Proof as a full-screen artifact.
+Secondary:
+- Receipt from Case/Proof
+- Technical Evidence from Proof/footer
 
-System is reachable from an overflow/menu surface.
+### Mobile
 
-No horizontal page scroll at 375px.
+Bottom nav:
+- Home
+- Case
+- Proof
+- Lab
 
----
+Receipt:
+- full-screen artifact.
 
-## 8. Component system
+Technical evidence:
+- disclosure from Proof.
 
-Canonical components:
-
-### `TenderShell`
-Global nav, page transition frame, dark chromatic shell.
-
-### `SettlementRail`
-Six causal states with current/completed/blocked semantics.
-
-### `ClaimFingerprint`
-Deterministic SVG/canvas security-print visual generated from claim id.
-
-### `ProofStrip`
-Five-number compression strip for judge scanning.
-
-### `EvidenceSheet`
-Ledger-paper component for acceptance/policy/raw evidence.
-
-### `ReceiptArtifact`
-Security-print settlement receipt.
-
-### `ReplaySeal`
-Stateful “NO SECOND PAYMENT” result, not a decorative badge.
-
-### `ChainProofPanel`
-Independent Base verification with explorer handoff.
-
-### `MutationCompare`
-Baseline/candidate fingerprints + changed-field diff.
-
-### `EvidenceDrawer`
-Raw ids and machine-readable evidence without cluttering primary reading.
-
-### `StateChip`
-Text + shape + colour state system.
-
-Avoid a generic card grid. Components should visibly belong to the clearing-house metaphor.
+No page-level horizontal scroll at 375px.
 
 ---
 
-## 9. Motion grammar
+## Signature object — Claim Fingerprint
 
-Use the canonical TRACE grammar:
+The fingerprint is the **visual identity of the claim**.
+
+It is not proof.
+
+Proof remains:
+- deterministic recomputation;
+- stored acceptance evidence;
+- KeeperHub execution;
+- transaction;
+- independent chain verification;
+- replay result.
+
+### Form
+
+Use deterministic SVG security-print / guilloche geometry derived from `claimId`.
+
+Stable parameters may include:
+- line count;
+- phase;
+- radial frequency;
+- angle;
+- intersection density;
+- crop;
+- semantic ink.
+
+### Behaviour
+
+Same economics:
+- same claim;
+- same fingerprint;
+- no visible regeneration on replay.
+
+Changed economics:
+- different claim;
+- different fingerprint;
+- misregistration/difference is visible.
+
+Reduced motion:
+- immediate static replacement.
+
+### Material role
+
+Fingerprint must be structural:
+- ground of the instrument;
+- registration field;
+- identity layer.
+
+If it can be removed without weakening the composition, the implementation is too decorative.
+
+---
+
+## One instrument across all routes
+
+The same canonical instrument persists.
+
+### Home
+Whole instrument.
+
+### Case
+Instrument opens to reveal causal layers.
+
+### Proof
+Instrument is checked against transaction, chain proof and replay.
+
+### Lab
+Instrument is compared against a candidate.
+
+Pages are views of one object, not four unrelated mini-sites.
+
+---
+
+## Five-identity system
+
+Never render all identities as indistinguishable truncated hashes.
+
+Canonical identities:
+
+1. Acceptance
+2. Tender Claim
+3. KeeperHub Execution
+4. Transaction
+5. Tender Receipt
+
+Each requires:
+- stable name;
+- stable symbol;
+- stable semantic accent;
+- one-line role caption;
+- consistent position/order;
+- derivation arrows where relationships appear.
+
+Proposed semantic accents:
+
+| Identity | Role | Accent |
+| --- | --- | --- |
+| Acceptance | Why value became eligible | Warning Amber |
+| Tender Claim | Economic identity | Claim Coral |
+| KeeperHub Execution | Value-moving execution record | Proof Cyan |
+| Transaction | Onchain movement | Settlement Lime |
+| Tender Receipt | Durable settlement artifact | Receipt Pink |
+
+Colour is never the only differentiator.
+
+---
+
+## Five-proof register
+
+Use one compact register, not five generic cards:
+
+1. Accepted work
+2. Tender Claim
+3. Tender Receipt
+4. KeeperHub Execution
+5. Onchain movement
+
+The register should show identity and derivation.
+
+---
+
+## Replay — signature interaction
+
+The memorable motion is refusal, not payment success.
+
+### Before
+
+Show baseline:
+- Claims: 1
+- KeeperHub executions: 1
+- Additional movement: $0.00
+
+### Trigger
+
+**Replay the same accepted work**
+
+### During
+
+- existing instrument remains;
+- fingerprint does not regenerate;
+- no second receipt is issued;
+- no confetti;
+- no success toast;
+- no public control implies a second broadcast is possible.
+
+### Result
+
+The zeros are the headline:
+
+- Δ new claim: 0 for the same obligation
+- Δ KeeperHub executions: 0
+- Δ additional movement: $0.00
+
+Verdict:
+
+**Same claim. No second payment.**
+
+Seal:
+
+**NO SECOND PAYMENT**
+
+Static system state:
+
+**Second payment unavailable by design**
+
+---
+
+## Visual system
+
+### Base
+
+- Carbon `#0C0910`
+- Ledger Paper `#F3E9D8`
+
+### Semantic inks
+
+- Claim Coral `#FF624F`
+- Proof Cyan `#40E8E0`
+- Settlement Lime `#D8FF43`
+- Receipt Pink `#FF4DAF`
+- Warning Amber `#FFC247`
+
+Void Plum, Signal Violet and Muted Lilac are non-default and may be removed if they do not earn a clear semantic role.
+
+### Surface discipline
+
+A surface normally uses:
+- base shell;
+- Ledger Paper instrument;
+- one primary semantic ink;
+- one exceptional ink at most.
+
+No rainbow palette.
+
+---
+
+## Material language
+
+Use:
+- guilloche;
+- registration marks;
+- perforation;
+- microtype;
+- audit/settlement stamps;
+- ledger numbering;
+- dry security-paper texture;
+- controlled misregistration for changed economics.
+
+Avoid:
+- glass cards;
+- glowing blobs;
+- random particles;
+- crypto chain/coin motifs;
+- ornamental 3D;
+- fake terminals;
+- decorative guilloche unrelated to claim identity.
+
+---
+
+## Typography
+
+Three roles:
+
+1. Display — editorial declaration.
+2. Product sans — navigation, labels, controls.
+3. Mono — ids, hashes, timestamps, proof facts.
+
+Schoolbell:
+- sparse annotation only;
+- never body copy;
+- optional, not required.
+
+---
+
+## Motion grammar
+
+Canonical grammar:
 
 `TARGET -> TRIGGER -> MOTION -> TIMING -> EXIT/RETURN -> INPUT PARITY -> REDUCED MOTION -> IMPLEMENTATION`
 
-### Page transition
+### Priority
 
-- TARGET: content stage.
-- TRIGGER: navigation.
-- MOTION: security-print wipe / registration-line alignment.
-- TIMING: 220–360ms.
-- EXIT: old layer recedes; new layer locks into registration.
-- Reduced motion: instant crossfade / no translation.
+1. Replay refusal
+2. Claim mutation comparison
+3. Receipt registration
+4. Route transition
 
-### Claim fingerprint
+### Plate registration
 
-- TARGET: guilloche lines.
-- TRIGGER: initial render or candidate mutation.
-- MOTION: deterministic interpolation between parameter sets.
-- TIMING: 450–700ms.
-- Reduced motion: replace SVG immediately.
+Alignment = same identity.
 
-### Settlement proof
+Misregistration = changed economics.
 
-- TARGET: Settlement Rail + Receipt.
-- TRIGGER: canonical proof loaded.
-- MOTION: rail advances once, receipt registers, lime appears only at settled state.
-- Reduced motion: all settled facts appear immediately.
+### Reduced motion
 
-### Replay
+Every state remains fully understandable without movement.
 
-- TARGET: existing claim/fingerprint + ReplaySeal.
-- TRIGGER: Verify same obligation.
-- MOTION: a pulse travels the rail but stops at the existing receipt; no new receipt appears.
-- RESULT: “NO SECOND PAYMENT”.
-- Reduced motion: result swaps without pulse.
-
-### Mutation
-
-- TARGET: baseline/candidate.
-- TRIGGER: form input.
-- MOTION: candidate fingerprint morph + changed fields reveal.
-- Reduced motion: static replace.
-
-No autoplay loops other than a very subtle claim-fingerprint idle phase if it passes distraction QA.
+No autoplay motion is required.
 
 ---
 
-## 10. Judge Compression Layer
+## Failure-state contract
+
+Failure must look plainer than success.
+
+Canonical failure headline:
+
+**Cannot verify right now.**
+
+Rules:
+- never green-with-caveats;
+- never display proof verdict after verifier failure;
+- disable replay when prerequisite proof is unavailable;
+- failed replay must not show NO SECOND PAYMENT;
+- inability to verify is not evidence of settlement failure.
+
+Examples:
+
+Independent chain proof unavailable:
+> The recorded settlement remains available, but independent chain verification could not be completed right now.
+
+Replay verification failed:
+> Replay verification did not complete. No replay verdict is being shown.
+
+Invalid mutation:
+> This candidate cannot be recomputed from the supplied values.
+
+---
+
+## Judge compression
 
 ### 0–5 seconds
 
-Judge understands:
-
 **Accepted once. Owed once. Settled once.**
 
-### 5–12 seconds
+Judge sees one instrument, not a dashboard.
 
-Judge sees:
+### 5–15 seconds
 
-- canonical claim fingerprint;
-- 0.01 USDC;
-- SETTLED;
-- KeeperHub proof available.
+Judge understands:
+- accepted work;
+- one claim;
+- settled state;
+- proof is available.
 
-### 12–22 seconds
+### 15–30 seconds
 
-Judge opens Proof and independently verifies chain evidence.
+1. click **Run the proof**
+2. press **Replay the same accepted work**
+3. see unchanged fingerprint
+4. see Δ0 executions
+5. see Δ$0.00
+6. read **Same claim. No second payment.**
 
-### 22–35 seconds
+### 30–90 seconds
 
-Judge hits replay and sees:
-
-**same claim · 0 extra executions · $0 moved**
-
-### 35–60 seconds
-
-Judge opens Mutation Lab and changes the amount:
-
-**new fingerprint · new claim · requires acceptance · $0 moved**
-
-The strongest proof is therefore visible without architecture narration.
-
----
-
-## 11. Copy system
-
-### Homepage
-
-**Headline**
-Accepted once. Owed once. Settled once.
-
-**Support**
-Accepted work becomes one economic obligation. Tender gives it deterministic identity, clears it through KeeperHub, and refuses to pay it twice.
-
-**Proof strip**
-1 accepted work · 1 claim · 1 settlement · 1 receipt · replay = $0
-
-### Proof
-
-**Headline**
-The payment happened. The replay did not.
-
-**Support**
-KeeperHub cleared the obligation. Tender preserved its identity. Replaying the same economics references the existing receipt instead of broadcasting again.
-
-### Lab
-
-**Headline**
-Change the economics. Change the claim.
-
-**Support**
-Amount, recipient, policy and accepted work belong to the economic identity. Retries do not.
-
-### Receipt
-
-**Headline**
-The economic record that survives execution.
+Deeper path:
+- Case: why value became owed;
+- Receipt: durable artifact;
+- Lab: mutate one economic input;
+- new claim/fingerprint;
+- requires acceptance;
+- technical Evidence Drawer if needed.
 
 ---
 
-## 12. Accessibility / QA gates
+## Mobile rules
 
-Before promotion:
+At 375px:
 
-- 375px mobile with no horizontal page scrolling.
-- 44px minimum critical touch targets.
-- keyboard-visible focus.
-- semantic landmarks and heading order.
-- no state encoded by colour alone.
-- full `prefers-reduced-motion` behaviour.
-- long ids never overflow.
-- proof data remains readable at 200% zoom.
-- no animation blocks interaction.
-- fingerprints remain decorative to screen readers unless a textual claim-state description is provided.
-- public pages never expose operator credentials or value-moving actions.
+- instrument remains primary;
+- bottom nav = Home / Case / Proof / Lab;
+- Receipt is full-screen;
+- proof counters become compact before/after rows;
+- identity legend becomes expandable or horizontally compact without overflow;
+- mutation compare becomes baseline/candidate toggle or swipe;
+- no desktop tables squeezed onto mobile;
+- no page-level horizontal scroll;
+- 44px minimum critical target.
 
 ---
 
-## 13. Implementation sequencing
+## Component inventory
 
-### Phase A — foundation
+### TenderShell
+Global product shell.
 
-- route shell;
-- tokens;
-- typography;
-- navigation;
-- Settlement Rail;
-- EvidenceSheet;
-- ClaimFingerprint static version.
+### TenderNav / MobileNav
+Four primary destinations.
 
-### Phase B — split current page
+### ClaimInstrument
+The persistent economic instrument.
 
-Move existing functionality into:
+### ClaimFingerprint
+Deterministic claim portrait.
 
+### IdentityToken
+Acceptance / Claim / Execution / Transaction / Receipt.
+
+### DerivationRail
+Causal relationships between identities/states.
+
+### ProofRegister
+Five-proof compression.
+
+### ReplayRefusal
+Before/after replay result.
+
+### ReceiptArtifact
+Full-screen/permalink settlement artifact.
+
+### EvidenceDrawer
+Raw/technical proof.
+
+### MutationCompare
+Baseline/candidate invariant comparison.
+
+### ChainProofPanel
+Independent Base verification.
+
+### FailurePanel
+Plain unavailable/unverified state.
+
+---
+
+## TRACE reference routing
+
+### Product / mobile
+- Mobbin
+- Pageflows
+- Appbrainy
+- UXGoodies / Janus
+- Fiona Lim
+
+### Art direction
+- Annual Report Gallery
+- Studio Thonik
+- Cue Design
+- Daniel Snows
+- Inspora
+- Awwwards as quality bar only
+
+### Motion
+- 60FPS Design
+- Transitions.dev
+- Motion Primitives
+- Rare UI
+- Sohrab Khan
+- Emil Kowalski as animation veto
+
+### Components
+- shadcn/ui
+- ReUI
+- Beautiful UI
+- OpenSourceUI
+- Component Gallery
+
+### Materials / identity
+- Logosystem
+- The Met Collection
+- Backgrounds Supply if licensed
+- Are.na
+- Schoolbell sparingly
+
+---
+
+## ETHOnline lesson
+
+Do not copy the purple finalist-card aesthetic.
+
+Retain the structural lesson:
+
+**one sentence + one recognisable object + one falsifiable proof**
+
+Tender:
+
+Sentence:
+**Accepted once. Owed once. Settled once.**
+
+Object:
+**Once-written Claim Instrument / Claim Fingerprint**
+
+Proof:
+**Same claim. No second payment. Δ0 executions. Δ$0.00.**
+
+---
+
+## Implementation priority
+
+### P0
+
+- four-route shell;
+- routing;
+- ClaimInstrument;
+- static ClaimFingerprint;
+- identity tokens;
 - Home;
-- Obligation;
 - Proof;
-- Receipt;
+- replay refusal;
+- failure states;
+- Receipt artifact/permalink.
+
+### P1
+
+- Case;
 - Lab;
-- System.
+- derivation relationships;
+- Proof Register;
+- Evidence Drawer;
+- independent chain proof presentation.
 
-No runtime-semantic change.
+### P2
 
-### Phase C — signature motion
-
-- fingerprint morph;
-- replay rail pulse;
-- receipt registration;
-- page transitions.
-
-### Phase D — mobile / reduced motion
-
-- bottom navigation;
-- full-screen receipt;
-- 375px QA;
-- reduced-motion parity.
-
-### Phase E — judge pass
-
-- 60-second comprehension test;
-- proof above the fold;
-- demo video path;
-- screenshot/card assets;
-- failure states.
+- registration motion;
+- fingerprint mutation animation;
+- mobile-native refinements;
+- final material/typography polish;
+- demo/screenshot optimization.
 
 ---
 
-## 14. Anti-slop rules
+## Accessibility / QA
 
-Reject any implementation that introduces:
-
-- generic dark-blue AI dashboard;
-- glowing gradient blobs unrelated to state;
-- floating 3D objects with no product meaning;
-- random particle fields;
-- glass cards everywhere;
-- oversized “AI” iconography;
-- chain/coin decoration as crypto shorthand;
-- endless scroll as information architecture;
-- animation whose removal does not change meaning;
-- a card grid replacing actual product flow.
-
-The design can be visually wild, but every unusual mechanism must strengthen identity, proof, causality, or comprehension.
+Required:
+- 375px;
+- 390px;
+- 768px;
+- 1280px;
+- 1440px;
+- keyboard navigation;
+- visible focus;
+- reduced motion;
+- 200% zoom;
+- no colour-only states;
+- long ids safe;
+- no page horizontal scroll;
+- failure-state QA;
+- proof API failure;
+- Base RPC failure;
+- replay failure;
+- invalid mutation;
+- public/operator boundary check.
 
 ---
 
-## 15. Runtime lock
+## Kill criteria
 
-The redesign must preserve:
+Reject any implementation if:
 
-- Acceptance -> Claim -> Authorization -> Settlement -> Receipt semantics.
+1. it works unchanged as a generic USDC product;
+2. Claim Fingerprint is removable without structural loss;
+3. payment success gets more motion than replay refusal;
+4. loud colour lacks a state job;
+5. a still frame cannot communicate Accepted once. Owed once. Settled once.;
+6. identities collapse into anonymous hashes;
+7. Failure resembles Verified;
+8. Case and Proof duplicate each other;
+9. Receipt becomes primary navigation;
+10. architecture pushes proof away from the main path;
+11. public UI implies a second payment can be broadcast;
+12. a route exists only because content needed somewhere to live.
+
+---
+
+## Runtime lock
+
+The redesign does not change:
+
+- Policy -> Acceptance -> Claim -> Authorization -> Settlement -> Receipt;
 - deterministic economic identity;
 - canonical live proof;
 - replay safety;
 - independent chain verification;
 - public proof vs authenticated operator separation;
-- no public value-moving execution;
-- no rerun of canonical payment.
-
-The runtime is locked unless a real bug is discovered.
+- no public value movement;
+- no canonical payment rerun.
 
 ---
 
-## 16. Canonical creative verdict
+## Final statement
 
-**Tender should feel like a live clearing house with the visual authority of a security document and the energy of an experimental product interface.**
+Tender should feel like **one once-written economic instrument whose identity survives settlement and whose replay visibly produces nothing new**.
 
-The single strongest distinctive move is the **deterministic Claim Fingerprint** coupled to the economic identity. The single strongest judge interaction is **Replay -> Same Claim -> No Second Payment -> $0 moved**.
+Receipt is the artifact.
 
-Everything else should support those two ideas.
+System is evidence.
+
+Claim Fingerprint is the claim's portrait.
+
+Replay refusal is the remembered interaction.
+
+The zeros are the proof.
