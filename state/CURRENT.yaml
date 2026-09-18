@@ -400,7 +400,7 @@ kimi_design_review:
   synthesis_doc: docs/TRACE-DESIGN-SYNTHESIS.md
 
 design_synthesis_v3:
-  status: ui_deployed_live_visual_qa_pending
+  status: first_visual_polish_ci_green_redeploy_pending
   direction: Once-Written Clearing Instrument
   primary_routes: ["/", "/obligation", "/proof", "/lab"]
   receipt: artifact_permalink_full_screen_from_case_and_proof
@@ -529,3 +529,32 @@ cloudflare_deploy_2026_09_18:
     - capture_mobile_home_proof
     - verify replay and independent Base check manually
     - apply polish in one block if defects are found
+
+visual_qa_video_2026_09_18:
+  source: user_live_desktop_screen_recording
+  status: reviewed_and_first_polish_pass_applied
+  strengths:
+    - instrument_as_hero_is_distinctive
+    - replay_refusal_reads_clearly
+    - paper_vs_dark_material_contrast_is_memorable
+    - proof_and_case_are_visually_distinct
+    - lab_read_only_boundary_is_legible
+  defects_found_and_fixed:
+    - app_main_programmatic_focus_created_full_page_cyan_outline
+    - browser_scroll_restoration_could_open_routes_with_titles_clipped
+    - proof_compact_instrument_was_not_actually_compact
+    - receipt_id_overflowed_the_artifact_header
+    - receipt_fact_grid_created_excess_vertical_blank_space
+    - lab_same_claim_portrait_used_inconsistent_material_context
+  polish_commits:
+    - 1034c4a3b0523c0e2cd73011c55416c4d1794ab3
+    - 434c49bafe77762054702995e2de5eedff7b34ee
+  ci:
+    run_id: 35322243227
+    result: success
+    verified_sha: 434c49bafe77762054702995e2de5eedff7b34ee
+  remaining_qa:
+    - redeploy_polish_to_cloudflare
+    - confirm_desktop_route_top_position_and_receipt_header
+    - capture_375px_home_and_proof
+    - validate_mobile_bottom_nav_and_replay_sheet
