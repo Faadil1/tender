@@ -89,9 +89,23 @@ Tender includes a specific integration with **Valid Until**, a deployed agent-sa
 - Integration implementation: `src/integrations/validUntil.ts`
 - Tests: `tests/validUntilIntegration.test.ts`
 
-The binding is implemented and tested.
+The binding is implemented, tested, and now proven through a distinct KeeperHub execution.
 
-A dedicated value-moving workflow exists with an explicit approval gate. Tender does **not** claim the Valid Until-specific KeeperHub transfer as completed until that distinct transaction has actually been executed.
+| Evidence | Value |
+| --- | --- |
+| GitHub Actions run | `35328265031` |
+| Accepted work | `aeec4ed165eb0917688a885b960175d58f729692` |
+| Tender Claim | `tclaim_b5b5600f73b00dd1790a6747e1bc2ac4` |
+| Tender Receipt | `treceipt_b5b5600f73b00dd1790a6747e1bc2ac4` |
+| KeeperHub execution | `50m417t2khmb8a17iggt7` |
+| Transaction | `0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b` |
+| Replay | `ALREADY_SETTLED` |
+| Additional KeeperHub executions | `0` |
+| Additional movement | `$0` |
+
+Machine-readable proof: `evidence/valid-until-live-proof.json`.
+
+Transaction: https://sepolia.basescan.org/tx/0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b
 
 ## Reliability / negative paths
 
@@ -187,7 +201,7 @@ Tender answers the economic-identity question.
 
 | Criterion | Tender evidence |
 | --- | --- |
-| Integration depth | Specific Valid Until binding + accepted-work identity + guarded project-specific live settlement workflow |
+| Integration depth | Specific Valid Until binding + real accepted-work SHA + distinct proven KeeperHub settlement + isolated evidence record |
 | Execution through KeeperHub | Real Base Sepolia USDC transaction, KeeperHub execution ID, independent chain verification |
 | Reliability / observability | deterministic claims, reconciliation, explicit UNKNOWN/failure states, 42 tests, 12 replay scenarios |
 | Usefulness / originality | exactly-once economic identity for accepted work rather than transport-event dedupe |
@@ -202,11 +216,14 @@ Complete:
 - independent chain verification;
 - Tender Receipt;
 - deterministic test/replay suite;
-- Valid Until-specific integration code and tests.
+- Valid Until-specific integration code and tests;
+- distinct Valid Until-specific KeeperHub execution;
+- distinct Valid Until Tender Receipt and machine-readable proof.
 
 Still intentionally pending:
-- the **distinct Valid Until-specific real KeeperHub settlement**, which requires explicit approval before broadcasting;
 - final redeploy of the latest visual/negative-evidence polish;
 - final mobile/judge-video capture.
+
+The Valid Until-specific real KeeperHub settlement is complete and proven.
 
 Tender does not label pending work as completed.
