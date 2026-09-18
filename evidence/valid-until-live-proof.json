@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-09-18T09:12:07.480Z",
+  "repository": "Faadil1/valid-until-agent-os",
+  "runnerRepository": "Faadil1/tender",
+  "commitSha": "03db72347d50e24285b3eaaa4b40dc8ae362b0bc",
+  "contribution": {
+    "taskId": "valid-until-exact-action-binding",
+    "pullRequestId": "commit-aeec4ed165eb",
+    "acceptedWorkId": "aeec4ed165eb0917688a885b960175d58f729692"
+  },
+  "tenderClaim": {
+    "claimId": "tclaim_b5b5600f73b00dd1790a6747e1bc2ac4",
+    "policyVersion": "policy.live.base-sepolia-usdc.v1",
+    "idempotencyKey": "tender:claim:tclaim_b5b5600f73b00dd1790a6747e1bc2ac4"
+  },
+  "keeperHub": {
+    "workflowId": "yy4ml6aevkov3zaukpx15",
+    "executionId": "50m417t2khmb8a17iggt7",
+    "baseUrl": "https://app.keeperhub.com"
+  },
+  "settlement": {
+    "status": "SETTLED",
+    "transactionHash": "0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b",
+    "explorerUrl": "https://sepolia.basescan.org/tx/0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b",
+    "receipt": {
+      "receiptId": "treceipt_b5b5600f73b00dd1790a6747e1bc2ac4",
+      "acceptedContribution": "aeec4ed165eb0917688a885b960175d58f729692",
+      "acceptanceEvidence": {
+        "source": "github",
+        "acceptanceKind": "maintainer_attestation",
+        "eventId": "github-actions-35328265031",
+        "acceptedWorkId": "aeec4ed165eb0917688a885b960175d58f729692",
+        "mergeSha": "03db72347d50e24285b3eaaa4b40dc8ae362b0bc",
+        "eventTime": "2026-09-18T09:12:01.873Z"
+      },
+      "claimId": "tclaim_b5b5600f73b00dd1790a6747e1bc2ac4",
+      "policyVersion": "policy.live.base-sepolia-usdc.v1",
+      "recipients": [
+        {
+          "wallet": "0x2ca7ba27ab8686F3a073c053FaD6258C003a02bb",
+          "amount": "0.01",
+          "role": "primary"
+        }
+      ],
+      "asset": "USDC",
+      "amount": "0.01",
+      "keeperHubExecutionId": "50m417t2khmb8a17iggt7",
+      "transactionHash": "0x5ee526ba2c5c630e58f9b5c0de53c24ffb0e77d83e85a78c1b3038365f42bb5b",
+      "status": "SETTLED",
+      "settledAt": "2026-09-18T09:12:07.479Z"
+    }
+  },
+  "replay": {
+    "status": "ALREADY_SETTLED",
+    "sameClaim": true,
+    "additionalKeeperHubExecutions": 0,
+    "additionalMovement": "$0"
+  }
+}
