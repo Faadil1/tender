@@ -10,6 +10,10 @@ on:
         description: Minimal USDC amount
         required: true
         default: "0.01"
+      source_repository:
+        description: Named live project repository whose accepted work is being settled
+        required: false
+        default: "Faadil1/tender"
       accepted_work_id:
         description: Accepted work identity; defaults to commit SHA when blank
         required: false
@@ -28,6 +32,7 @@ jobs:
       KEEPERHUB_WORKFLOW_ID: ${{ secrets.KEEPERHUB_WORKFLOW_ID }}
       TENDER_RECIPIENT_WALLET: ${{ inputs.recipient_wallet }}
       TENDER_AMOUNT_USDC: ${{ inputs.amount_usdc }}
+      TENDER_SOURCE_REPOSITORY: ${{ inputs.source_repository }}
       TENDER_ACCEPTED_WORK_ID: ${{ inputs.accepted_work_id }}
       TENDER_TASK_ID: ${{ inputs.task_id }}
     steps:
