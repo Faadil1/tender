@@ -314,7 +314,7 @@ do_not:
   - Do not implement upstream KeeperHub code before an issue is accepted.
   - Do not chase "#2373", "#2495/#2552", or "#2408".
 
-next_action: Keep Tender runtime/proof locked. Execute the Electric Clearing House design gate: run Grok/Kimi cross-examination from docs/TRACE-DESIGN-LLM-PROMPTS.md if available, synthesize only evidence-backed deltas, then implement the multi-surface UI in reviewable slices. In parallel, KeeperHub #2560 remains the primary bounty candidate and still requires accepted before implementation.
+next_action: Keep Tender runtime/proof locked. Grok/Kimi synthesis is promoted in docs/TRACE-DESIGN-SYNTHESIS.md and docs/DESIGN-DIRECTION.md. Begin P0 UI implementation: four-route shell, persistent Claim Instrument, static Claim Fingerprint, identity tokens, Home, Proof, replay refusal, plain failure states, and Receipt artifact/permalink. KeeperHub #2560 remains parallel and still requires accepted before implementation.
 
 accepted_issue_sweep_2026_09_17:
   verdict: no_clean_substantive_unclaimed_alternative
@@ -326,10 +326,10 @@ accepted_issue_sweep_2026_09_17:
   expedited_triage: required
 
 design_v2:
-  status: grok_received_waiting_for_kimi_then_synthesis
+  status: grok_kimi_synthesis_promoted_ready_for_build
   canonical_doc: docs/DESIGN-DIRECTION.md
   prompt_pack: docs/TRACE-DESIGN-LLM-PROMPTS.md
-  direction: Electric Clearing House
+  direction: Once-Written Clearing Instrument
   memory_sentence: "Accepted once. Owed once. Settled once."
   signature_mechanism: deterministic Claim Fingerprint generated from claimId using security-print / guilloche language
   architecture:
@@ -385,3 +385,29 @@ grok_design_review:
     - Mutation_Lab_as_destination
     - Electric_direction_name
   synthesis_status: waiting_for_Kimi_before_final_promotion
+
+kimi_design_review:
+  status: received_summary_and_synthesized
+  strongest_retained:
+    - four_surface_primary_funnel
+    - receipt_as_artifact_not_primary_nav
+    - system_as_secondary_evidence_not_primary_job
+    - replay_before_after_zero_counters
+    - claim_fingerprint_captioned_as_visual_identity_not_proof
+    - five_identity_token_system
+    - plain_failure_states
+  limitation: full_15_section_kimi_document_not_supplied_only_headline_summary_promoted
+  synthesis_doc: docs/TRACE-DESIGN-SYNTHESIS.md
+
+design_synthesis_v3:
+  status: canonical_ready_for_implementation
+  direction: Once-Written Clearing Instrument
+  primary_routes: ["/", "/obligation", "/proof", "/lab"]
+  receipt: artifact_permalink_full_screen_from_case_and_proof
+  system: proof_evidence_drawer_plus_secondary_footer_link
+  signature_object: persistent Claim Instrument with deterministic Claim Fingerprint
+  fingerprint_caption: "Visual identity of this claim"
+  signature_interaction: "Replay same accepted work -> unchanged instrument -> delta 0 executions -> delta $0.00 -> Same claim. No second payment."
+  failure_headline: "Cannot verify right now."
+  primary_nav: [Home, Case, Proof, Lab]
+  implementation_gate: P0_shell_instrument_home_proof_replay_receipt_failure_states
