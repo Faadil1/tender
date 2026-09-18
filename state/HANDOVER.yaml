@@ -65,7 +65,7 @@ ui_ux_handoff:
     - Clear distinction between public proof surface and authenticated operator surface.
 
 keeperhub_bounty_handoff:
-  status: multi_llm_whitespace_discovery_perplexity_and_deepseek_phase2_fact_checked
+  status: multi_llm_whitespace_discovery_perplexity_deepseek_and_claude_phase2_fact_checked
   main_track_and_bounty_are_separate_workstreams: true
   research_doc: docs/KEEPERHUB-BOUNTY-INTELLIGENCE.md
   external_review_packet: docs/EXTERNAL-LLM-CRITIQUE-PACKET.md
@@ -75,11 +75,17 @@ keeperhub_bounty_handoff:
 
   external_review_results:
     claude:
-      status: targeted_direct_status_contract_review_queued
-      question:
-        - Is ExecuteResponse.errorClass/rejection -> status.result.errorClass/rejection an intentional sufficient contract, small DX debt, or a real recurring API gap?
-        - Promotion requires concrete current caller harm/repeated workaround, no active owner, and a bounded backwards-compatible patch.
-        - Do not add/infer retryable without a stable existing KeeperHub source of truth.
+      status: phase2_received_fact_checked
+      effect: no candidate promoted; direct execution typed failure status remains RESEARCH ONLY
+      strongest_supported_points:
+        - No concrete recurring caller harm or repeated workaround was found for nested result.errorClass/result.rejection.
+        - The immediate ExecuteResponse versus durable status.result asymmetry is plausibly intentional.
+        - API symmetry alone does not justify top-level promotion.
+        - No generic retryable field without a stable cross-action source of truth.
+      fact_check:
+        - "#2206 is closed; PR #2213 merged the protocol-write ExecuteResponse envelope."
+        - "Current staging already returns executionId/status for protocol writes."
+        - "PR #2528 is separate MCP simulate-response documentation/DX work."
     gemini:
       status: received_fact_checked
       effect: enforcing Effect-Bound Execution Reference demoted
@@ -136,6 +142,9 @@ keeperhub_bounty_handoff:
     softened_error_execution_contract:
       status: no_go_occupied
       note: "#2408 closed; PR #2446 merged; execution-level remainder retained by core team"
+    direct_execution_typed_failure_status:
+      status: research_only_do_not_file
+      note: "No current caller harm/workaround tied to nested typed-error placement; #2206 adjacent envelope gap already fixed by merged PR #2213"
 
   verified_overlap_and_ownership:
     - "#1840 open accepted confirmed; PR #2372 open mergeable not merged"
@@ -144,6 +153,7 @@ keeperhub_bounty_handoff:
     - "#2177 closed completed"
     - "#2374 closed completed; PR #2386 merged"
     - "#1979 closed completed"
+    - "#2206 closed completed; PR #2213 merged"
     - "#2408 closed completed accepted confirmed; PR #2446 merged"
     - "#2495 open accepted confirmed; PR #2552 open mergeable not merged"
 
@@ -206,8 +216,8 @@ do_not:
 next_exact_actions:
   - Keep Tender runtime/proof locked.
   - Continue Benita UI/UX work and main-track live-product binding.
-  - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi and DeepSeek; require Claude to adjudicate the direct-execution typed failure status asymmetry explicitly.
-  - Give DeepSeek the source-level reliability role defined in the packet.
+  - Run Grok next against the updated whitespace packet for adversarial duplicate/competition/recurrence discovery.
+  - If Grok finds no surviving candidate, run fresh Gemini + Kimi passes against the updated no-go set.
   - Fact-check all outputs against current KeeperHub source/issues/PRs.
   - Cross-examine duplicate claims before selecting any primary candidate.
   - File nothing upstream until a distinct, unclaimed, evidence-backed candidate survives.
