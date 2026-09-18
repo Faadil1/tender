@@ -130,18 +130,20 @@ The next bounty candidate must be:
 
 ## Pending reviews
 
-- Claude: maintainer / mergeability / hidden-coupling critique.
 - Grok: duplicate / competition / recurrence / adversarial uniqueness critique.
+- Fresh Gemini pass: systems/API/schema/concurrency, after Grok if no candidate survives.
+- Fresh Kimi pass: product-boundary/semantics/DX, after Grok if no candidate survives.
 
 Perplexity and Kimi are extra adversarial reviewers beyond the original three-model gate.
 
 ## Next synthesis gate
 
-1. Run Claude and Grok with the same packet.
-2. Fact-check their current KeeperHub claims before promotion.
-3. Use them primarily to discover a **new, narrow, unclaimed whitespace candidate**, not to rescue any rejected candidate.
-4. If no high-signal candidate survives, skip the bounty rather than weaken Tender or duplicate active work.
-5. Re-run issue/PR overlap immediately before any upstream filing.
+1. Run Grok with the updated packet.
+2. Fact-check every current KeeperHub claim before promotion.
+3. If Grok finds no surviving candidate, run fresh Gemini + Kimi passes against the updated no-go set.
+4. Use all remaining reviewers primarily to discover a **new, narrow, unclaimed whitespace candidate**, not to rescue any rejected candidate.
+5. If no high-signal candidate survives, skip the bounty rather than weaken Tender or duplicate active work.
+6. Re-run issue/PR overlap immediately before any upstream filing.
 
 
 ## Phase 2 — full whitespace discovery roster
@@ -231,7 +233,38 @@ The only surviving observation is that direct execution status error classificat
 DeepSeek's main value in this round was restraint: it did not invent a primary candidate without source access.
 
 
-## Claude targeted adjudication queued — direct execution typed failure status
+## Phase 2 Claude maintainer review — received and fact-checked
+
+Claude returned **RESEARCH ONLY — NO BOUNTY CANDIDATE SURVIVES** for the direct-execution typed-failure-status hypothesis.
+
+### Findings retained after fact-check
+
+1. **The cited reliability incidents do not prove a nested-status contract bug.**
+   - #2374 was a sponsored-send outcome-classification problem and is closed via merged PR #2386.
+   - #1840 / PR #2372 concerns idempotency disposition after definite versus uncertain failure; PR #2372 remains open and does not depend on top-level status normalization.
+   - Neither establishes caller harm caused specifically by `result.errorClass` / `result.rejection` being nested.
+
+2. **No repeated consumer workaround was found.**
+   Spot checks across `daydreamsai/lucid-agents`, `DecodeDedan/plugin-keeperhub`, and `EcstaceeLOR/Synesis` found no `errorClass` / `result.errorClass` branching pattern. This supports Claude's claim that current consumers principally branch on execution status / receipt evidence rather than lifting nested typed-error fields.
+
+3. **The current asymmetry is plausibly intentional.**
+   `ExecuteResponse` exposes freshly computed `rejection` / `errorClass` on the synchronous call path. Durable status reads stored `output` as `result`, and `failExecution()` persists those typed details there when available. Source inspection found no current evidence that this shape itself causes an unsafe decision.
+
+4. **The adjacent protocol-write response gap is already fixed, not merely occupied.**
+   Claude pointed to #2206 as the real historical contract gap: protocol writes omitted `executionId` / `status` and returned raw plugin results. Fact-check correction: #2206 is closed, and PR #2213 was merged (merge commit `56b1475855bcd9b299b4247245a7d7496e36ac85`) to return the standardized `ExecuteResponse` envelope. Current staging already contains that envelope. Therefore #2206 is not available as whitespace.
+
+5. **MCP structured failure output is a separate surface.**
+   PR #2528 documents current MCP simulate failure behavior and remains a separate DX/documentation thread. It does not establish a defect in `GET /api/execute/{executionId}/status`.
+
+### Decision
+
+`Direct Execution typed failure status` stays **RESEARCH ONLY / DO NOT FILE**.
+
+A docs-only clarification that typed failure detail lives at `result.errorClass` / `result.rejection` would be legitimate DX cleanup, but current evidence does not make it bounty-worthy. Top-level promotion is not justified by symmetry alone. A generic `retryable` field remains explicitly prohibited unless KeeperHub gains a stable cross-action retryability source of truth.
+
+### Claude result
+
+No candidate from the Claude pass is promoted.
 
 Claude's maintainer review now has one explicit sub-question in addition to broad whitespace discovery.
 
