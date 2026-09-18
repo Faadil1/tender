@@ -124,3 +124,16 @@ Promote only if:
 - the change is useful beyond Tender
 
 If both reviewers disagree, preserve both objections and let source/maintainer evidence decide. Do not vote.
+
+
+### Pre-packet Kimi note
+
+A Kimi response produced before this packet proposed a contract-code-hash admission guardrail instead of adjudicating this candidate. That response does not count.
+
+Fact-check established:
+- #2408 is closed/completed.
+- current KeeperHub simulate does not expose contractCodeSha256.
+- ProofPulse computes its bytecode hash locally via eth_getCode + SHA-256.
+- #2503 is already under core-team discussion for adjacent caller-expectation / execution-verification semantics.
+
+For the targeted Kimi rerun, do not revive the code-hash candidate. Adjudicate only the poll-contract candidate above.
