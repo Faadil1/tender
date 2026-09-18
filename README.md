@@ -6,6 +6,7 @@
 It turns acceptance into one deterministic obligation, delegates value movement to KeeperHub, and preserves a receipt that survives retries, callbacks, and replay.
 
 **Live product:** https://tender-settlement.faadil-casecraft.workers.dev  
+**Demo video:** https://youtu.be/932Cav8cd9g  
 **Canonical KeeperHub transaction:** https://sepolia.basescan.org/tx/0x269f77504e421e16ee3193de5bb5c56a55618a4fc210f5ccba2dabf73d18e5db  
 **Tests:** 42/42 passing · **Replay harness:** 12 scenarios · **Duplicate payouts:** 0
 
