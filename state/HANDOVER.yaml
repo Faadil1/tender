@@ -74,6 +74,12 @@ keeperhub_bounty_handoff:
   keeperhub_contribution_rule: "Issue first -> Reason/Scope/Plan -> wait for accepted -> implement -> PR to staging"
 
   external_review_results:
+    claude:
+      status: targeted_direct_status_contract_review_queued
+      question:
+        - Is ExecuteResponse.errorClass/rejection -> status.result.errorClass/rejection an intentional sufficient contract, small DX debt, or a real recurring API gap?
+        - Promotion requires concrete current caller harm/repeated workaround, no active owner, and a bounded backwards-compatible patch.
+        - Do not add/infer retryable without a stable existing KeeperHub source of truth.
     gemini:
       status: received_fact_checked
       effect: enforcing Effect-Bound Execution Reference demoted
@@ -200,7 +206,7 @@ do_not:
 next_exact_actions:
   - Keep Tender runtime/proof locked.
   - Continue Benita UI/UX work and main-track live-product binding.
-  - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi and DeepSeek.
+  - Run docs/KEEPERHUB-WHITESPACE-MULTI-LLM-PACKET.md through Claude, Gemini, Grok, Perplexity, Kimi and DeepSeek; require Claude to adjudicate the direct-execution typed failure status asymmetry explicitly.
   - Give DeepSeek the source-level reliability role defined in the packet.
   - Fact-check all outputs against current KeeperHub source/issues/PRs.
   - Cross-examine duplicate claims before selecting any primary candidate.
